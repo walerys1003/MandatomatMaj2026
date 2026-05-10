@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 
-import { CasesList, CasesTable, type CaseTableRow } from '@mandatomat/ui'
+import { CasesList, CasesTable, EmptyState, type CaseTableRow } from '@mandatomat/ui'
 
 import { caseTypeFromDb } from '@/lib/cases/db-mapping'
 import { getCaseTypeMeta } from '@/lib/cases/catalog'
@@ -87,18 +87,46 @@ export default async function CasesListPage() {
         </div>
         <Link
           href="/sprawy/nowa"
-          className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
+          className="bg-brand-600 hover:bg-brand-700 rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm"
         >
           + Nowe pismo
         </Link>
       </header>
 
-      <div className="hidden md:block">
-        <CasesTable rows={rows} emptyMessage="Nie masz jeszcze żadnych spraw — stwórz pierwszą." />
-      </div>
-      <div className="md:hidden">
-        <CasesList rows={rows} emptyMessage="Brak spraw." />
-      </div>
+      {rows.length === 0 ? (
+        <EmptyState
+          variant="hero"
+          size="lg"
+          icon="📋"
+          title="Nie masz jeszcze żadnych spraw"
+          description="Każda sprawa to jedno pismo — odwołanie, sprzeciw lub reklamacja. Kreator zajmie ok. 3 minut, a AI wygeneruje gotowy dokument."
+          action={
+            <Link
+              href="/sprawy/nowa"
+              className="inline-flex items-center gap-2 rounded-md bg-precision-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-precision-blue-500"
+            >
+              Stwórz pierwszą sprawę →
+            </Link>
+          }
+          secondaryAction={
+            <Link
+              href="/sprawdz-szanse"
+              className="text-sm text-iron-600 underline-offset-4 hover:text-iron-900 hover:underline dark:text-iron-300 dark:hover:text-white"
+            >
+              Sprawdź szanse za darmo
+            </Link>
+          }
+        />
+      ) : (
+        <>
+          <div className="hidden md:block">
+            <CasesTable rows={rows} />
+          </div>
+          <div className="md:hidden">
+            <CasesList rows={rows} />
+          </div>
+        </>
+      )}
     </div>
   )
 }

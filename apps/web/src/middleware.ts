@@ -25,6 +25,12 @@ const PROTECTED_PATHS = [
 const AUTH_PATHS = ['/login', '/rejestracja']
 const PUBLIC_API_PREFIXES = ['/api/health']
 
+/**
+ * P8: ścieżki, na które redirectujemy do /witaj jeśli user nie ukończył onboardingu.
+ * /witaj/* + /api/* są wyłączone, żeby nie tworzyć pętli ani nie blokować API.
+ */
+const ONBOARDING_GATED_PATHS = ['/panel', '/sprawy', '/terminy', '/profil', '/ustawienia']
+
 function pathMatches(path: string, prefixes: ReadonlyArray<string>): boolean {
   return prefixes.some((p) => path === p || path.startsWith(`${p}/`))
 }
@@ -69,6 +75,36 @@ export async function middleware(request: NextRequest) {
   // Auth paths z sesją → redirect na panel
   if (user && pathMatches(pathname, AUTH_PATHS)) {
     return NextResponse.redirect(new URL('/panel', request.url))
+  }
+
+  // P8: onboarding gating — jeśli user zalogowany, ale nie ukończył onboardingu,
+  // i wchodzi na chronioną stronę APP (poza /witaj/*) → redirect do /witaj.
+  // Cookie `mnd_onb_done=1` (set po completeOnboardingAction) służy jako szybki
+  // bypass żeby nie pingować bazy przy każdym request.
+  if (user && pathMatches(pathname, ONBOARDING_GATED_PATHS)) {
+    const onbCookie = request.cookies.get('mnd_onb_done')?.value
+    if (onbCookie !== '1') {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onboarding_completed')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      const completed =
+        (profile as { onboarding_completed: boolean | null } | null)?.onboarding_completed === true
+
+      if (completed) {
+        // Cache pozytywnej odpowiedzi w cookie (30 dni, samesite=lax)
+        response.cookies.set('mnd_onb_done', '1', {
+          maxAge: 60 * 60 * 24 * 30,
+          path: '/',
+          sameSite: 'lax',
+          httpOnly: true,
+        })
+      } else {
+        return NextResponse.redirect(new URL('/witaj', request.url))
+      }
+    }
   }
 
   return response

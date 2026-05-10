@@ -1,5 +1,6 @@
 'use server'
 
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 import { z } from 'zod'
@@ -126,6 +127,15 @@ export async function completeOnboardingAction(formData: FormData): Promise<void
       () => undefined,
       () => undefined, // ignoruj błąd insertu eventu — nie blokuje flow
     )
+
+  // P8: ustaw cookie `mnd_onb_done=1` żeby middleware nie redirectował z powrotem
+  // do /witaj przy następnej nawigacji (cache 30d, httpOnly, samesite=lax).
+  cookies().set('mnd_onb_done', '1', {
+    maxAge: 60 * 60 * 24 * 30,
+    path: '/',
+    sameSite: 'lax',
+    httpOnly: true,
+  })
 
   redirect(target === 'sprawy' ? '/sprawy/nowa' : '/panel')
 }

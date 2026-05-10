@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@mandatomat/ui/card'
+import { EmptyState } from '@mandatomat/ui/empty-state'
 
 import { getReferralStats, REFERRAL_DISCOUNT_PERCENT } from '@/lib/payments/referral'
 import { createClient } from '@/lib/supabase/server'
@@ -46,11 +47,12 @@ export default async function PoleceniaPage() {
             Polecaj znajomym
           </h1>
         </header>
-        <Card>
-          <CardContent className="py-8 text-center text-iron-600 dark:text-iron-300">
-            Twój kod referral nie został jeszcze wygenerowany. Spróbuj ponownie za chwilę.
-          </CardContent>
-        </Card>
+        <EmptyState
+          variant="default"
+          icon="⏳"
+          title="Kod referral się generuje"
+          description="Twój unikalny kod referral nie został jeszcze wygenerowany. Spróbuj odświeżyć stronę za kilka sekund."
+        />
       </div>
     )
   }

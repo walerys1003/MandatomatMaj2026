@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 
-import { DeadlineCountdown } from '@mandatomat/ui'
+import { DeadlineCountdown, EmptyState } from '@mandatomat/ui'
 
 import { createClient } from '@/lib/supabase/server'
 
@@ -24,8 +24,18 @@ interface DeadlineRow {
 }
 
 const POLISH_MONTHS = [
-  'stycznia', 'lutego', 'marca', 'kwietnia', 'maja', 'czerwca',
-  'lipca', 'sierpnia', 'września', 'października', 'listopada', 'grudnia',
+  'stycznia',
+  'lutego',
+  'marca',
+  'kwietnia',
+  'maja',
+  'czerwca',
+  'lipca',
+  'sierpnia',
+  'września',
+  'października',
+  'listopada',
+  'grudnia',
 ]
 const POLISH_DAYS = ['pon', 'wt', 'śr', 'czw', 'pt', 'sob', 'ndz']
 
@@ -59,8 +69,12 @@ export default async function DeadlinesPage() {
   today.setHours(0, 0, 0, 0)
   const todayIso = today.toISOString().slice(0, 10)
 
-  const upcoming = allDeadlines.filter((d) => d.deadline_date >= todayIso && !['cancelled', 'completed'].includes(d.status))
-  const past = allDeadlines.filter((d) => d.deadline_date < todayIso || ['cancelled', 'completed'].includes(d.status))
+  const upcoming = allDeadlines.filter(
+    (d) => d.deadline_date >= todayIso && !['cancelled', 'completed'].includes(d.status),
+  )
+  const past = allDeadlines.filter(
+    (d) => d.deadline_date < todayIso || ['cancelled', 'completed'].includes(d.status),
+  )
 
   // Build calendar grid for current month
   const monthStart = startOfMonth(today)
@@ -120,7 +134,13 @@ export default async function DeadlinesPage() {
               >
                 {cell.day !== null ? (
                   <>
-                    <div className={isToday ? 'font-bold text-brand-700 dark:text-brand-300' : 'text-iron-700 dark:text-iron-300'}>
+                    <div
+                      className={
+                        isToday
+                          ? 'text-brand-700 dark:text-brand-300 font-bold'
+                          : 'text-iron-700 dark:text-iron-300'
+                      }
+                    >
                       {cell.day}
                     </div>
                     {hasDeadlines ? (
@@ -144,27 +164,49 @@ export default async function DeadlinesPage() {
 
       {/* Lista nadchodzących */}
       <section>
-        <h2 className="mb-3 text-lg font-semibold text-iron-900 dark:text-iron-100">
-          Nadchodzące
-        </h2>
+        <h2 className="mb-3 text-lg font-semibold text-iron-900 dark:text-iron-100">Nadchodzące</h2>
         {upcoming.length === 0 ? (
-          <div className="rounded-md border border-dashed border-iron-300 bg-white p-6 text-center text-sm text-iron-500 dark:border-iron-700 dark:bg-iron-900 dark:text-iron-400">
-            Brak nadchodzących terminów.
-          </div>
+          allDeadlines.length === 0 ? (
+            <EmptyState
+              variant="default"
+              size="md"
+              icon="📅"
+              title="Brak terminów"
+              description="Terminy pojawią się automatycznie, gdy utworzysz sprawę. Pilnujemy każdego deadline'u — przypomnimy 5/3/1 dzień przed."
+              action={
+                <Link
+                  href="/sprawy/nowa"
+                  className="inline-flex items-center gap-2 rounded-md bg-precision-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-precision-blue-500"
+                >
+                  Stwórz pierwszą sprawę →
+                </Link>
+              }
+            />
+          ) : (
+            <EmptyState
+              variant="compact"
+              size="sm"
+              icon="✓"
+              title="Brak nadchodzących terminów"
+              description="Wszystkie terminy zostały zrealizowane lub anulowane."
+            />
+          )
         ) : (
           <ul className="space-y-2">
             {upcoming.map((d) => (
               <li key={d.id}>
                 <Link
                   href={`/sprawy/${d.case_id}`}
-                  className="flex items-center justify-between gap-3 rounded-md border border-iron-200 bg-white px-4 py-3 hover:border-brand-300 dark:border-iron-700 dark:bg-iron-900 dark:hover:border-brand-600"
+                  className="hover:border-brand-300 dark:hover:border-brand-600 flex items-center justify-between gap-3 rounded-md border border-iron-200 bg-white px-4 py-3 dark:border-iron-700 dark:bg-iron-900"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-iron-900 dark:text-iron-100">
                       {d.title}
                     </p>
                     {d.legal_basis ? (
-                      <p className="mt-0.5 text-xs text-iron-500 dark:text-iron-400">{d.legal_basis}</p>
+                      <p className="mt-0.5 text-xs text-iron-500 dark:text-iron-400">
+                        {d.legal_basis}
+                      </p>
                     ) : null}
                   </div>
                   <DeadlineCountdown deadline={d.deadline_date} format="long" />
@@ -178,9 +220,7 @@ export default async function DeadlinesPage() {
       {/* Historia */}
       {past.length > 0 ? (
         <section>
-          <h2 className="mb-3 text-lg font-semibold text-iron-700 dark:text-iron-300">
-            Historia
-          </h2>
+          <h2 className="mb-3 text-lg font-semibold text-iron-700 dark:text-iron-300">Historia</h2>
           <ul className="space-y-1.5">
             {past.slice(0, 20).map((d) => (
               <li key={d.id}>
@@ -189,7 +229,9 @@ export default async function DeadlinesPage() {
                   className="flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm text-iron-600 hover:bg-iron-100 dark:text-iron-400 dark:hover:bg-iron-800"
                 >
                   <span className="truncate">{d.title}</span>
-                  <span className="text-xs text-iron-500">{d.deadline_date} · {d.status}</span>
+                  <span className="text-xs text-iron-500">
+                    {d.deadline_date} · {d.status}
+                  </span>
                 </Link>
               </li>
             ))}

@@ -5,6 +5,7 @@ import {
   CasesList,
   CasesTable,
   DeadlineWidget,
+  EmptyState,
   MetricsGrid,
   QuickActionBar,
   SuccessRateWidget,
@@ -61,7 +62,11 @@ export default async function PanelPage() {
 
   // Parallel data fetch
   const [profileRes, casesRes, deadlinesRes, monthCountRes, successRes] = await Promise.all([
-    supabase.from('profiles').select('full_name, plan, subscription_tier').eq('id', userId).maybeSingle(),
+    supabase
+      .from('profiles')
+      .select('full_name, plan, subscription_tier')
+      .eq('id', userId)
+      .maybeSingle(),
     supabase
       .from('cases')
       .select('id, case_type, status, created_at, title, institution')
@@ -81,13 +86,14 @@ export default async function PanelPage() {
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .gte('created_at', firstOfMonthIso()),
-    supabase
-      .from('cases')
-      .select('id, status')
-      .eq('user_id', userId),
+    supabase.from('cases').select('id, status').eq('user_id', userId),
   ])
 
-  const profile = profileRes.data as { full_name: string | null; plan: string | null; subscription_tier: string | null } | null
+  const profile = profileRes.data as {
+    full_name: string | null
+    plan: string | null
+    subscription_tier: string | null
+  } | null
   const cases = (casesRes.data ?? []) as CaseRow[]
   const deadlines = (deadlinesRes.data ?? []) as DeadlineRow[]
   const monthCount = monthCountRes.count ?? 0
@@ -99,7 +105,9 @@ export default async function PanelPage() {
   const pending = allCases.filter((c) => ['paid', 'sent', 'waiting'].includes(c.status)).length
   const totalFinished = accepted + rejected
   const successRate = totalFinished > 0 ? Math.round((accepted / totalFinished) * 100) : 0
-  const pendingCount = allCases.filter((c) => ['draft', 'preview', 'paid_pending'].includes(c.status)).length
+  const pendingCount = allCases.filter((c) =>
+    ['draft', 'preview', 'paid_pending'].includes(c.status),
+  ).length
 
   const firstName = profile?.full_name?.split(' ')[0] ?? 'Cześć'
 
@@ -181,7 +189,7 @@ export default async function PanelPage() {
         </div>
         <Link
           href="/sprawy/nowa"
-          className="inline-flex items-center gap-2 rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
+          className="bg-brand-600 hover:bg-brand-700 inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm"
         >
           + Nowe pismo
         </Link>
@@ -192,23 +200,29 @@ export default async function PanelPage() {
 
       {/* Empty state vs full dashboard */}
       {isEmpty ? (
-        <div className="rounded-lg border-2 border-dashed border-iron-200 bg-white p-10 text-center dark:border-iron-700 dark:bg-iron-900">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-2xl text-brand-700 dark:bg-brand-900 dark:text-brand-300">
-            ✨
-          </div>
-          <h2 className="mt-4 text-lg font-semibold text-iron-900 dark:text-iron-100">
-            Witaj w Mandatomacie
-          </h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-iron-600 dark:text-iron-400">
-            Stwórz pierwsze pismo — kreator zajmie ok. 3 minut. AI wygeneruje dla Ciebie sprzeciw, odwołanie lub odpowiedź.
-          </p>
-          <Link
-            href="/sprawy/nowa"
-            className="mt-4 inline-flex items-center gap-2 rounded-md bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
-          >
-            Stwórz pierwsze pismo →
-          </Link>
-        </div>
+        <EmptyState
+          variant="hero"
+          size="lg"
+          icon="✨"
+          title="Witaj w Mandatomacie"
+          description="Stwórz pierwsze pismo — kreator zajmie ok. 3 minut. AI wygeneruje dla Ciebie sprzeciw, odwołanie lub odpowiedź."
+          action={
+            <Link
+              href="/sprawy/nowa"
+              className="inline-flex items-center gap-2 rounded-md bg-precision-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-precision-blue-500"
+            >
+              Stwórz pierwsze pismo →
+            </Link>
+          }
+          secondaryAction={
+            <Link
+              href="/sprawdz-szanse"
+              className="text-sm text-iron-600 underline-offset-4 hover:text-iron-900 hover:underline dark:text-iron-300 dark:hover:text-white"
+            >
+              albo sprawdź szanse za darmo
+            </Link>
+          }
+        />
       ) : (
         <>
           {/* Deadlines */}
@@ -228,7 +242,7 @@ export default async function PanelPage() {
               </h2>
               <Link
                 href="/sprawy"
-                className="text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400"
+                className="text-brand-600 hover:text-brand-700 dark:text-brand-400 text-sm font-medium"
               >
                 Wszystkie →
               </Link>

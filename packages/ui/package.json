@@ -16,6 +16,7 @@
     "./button": "./src/components/button.tsx",
     "./card": "./src/components/card.tsx",
     "./checkbox": "./src/components/checkbox.tsx",
+    "./empty-state": "./src/components/empty-state.tsx",
     "./input": "./src/components/input.tsx",
     "./logo": "./src/components/logo.tsx",
     "./markdown-preview": "./src/components/markdown-preview.tsx",
