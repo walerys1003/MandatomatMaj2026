@@ -64,7 +64,7 @@ export default async function DashboardPage() {
           </p>
         </div>
         <Button asChild size="md" variant="primary">
-          <Link href="/kreator">+ Nowe pismo</Link>
+          <Link href="/sprawy/nowa">+ Nowe pismo</Link>
         </Button>
       </div>
 
@@ -74,7 +74,15 @@ export default async function DashboardPage() {
           <CardHeader>
             <CardDescription>Sprawy aktywne</CardDescription>
             <CardTitle className="font-display text-3xl tabular-nums">
-              {cases.filter((c) => c.status === 'in_progress' || c.status === 'draft').length}
+              {
+                cases.filter(
+                  (c) =>
+                    c.status === 'draft' ||
+                    c.status === 'form_completed' ||
+                    c.status === 'preview' ||
+                    c.status === 'editing',
+                ).length
+              }
             </CardTitle>
           </CardHeader>
         </Card>
@@ -121,7 +129,7 @@ export default async function DashboardPage() {
                 Zacznij od pierwszego odwołania — zajmie to 3 minuty.
               </p>
               <Button asChild size="md" variant="primary" className="mt-6">
-                <Link href="/kreator">Zacznij pierwsze pismo →</Link>
+                <Link href="/sprawy/nowa">Zacznij pierwsze pismo →</Link>
               </Button>
             </CardContent>
           </Card>

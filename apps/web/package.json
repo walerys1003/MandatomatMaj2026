@@ -12,13 +12,16 @@
     "clean": "rm -rf .next .turbo"
   },
   "dependencies": {
+    "@hookform/resolvers": "^3.9.0",
     "@mandatomat/db-types": "workspace:*",
     "@mandatomat/ui": "workspace:*",
     "@supabase/ssr": "^0.5.1",
     "@supabase/supabase-js": "^2.45.4",
+    "gray-matter": "^4.0.3",
     "next": "14.2.15",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-hook-form": "^7.53.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
