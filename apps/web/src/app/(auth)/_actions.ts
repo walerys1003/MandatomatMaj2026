@@ -125,7 +125,7 @@ export async function signupAction(_prev: AuthState, formData: FormData): Promis
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
-      emailRedirectTo: `${origin}/api/auth/callback?next=/panel`,
+      emailRedirectTo: `${origin}/api/auth/callback?next=/witaj`,
       data: {
         newsletter_opt_in: parsed.data.newsletter === 'on',
       },
@@ -134,10 +134,9 @@ export async function signupAction(_prev: AuthState, formData: FormData): Promis
   if (error) {
     return {
       ok: false,
-      error:
-        error.message.includes('already registered')
-          ? 'Ten e-mail jest już zarejestrowany. Zaloguj się.'
-          : 'Rejestracja nieudana. Spróbuj ponownie.',
+      error: error.message.includes('already registered')
+        ? 'Ten e-mail jest już zarejestrowany. Zaloguj się.'
+        : 'Rejestracja nieudana. Spróbuj ponownie.',
     }
   }
 
@@ -194,10 +193,7 @@ const confirmResetSchema = z
     path: ['passwordConfirm'],
   })
 
-export async function confirmResetAction(
-  _prev: AuthState,
-  formData: FormData,
-): Promise<AuthState> {
+export async function confirmResetAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const parsed = confirmResetSchema.safeParse({
     password: formData.get('password'),
     passwordConfirm: formData.get('passwordConfirm'),

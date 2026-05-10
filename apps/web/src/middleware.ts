@@ -13,7 +13,15 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
  *   AUTH_PATHS      — jeśli zalogowany → redirect do /panel
  */
 
-const PROTECTED_PATHS = ['/panel', '/sprawy', '/profil', '/ustawienia', '/kreator']
+const PROTECTED_PATHS = [
+  '/panel',
+  '/sprawy',
+  '/profil',
+  '/ustawienia',
+  '/kreator',
+  '/witaj',
+  '/terminy',
+]
 const AUTH_PATHS = ['/login', '/rejestracja']
 const PUBLIC_API_PREFIXES = ['/api/health']
 

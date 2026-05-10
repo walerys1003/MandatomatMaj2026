@@ -26,6 +26,7 @@ const patchSchema = z.object({
   marketing_consent: z.boolean().optional(),
   newsletter_consent: z.boolean().optional(),
   preferred_locale: z.enum(['pl', 'en']).optional(),
+  onboarding_completed: z.boolean().optional(),
 })
 
 export async function GET(_req: NextRequest): Promise<NextResponse> {
