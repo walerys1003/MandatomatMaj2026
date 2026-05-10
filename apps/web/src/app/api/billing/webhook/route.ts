@@ -5,13 +5,48 @@ import {
   verifyWebhookSignature,
   type StripeCheckoutSession,
   type StripePaymentIntent,
+  type StripeSubscription,
 } from '@/lib/payments/stripe'
 import { createInvoice, FakturowniaError } from '@/lib/payments/fakturownia'
 import { incrementPromoUsage } from '@/lib/payments/promo'
+import {
+  applySubscriptionToProfile,
+  getPlanByProductCode,
+  type SubscriptionTier,
+} from '@/lib/payments/subscriptions'
 import { sendEmail } from '@/lib/notifications/email'
 import { tplPaymentSuccess } from '@/lib/notifications/templates'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { inngest } from '@/lib/inngest/client'
+
+/**
+ * P7: Typy eventów subskrypcji.
+ *
+ * Stripe `customer.subscription.*` event.data.object = pełen subscription object.
+ * Stripe `invoice.payment_*` event.data.object = invoice z `subscription` ref + `customer` ref.
+ */
+type StripeSubscriptionEvent = StripeSubscription
+
+interface StripeInvoiceEvent {
+  id: string
+  customer: string
+  subscription: string | null
+  status: 'draft' | 'open' | 'paid' | 'void' | 'uncollectible'
+  amount_paid: number
+  amount_due: number
+  currency: string
+  period_start: number
+  period_end: number
+  billing_reason:
+    | 'subscription_cycle'
+    | 'subscription_create'
+    | 'subscription_update'
+    | 'subscription_threshold'
+    | 'manual'
+    | 'upcoming'
+    | string
+  metadata: Record<string, string>
+}
 
 /**
  * POST /api/billing/webhook
@@ -111,6 +146,27 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           admin,
           event.data.object as unknown as { payment_intent: string; amount_refunded: number },
         )
+        break
+
+      // Subscription lifecycle (P7)
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated':
+        await handleSubscriptionUpserted(event.data.object as unknown as StripeSubscriptionEvent)
+        break
+
+      case 'customer.subscription.deleted':
+        await handleSubscriptionDeleted(event.data.object as unknown as StripeSubscriptionEvent)
+        break
+
+      case 'invoice.payment_succeeded':
+        await handleInvoicePaymentSucceeded(
+          admin,
+          event.data.object as unknown as StripeInvoiceEvent,
+        )
+        break
+
+      case 'invoice.payment_failed':
+        await handleInvoicePaymentFailed(admin, event.data.object as unknown as StripeInvoiceEvent)
         break
 
       default:
@@ -461,6 +517,261 @@ async function handleChargeRefunded(
     .from('payments')
     .update({ status: 'refunded' })
     .eq('stripe_payment_intent_id', charge.payment_intent)
+}
+
+// ============================================================
+// P7: Subscription handlers
+// ============================================================
+
+/**
+ * Mapowanie statusu Stripe → status snapshot.
+ */
+function mapSubscriptionStatus(s: StripeSubscription['status']): string {
+  return s
+}
+
+/**
+ * Mapowanie productCode (z metadata) → tier.
+ * Fallback po amount, jeśli metadata nie zawiera product_code.
+ */
+function resolveTier(sub: StripeSubscriptionEvent): {
+  tier: SubscriptionTier
+  productCode: string
+} {
+  const metaProductCode = sub.metadata?.['product_code']
+  if (metaProductCode) {
+    const plan = getPlanByProductCode(metaProductCode)
+    if (plan) return { tier: plan.tier, productCode: metaProductCode }
+  }
+
+  const metaTier = sub.metadata?.['tier'] as SubscriptionTier | undefined
+  if (metaTier === 'kierowca' || metaTier === 'pro' || metaTier === 'pro_plus') {
+    return {
+      tier: metaTier,
+      productCode:
+        metaTier === 'kierowca' ? 'SUB_KIEROWCA' : metaTier === 'pro' ? 'SUB_PRO' : 'SUB_PRO_PLUS',
+    }
+  }
+
+  // Fallback po amount (grosze)
+  const amount = sub.items.data[0]?.price.unit_amount ?? 0
+  if (amount === 2900) return { tier: 'kierowca', productCode: 'SUB_KIEROWCA' }
+  if (amount === 5900) return { tier: 'pro', productCode: 'SUB_PRO' }
+
+  return { tier: 'kierowca', productCode: 'SUB_KIEROWCA' }
+}
+
+/**
+ * customer.subscription.created / customer.subscription.updated
+ * Idempotent UPSERT do `subscriptions` + sync `profiles`.
+ */
+async function handleSubscriptionUpserted(sub: StripeSubscriptionEvent): Promise<void> {
+  const userId = sub.metadata?.['user_id']
+  if (!userId) {
+    console.error('[subscription.upserted] missing user_id in metadata', sub.id)
+    return
+  }
+
+  const { tier, productCode } = resolveTier(sub)
+  const priceItem = sub.items.data[0]
+  const amount = priceItem?.price.unit_amount ?? 0
+
+  await applySubscriptionToProfile({
+    userId,
+    stripeSubscriptionId: sub.id,
+    stripeCustomerId: sub.customer,
+    stripePriceId: priceItem?.price.id,
+    productCode,
+    tier,
+    status: mapSubscriptionStatus(sub.status),
+    currentPeriodStart: sub.current_period_start
+      ? new Date(sub.current_period_start * 1000).toISOString()
+      : null,
+    currentPeriodEnd: sub.current_period_end
+      ? new Date(sub.current_period_end * 1000).toISOString()
+      : null,
+    cancelAtPeriodEnd: sub.cancel_at_period_end,
+    canceledAt: sub.canceled_at ? new Date(sub.canceled_at * 1000).toISOString() : null,
+    amount,
+  })
+
+  // Event log
+  const admin = createAdminClient()
+  await admin.from('events').insert({
+    user_id: userId,
+    event_type: 'subscription_upserted',
+    data: {
+      subscription_id: sub.id,
+      tier,
+      status: sub.status,
+      cancel_at_period_end: sub.cancel_at_period_end,
+    },
+  })
+}
+
+/**
+ * customer.subscription.deleted
+ * → status='canceled', tier='free', quota=0
+ */
+async function handleSubscriptionDeleted(sub: StripeSubscriptionEvent): Promise<void> {
+  const userId = sub.metadata?.['user_id']
+  if (!userId) {
+    console.error('[subscription.deleted] missing user_id in metadata', sub.id)
+    return
+  }
+
+  const { tier, productCode } = resolveTier(sub)
+  const priceItem = sub.items.data[0]
+  const amount = priceItem?.price.unit_amount ?? 0
+
+  await applySubscriptionToProfile({
+    userId,
+    stripeSubscriptionId: sub.id,
+    stripeCustomerId: sub.customer,
+    stripePriceId: priceItem?.price.id,
+    productCode,
+    tier, // applySubscriptionToProfile użyje tier z input do `subscriptions`,
+    // ale sync profiles wymusi 'free' bo status != active/trialing
+    status: 'canceled',
+    currentPeriodStart: sub.current_period_start
+      ? new Date(sub.current_period_start * 1000).toISOString()
+      : null,
+    currentPeriodEnd: sub.current_period_end
+      ? new Date(sub.current_period_end * 1000).toISOString()
+      : null,
+    cancelAtPeriodEnd: sub.cancel_at_period_end,
+    canceledAt: sub.canceled_at
+      ? new Date(sub.canceled_at * 1000).toISOString()
+      : new Date().toISOString(),
+    amount,
+  })
+
+  const admin = createAdminClient()
+  await admin.from('events').insert({
+    user_id: userId,
+    event_type: 'subscription_canceled',
+    data: { subscription_id: sub.id, tier },
+  })
+}
+
+/**
+ * invoice.payment_succeeded
+ *
+ * Przy odnowieniu cyklu (`billing_reason='subscription_cycle'`) resetujemy
+ * miesięczną kwotę (monthly_quota_remaining = monthly_quota_total).
+ *
+ * Pierwsza faktura (subscription_create) NIE wymaga reseta — webhook
+ * `customer.subscription.created` już ustawił quota.
+ */
+async function handleInvoicePaymentSucceeded(
+  admin: AdminClient,
+  invoice: StripeInvoiceEvent,
+): Promise<void> {
+  if (!invoice.subscription) {
+    // Nie-subscription invoice (np. one-time) — ignoruj
+    return
+  }
+
+  // Znajdź user_id po stripe_subscription_id
+  const { data: subRow } = await admin
+    .from('subscriptions')
+    .select('user_id, tier')
+    .eq('stripe_subscription_id', invoice.subscription)
+    .maybeSingle()
+
+  const sub = subRow as { user_id: string; tier: string } | null
+  if (!sub) {
+    console.warn(`[invoice.payment_succeeded] subscription ${invoice.subscription} not found in DB`)
+    return
+  }
+
+  // Reset quota tylko przy renewal (subscription_cycle), nie przy create
+  if (invoice.billing_reason === 'subscription_cycle') {
+    // Pobierz aktualne monthly_quota_total z profilu (aktualny plan)
+    const { data: profileRow } = await admin
+      .from('profiles')
+      .select('monthly_quota_total')
+      .eq('id', sub.user_id)
+      .maybeSingle()
+
+    const quotaTotal =
+      (profileRow as { monthly_quota_total: number | null } | null)?.monthly_quota_total ?? 0
+
+    await admin
+      .from('profiles')
+      .update({
+        monthly_quota_remaining: quotaTotal,
+        subscription_status: 'active',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', sub.user_id)
+
+    await admin.from('events').insert({
+      user_id: sub.user_id,
+      event_type: 'subscription_renewed',
+      data: {
+        subscription_id: invoice.subscription,
+        invoice_id: invoice.id,
+        amount_paid: invoice.amount_paid,
+        quota_reset_to: quotaTotal,
+      },
+    })
+  } else {
+    // Pierwsza faktura — tylko event log, status sync robi już subscription.created
+    await admin.from('events').insert({
+      user_id: sub.user_id,
+      event_type: 'subscription_invoice_paid',
+      data: {
+        subscription_id: invoice.subscription,
+        invoice_id: invoice.id,
+        amount_paid: invoice.amount_paid,
+        billing_reason: invoice.billing_reason,
+      },
+    })
+  }
+}
+
+/**
+ * invoice.payment_failed
+ * → mark profiles.subscription_status='past_due'
+ */
+async function handleInvoicePaymentFailed(
+  admin: AdminClient,
+  invoice: StripeInvoiceEvent,
+): Promise<void> {
+  if (!invoice.subscription) return
+
+  const { data: subRow } = await admin
+    .from('subscriptions')
+    .select('user_id')
+    .eq('stripe_subscription_id', invoice.subscription)
+    .maybeSingle()
+
+  const sub = subRow as { user_id: string } | null
+  if (!sub) return
+
+  await admin
+    .from('subscriptions')
+    .update({ status: 'past_due', updated_at: new Date().toISOString() })
+    .eq('stripe_subscription_id', invoice.subscription)
+
+  await admin
+    .from('profiles')
+    .update({
+      subscription_status: 'past_due',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', sub.user_id)
+
+  await admin.from('events').insert({
+    user_id: sub.user_id,
+    event_type: 'subscription_payment_failed',
+    data: {
+      subscription_id: invoice.subscription,
+      invoice_id: invoice.id,
+      amount_due: invoice.amount_due,
+    },
+  })
 }
 
 // Helper: re-export for testing

@@ -23,7 +23,7 @@ export default async function ProfilePage() {
   const { data: profile } = await supabase
     .from('profiles')
     .select(
-      'id, email, full_name, phone, marketing_consent, newsletter_consent, preferred_locale, role, plan, created_at',
+      'id, email, full_name, phone, marketing_consent, newsletter_consent, preferred_locale, role, plan, subscription_tier, created_at',
     )
     .eq('id', user!.id)
     .single()
@@ -59,7 +59,9 @@ export default async function ProfilePage() {
           <Card>
             <CardHeader>
               <CardDescription>Plan</CardDescription>
-              <CardTitle className="font-display text-2xl">{profile?.plan ?? 'free'}</CardTitle>
+              <CardTitle className="font-display text-2xl capitalize">
+                {profile?.subscription_tier ?? profile?.plan ?? 'free'}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <Badge variant="neutral" mono>
@@ -77,6 +79,20 @@ export default async function ProfilePage() {
               </CardTitle>
             </CardHeader>
           </Card>
+          <Link
+            href="/profil/subskrypcja"
+            className="block rounded-xl border border-iron-200 bg-iron-50/50 p-5 transition hover:border-precision-blue-400 hover:bg-precision-blue-50/50 dark:border-iron-700 dark:bg-iron-900/40 dark:hover:border-precision-blue-700 dark:hover:bg-precision-blue-950/40"
+          >
+            <p className="font-mono text-[11px] uppercase tracking-wider text-iron-600 dark:text-iron-400">
+              Subskrypcja
+            </p>
+            <p className="mt-1 font-display text-base font-bold text-iron-950 dark:text-white">
+              Zarządzaj planem 💳
+            </p>
+            <p className="mt-1 text-xs text-iron-600 dark:text-iron-300">
+              Upgrade, anulowanie, faktury, limit miesięczny →
+            </p>
+          </Link>
           <Link
             href="/profil/polecenia"
             className="block rounded-xl border border-precision-blue-200 bg-precision-blue-50/50 p-5 transition hover:border-precision-blue-400 hover:bg-precision-blue-100/50 dark:border-precision-blue-900 dark:bg-precision-blue-950/30 dark:hover:bg-precision-blue-900/40"

@@ -61,7 +61,11 @@ interface StripeRequestOptions {
 async function stripeRequest<T>(path: string, opts: StripeRequestOptions = {}): Promise<T> {
   const apiKey = serverEnv.STRIPE_SECRET_KEY
   if (!apiKey) {
-    throw new StripeError('Stripe nie jest skonfigurowany (brak STRIPE_SECRET_KEY).', 500, 'config_missing')
+    throw new StripeError(
+      'Stripe nie jest skonfigurowany (brak STRIPE_SECRET_KEY).',
+      500,
+      'config_missing',
+    )
   }
 
   const url = `${STRIPE_API_URL}${path}`
@@ -122,7 +126,14 @@ export interface StripeCheckoutSession {
 
 export interface StripePaymentIntent {
   id: string
-  status: 'requires_payment_method' | 'requires_confirmation' | 'requires_action' | 'processing' | 'requires_capture' | 'canceled' | 'succeeded'
+  status:
+    | 'requires_payment_method'
+    | 'requires_confirmation'
+    | 'requires_action'
+    | 'processing'
+    | 'requires_capture'
+    | 'canceled'
+    | 'succeeded'
   amount: number
   amount_received: number
   currency: string
@@ -136,6 +147,42 @@ export interface StripeRefund {
   amount: number
   payment_intent: string
   reason: string | null
+}
+
+export interface StripeSubscription {
+  id: string
+  customer: string
+  status:
+    | 'active'
+    | 'past_due'
+    | 'canceled'
+    | 'incomplete'
+    | 'incomplete_expired'
+    | 'trialing'
+    | 'unpaid'
+    | 'paused'
+  current_period_start: number
+  current_period_end: number
+  cancel_at_period_end: boolean
+  canceled_at: number | null
+  items: {
+    data: Array<{
+      id: string
+      price: {
+        id: string
+        unit_amount: number | null
+        currency: string
+        recurring: { interval: 'day' | 'week' | 'month' | 'year' } | null
+      }
+    }>
+  }
+  metadata: Record<string, string>
+}
+
+export interface StripeBillingPortalSession {
+  id: string
+  url: string
+  return_url: string
 }
 
 // ============================================================
@@ -166,7 +213,9 @@ export interface CreateCheckoutSessionInput {
  * Tworzy Stripe Checkout Session w trybie one-time payment.
  * Cena obliczana po stronie serwera (nie ufamy klientowi).
  */
-export async function createCheckoutSession(input: CreateCheckoutSessionInput): Promise<StripeCheckoutSession> {
+export async function createCheckoutSession(
+  input: CreateCheckoutSessionInput,
+): Promise<StripeCheckoutSession> {
   const finalAmount =
     input.discountPercent && input.discountPercent > 0
       ? Math.round(input.amount * (1 - input.discountPercent / 100))
@@ -229,6 +278,166 @@ export async function retrieveCheckoutSession(sessionId: string): Promise<Stripe
   })
 }
 
+// ============================================================
+// Subscriptions (recurring)
+// ============================================================
+
+export interface CreateSubscriptionCheckoutInput {
+  userId: string
+  productCode: 'SUB_KIEROWCA' | 'SUB_PRO'
+  productName: string
+  /** Cena w groszach. */
+  amount: number
+  customerEmail?: string
+  /** Istniejący `stripe_customer_id` z profiles, jeśli user już go ma. */
+  customerId?: string
+  successUrl: string
+  cancelUrl: string
+  /** Tier z bazy — propaguje się do session.metadata. */
+  tier: 'kierowca' | 'pro' | 'pro_plus'
+  metadata?: Record<string, string>
+}
+
+/**
+ * Tworzy Stripe Checkout Session w trybie `subscription` (recurring monthly).
+ *
+ * Cena nie korzysta z preconfigurowanego `price_id` — używamy
+ * `price_data` z `recurring.interval='month'` żeby zachować ten sam
+ * mechanizm co przy one-time (cena w kodzie, nie w Stripe Dashboard).
+ */
+export async function createSubscriptionCheckoutSession(
+  input: CreateSubscriptionCheckoutInput,
+): Promise<StripeCheckoutSession> {
+  if (input.amount < 100) {
+    throw new StripeError('Minimalna kwota subskrypcji to 1,00 PLN.', 400, 'amount_too_low')
+  }
+
+  const metadata: Record<string, string> = {
+    user_id: input.userId,
+    product_code: input.productCode,
+    tier: input.tier,
+    subscription: 'true',
+    ...(input.metadata ?? {}),
+  }
+
+  const body: Record<string, unknown> = {
+    mode: 'subscription',
+    success_url: input.successUrl,
+    cancel_url: input.cancelUrl,
+    payment_method_types: ['card', 'blik'],
+    locale: 'pl',
+    line_items: [
+      {
+        price_data: {
+          currency: 'pln',
+          unit_amount: input.amount,
+          recurring: { interval: 'month' },
+          product_data: {
+            name: input.productName,
+            metadata: { product_code: input.productCode, tier: input.tier },
+          },
+        },
+        quantity: 1,
+      },
+    ],
+    metadata,
+    subscription_data: {
+      metadata,
+    },
+    // Polskie wymogi B2C — w Stripe Checkout subscription
+    billing_address_collection: 'auto',
+    allow_promotion_codes: false,
+  }
+
+  if (input.customerId) {
+    body['customer'] = input.customerId
+  } else if (input.customerEmail) {
+    body['customer_email'] = input.customerEmail
+  }
+
+  return stripeRequest<StripeCheckoutSession>('/checkout/sessions', {
+    method: 'POST',
+    body,
+    idempotencyKey: `sub-checkout:${input.userId}:${input.productCode}:${Date.now()}`,
+  })
+}
+
+/** Pobiera szczegóły subskrypcji ze Stripe (do webhook handlera + cancel UI). */
+export async function retrieveSubscription(subscriptionId: string): Promise<StripeSubscription> {
+  return stripeRequest<StripeSubscription>(`/subscriptions/${subscriptionId}`, {
+    method: 'GET',
+  })
+}
+
+/**
+ * Anuluje subskrypcję — domyślnie `cancel_at_period_end=true` (user zachowuje
+ * dostęp do końca okresu rozliczeniowego). Dla immediate cancel: passthrough false.
+ */
+export async function cancelSubscription(
+  subscriptionId: string,
+  options: { atPeriodEnd?: boolean } = {},
+): Promise<StripeSubscription> {
+  const atPeriodEnd = options.atPeriodEnd !== false
+
+  if (atPeriodEnd) {
+    // Update flagę (nie kasuje od razu)
+    return stripeRequest<StripeSubscription>(`/subscriptions/${subscriptionId}`, {
+      method: 'POST',
+      body: { cancel_at_period_end: true },
+      idempotencyKey: `sub-cancel-eop:${subscriptionId}`,
+    })
+  }
+
+  // Immediate cancel
+  return stripeRequest<StripeSubscription>(`/subscriptions/${subscriptionId}`, {
+    method: 'DELETE',
+    idempotencyKey: `sub-cancel-now:${subscriptionId}`,
+  })
+}
+
+/** Reaktywuje subskrypcję oznaczoną do cancel (cofa cancel_at_period_end=true). */
+export async function reactivateSubscription(subscriptionId: string): Promise<StripeSubscription> {
+  return stripeRequest<StripeSubscription>(`/subscriptions/${subscriptionId}`, {
+    method: 'POST',
+    body: { cancel_at_period_end: false },
+    idempotencyKey: `sub-reactivate:${subscriptionId}:${Date.now()}`,
+  })
+}
+
+/**
+ * Tworzy session do Stripe Customer Portal — user może samodzielnie
+ * zmieniać metodę płatności, pobrać faktury, anulować subskrypcję.
+ */
+export async function createBillingPortalSession(input: {
+  customerId: string
+  returnUrl: string
+}): Promise<StripeBillingPortalSession> {
+  return stripeRequest<StripeBillingPortalSession>('/billing_portal/sessions', {
+    method: 'POST',
+    body: {
+      customer: input.customerId,
+      return_url: input.returnUrl,
+    },
+  })
+}
+
+/** Tworzy klienta w Stripe (1:1 per user). */
+export async function createStripeCustomer(input: {
+  email: string
+  name?: string
+  userId: string
+}): Promise<{ id: string; email: string }> {
+  return stripeRequest<{ id: string; email: string }>('/customers', {
+    method: 'POST',
+    body: {
+      email: input.email,
+      ...(input.name ? { name: input.name } : {}),
+      metadata: { user_id: input.userId },
+    },
+    idempotencyKey: `customer:${input.userId}`,
+  })
+}
+
 /** Pobiera szczegóły PaymentIntent. */
 export async function retrievePaymentIntent(intentId: string): Promise<StripePaymentIntent> {
   return stripeRequest<StripePaymentIntent>(`/payment_intents/${intentId}`, {
@@ -237,7 +446,11 @@ export async function retrievePaymentIntent(intentId: string): Promise<StripePay
 }
 
 /** Refund (pełny lub częściowy). amount w groszach; brak = pełny zwrot. */
-export async function refund(paymentIntentId: string, amount?: number, reason?: 'duplicate' | 'fraudulent' | 'requested_by_customer'): Promise<StripeRefund> {
+export async function refund(
+  paymentIntentId: string,
+  amount?: number,
+  reason?: 'duplicate' | 'fraudulent' | 'requested_by_customer',
+): Promise<StripeRefund> {
   const body: Record<string, unknown> = {
     payment_intent: paymentIntentId,
   }
@@ -347,25 +560,75 @@ function constantTimeEqual(a: string, b: string): boolean {
  */
 export const PRICING: Record<string, { name: string; amount: number; description: string }> = {
   // Pojedyncze pisma (one-time)
-  M1_mandat_predkosc: { name: 'Sprzeciw od mandatu — prędkość', amount: 1900, description: 'Sprzeciw od mandatu za przekroczenie prędkości' },
-  M2_mandat_parking: { name: 'Sprzeciw od mandatu — parking', amount: 1900, description: 'Sprzeciw od mandatu parkingowego' },
-  M3_mandat_inne: { name: 'Sprzeciw od mandatu — inne', amount: 1900, description: 'Sprzeciw od mandatu (inne wykroczenia)' },
-  P1_parking_strefa: { name: 'Odwołanie ZTM — strefa płatnego parkowania', amount: 1900, description: 'Odwołanie od opłaty SPP' },
-  W1_wezwanie_predkosc: { name: 'Odpowiedź na wezwanie — prędkość', amount: 1900, description: 'Odpowiedź na wezwanie do wskazania kierowcy' },
-  U1_windykacja: { name: 'Sprzeciw od windykacji', amount: 1900, description: 'Sprzeciw od nakazu zapłaty / wezwania windykacyjnego' },
+  M1_mandat_predkosc: {
+    name: 'Sprzeciw od mandatu — prędkość',
+    amount: 1900,
+    description: 'Sprzeciw od mandatu za przekroczenie prędkości',
+  },
+  M2_mandat_parking: {
+    name: 'Sprzeciw od mandatu — parking',
+    amount: 1900,
+    description: 'Sprzeciw od mandatu parkingowego',
+  },
+  M3_mandat_inne: {
+    name: 'Sprzeciw od mandatu — inne',
+    amount: 1900,
+    description: 'Sprzeciw od mandatu (inne wykroczenia)',
+  },
+  P1_parking_strefa: {
+    name: 'Odwołanie ZTM — strefa płatnego parkowania',
+    amount: 1900,
+    description: 'Odwołanie od opłaty SPP',
+  },
+  W1_wezwanie_predkosc: {
+    name: 'Odpowiedź na wezwanie — prędkość',
+    amount: 1900,
+    description: 'Odpowiedź na wezwanie do wskazania kierowcy',
+  },
+  U1_windykacja: {
+    name: 'Sprzeciw od windykacji',
+    amount: 1900,
+    description: 'Sprzeciw od nakazu zapłaty / wezwania windykacyjnego',
+  },
   E1_etoll: { name: 'Reklamacja e-TOLL', amount: 1900, description: 'Reklamacja kary e-TOLL' },
-  K1_komornik: { name: 'Pismo do komornika', amount: 1900, description: 'Wniosek o ograniczenie egzekucji / sprzeciw' },
-  T1_techniczny: { name: 'Reklamacja przegląd techniczny', amount: 1900, description: 'Reklamacja decyzji o badaniu technicznym' },
+  K1_komornik: {
+    name: 'Pismo do komornika',
+    amount: 1900,
+    description: 'Wniosek o ograniczenie egzekucji / sprzeciw',
+  },
+  T1_techniczny: {
+    name: 'Reklamacja przegląd techniczny',
+    amount: 1900,
+    description: 'Reklamacja decyzji o badaniu technicznym',
+  },
 
   // Pakiety (multi-pay)
-  PACK_5: { name: 'Pakiet 5 pism', amount: 7900, description: '5 dowolnych pism (oszczędzasz 16 zł)' },
-  PACK_10: { name: 'Pakiet 10 pism', amount: 14900, description: '10 dowolnych pism (oszczędzasz 41 zł)' },
+  PACK_5: {
+    name: 'Pakiet 5 pism',
+    amount: 7900,
+    description: '5 dowolnych pism (oszczędzasz 16 zł)',
+  },
+  PACK_10: {
+    name: 'Pakiet 10 pism',
+    amount: 14900,
+    description: '10 dowolnych pism (oszczędzasz 41 zł)',
+  },
 
   // Subskrypcje (subscription)
-  SUB_KIEROWCA: { name: 'Subskrypcja Kierowca', amount: 2900, description: 'Miesięczna subskrypcja — 3 pisma/mies + priorytet' },
-  SUB_PRO: { name: 'Subskrypcja PRO', amount: 5900, description: 'Miesięczna subskrypcja — bez limitu pism' },
+  SUB_KIEROWCA: {
+    name: 'Subskrypcja Kierowca',
+    amount: 2900,
+    description: 'Miesięczna subskrypcja — 3 pisma/mies + priorytet',
+  },
+  SUB_PRO: {
+    name: 'Subskrypcja PRO',
+    amount: 5900,
+    description: 'Miesięczna subskrypcja — bez limitu pism',
+  },
 }
 
-export function getProduct(code: string): { name: string; amount: number; description: string } | null {
+export function getProduct(
+  code: string,
+): { name: string; amount: number; description: string } | null {
   return PRICING[code] ?? null
 }

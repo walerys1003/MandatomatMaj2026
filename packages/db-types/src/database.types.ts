@@ -175,13 +175,27 @@ interface ProfilesRow {
   preferred_locale: string | null
   // Subskrypcja — kanoniczny + aliasy
   subscription_plan: 'free' | 'kierowca' | 'pro' | null
-  subscription_tier: string | null
-  subscription_status: string | null
+  subscription_tier: 'free' | 'kierowca' | 'pro' | 'pro_plus' | null
+  subscription_status:
+    | 'active'
+    | 'inactive'
+    | 'past_due'
+    | 'canceled'
+    | 'incomplete'
+    | 'incomplete_expired'
+    | 'trialing'
+    | 'unpaid'
+    | 'paused'
+    | null
   subscription_stripe_id: string | null
   subscription_ends_at: string | null
+  subscription_period_end: string | null
+  subscription_cancel_at_period_end: boolean | null
+  stripe_customer_id: string | null
   documents_this_month: number | null
   documents_limit: number | null
   monthly_quota_remaining: number | null
+  monthly_quota_total: number | null
   // Meta
   role: 'user' | 'admin' | 'moderator' | null
   plan: string | null
@@ -446,6 +460,33 @@ interface PromptTemplateVersionsRow {
 
 export type FeedbackOutcomeEnum = 'success' | 'partial' | 'failure' | 'pending' | 'unknown'
 
+interface SubscriptionsRow {
+  id: string
+  user_id: string
+  stripe_subscription_id: string
+  stripe_customer_id: string
+  stripe_price_id: string | null
+  stripe_product_code: string | null
+  tier: 'kierowca' | 'pro' | 'pro_plus'
+  status:
+    | 'active'
+    | 'past_due'
+    | 'canceled'
+    | 'incomplete'
+    | 'incomplete_expired'
+    | 'trialing'
+    | 'unpaid'
+    | 'paused'
+  current_period_start: string | null
+  current_period_end: string | null
+  cancel_at_period_end: boolean | null
+  canceled_at: string | null
+  amount: number
+  currency: string | null
+  created_at: string | null
+  updated_at: string | null
+}
+
 interface FeedbackRow {
   id: string
   user_id: string
@@ -497,6 +538,7 @@ export interface Database {
       prompt_templates: Table<PromptTemplatesRow>
       prompt_template_versions: Table<PromptTemplateVersionsRow>
       feedback: Table<FeedbackRow>
+      subscriptions: Table<SubscriptionsRow>
     }
     Views: Record<string, never>
     Functions: {
