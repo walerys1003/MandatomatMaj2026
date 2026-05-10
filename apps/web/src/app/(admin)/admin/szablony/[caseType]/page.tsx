@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import type { Metadata } from 'next'
 
-import { CodeEditor } from '@mandatomat/ui'
+import { CodeEditor } from '@/components/admin/code-editor-lazy'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 

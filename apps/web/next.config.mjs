@@ -5,7 +5,16 @@
  * CSP w trybie strict — domeny: self, Supabase, Stripe, Anthropic.
  * Tryb 'unsafe-inline' tylko dla style — Tailwind generuje inline styles
  * z dynamicznymi klasami. JS — tylko self + Stripe.
+ *
+ * T5-PERF-038: bundle analyzer — uruchamiaj `ANALYZE=true npm run build`
+ * aby otworzyć interaktywne raporty .next/analyze/{client,server}.html
  */
+import bundleAnalyzer from '@next/bundle-analyzer'
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+  openAnalyzer: false,
+})
 
 const SUPABASE_HOST = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '')
   .replace(/^https?:\/\//, '')
@@ -199,4 +208,4 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+export default withBundleAnalyzer(nextConfig)
