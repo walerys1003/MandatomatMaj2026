@@ -16,6 +16,7 @@
     "./button": "./src/components/button.tsx",
     "./card": "./src/components/card.tsx",
     "./checkbox": "./src/components/checkbox.tsx",
+    "./confirm-dialog": "./src/components/confirm-dialog.tsx",
     "./cross-sell-banner": "./src/components/cross-sell-banner.tsx",
     "./empty-state": "./src/components/empty-state.tsx",
     "./input": "./src/components/input.tsx",
@@ -27,7 +28,8 @@
     "./spinner": "./src/components/spinner.tsx",
     "./stepper": "./src/components/stepper.tsx",
     "./textarea": "./src/components/textarea.tsx",
-    "./cn": "./src/lib/cn.ts"
+    "./cn": "./src/lib/cn.ts",
+    "./use-unsaved-changes-warning": "./src/lib/use-unsaved-changes-warning.ts"
   },
   "scripts": {
     "lint": "eslint src --ext .ts,.tsx",

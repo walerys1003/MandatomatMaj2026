@@ -1,7 +1,9 @@
 export * from './lib/cn'
+export * from './lib/use-unsaved-changes-warning'
 export * from './tokens'
 export * from './components/accordion'
 export * from './components/alert'
+export * from './components/confirm-dialog'
 
 // Badge — eksportuje Badge, BadgeProps, StatusBadge (CaseStatusLite-based), StatusBadgeProps, CaseStatusLite
 export {

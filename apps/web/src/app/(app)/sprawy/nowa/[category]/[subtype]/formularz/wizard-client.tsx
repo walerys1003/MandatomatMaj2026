@@ -8,6 +8,7 @@ import {
   Alert,
   DynamicForm,
   OcrUploader,
+  useUnsavedChangesWarning,
   type OcrParsedDocument,
 } from '@mandatomat/ui'
 
@@ -27,20 +28,25 @@ interface WizardClientProps {
  * <DynamicForm>, który użyje go zgodnie z `field.autoFillFromOcr` w schemie.
  * Po sukcesie submitu → redirect → /sprawy/[caseId]/podglad.
  */
-export function WizardClient({
-  caseType,
-  title,
-  schema,
-  price,
-  ocrHint,
-}: WizardClientProps) {
+export function WizardClient({ caseType, title, schema, price, ocrHint }: WizardClientProps) {
   const router = useRouter()
   const [isSubmitting, setSubmitting] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
-  const [ocrData, setOcrData] = React.useState<Record<string, unknown> | undefined>(
-    undefined,
-  )
+  const [ocrData, setOcrData] = React.useState<Record<string, unknown> | undefined>(undefined)
   const [ocrApplied, setOcrApplied] = React.useState(false)
+  const [hasInteracted, setHasInteracted] = React.useState(false)
+
+  // T3-FE-020: anti-bounce — gdy user zaczął wypełniać formularz i nie wysłał
+  // (isSubmitting = false znaczy: jeszcze przed onSubmit / po nieudanym submicie)
+  useUnsavedChangesWarning(
+    hasInteracted && !isSubmitting,
+    'Masz niezapisane dane w formularzu. Czy na pewno chcesz wyjść? Możesz wrócić — zapisaliśmy wersję roboczą.',
+  )
+
+  // OCR też liczymy jako "interakcja" (user już zainwestował w sprawę)
+  React.useEffect(() => {
+    if (ocrApplied) setHasInteracted(true)
+  }, [ocrApplied])
 
   function handleOcrParsed(parsed: OcrParsedDocument) {
     // Mergujemy: pola z `parsed.fields` + raw_text + meta — DynamicForm sam
@@ -56,6 +62,7 @@ export function WizardClient({
   }
 
   async function handleSubmit(data: FormData) {
+    setHasInteracted(false) // submit w toku — nie blokuj nawigacji
     setSubmitting(true)
     setError(null)
 

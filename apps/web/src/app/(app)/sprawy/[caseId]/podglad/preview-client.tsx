@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import {
   Alert,
   Button,
+  ConfirmDialog,
   MarkdownPreview,
   ScoringGauge,
   Spinner,
@@ -86,6 +87,8 @@ export function PreviewClient({
   const [generating, setGenerating] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [pollingValidation, setPollingValidation] = React.useState(false)
+  // T3-FE-045: regenerate confirm modal — pojawia się tylko gdy dokument już istnieje
+  const [regenerateConfirmOpen, setRegenerateConfirmOpen] = React.useState(false)
 
   // Auto-zapis edycji w sessionStorage (tylko klient — przeładowanie nie zgubi pracy)
   const draftKey = `mm:case:${caseId}:edit`
@@ -158,8 +161,23 @@ export function PreviewClient({
   // Handlers
   // ==========================================================================
 
+  /**
+   * Wrapper dla przycisków "Generuj"/"Wygeneruj ponownie":
+   * - jeśli nie ma jeszcze dokumentu → wywołaj generację bezpośrednio
+   * - jeśli istnieje → otwórz ConfirmDialog (regenerate kosztuje token AI + nadpisuje aktualną wersję)
+   */
+  function handleGenerateClick() {
+    if (generating) return
+    if (doc) {
+      setRegenerateConfirmOpen(true)
+      return
+    }
+    void handleGenerate()
+  }
+
   async function handleGenerate() {
     if (generating) return
+    setRegenerateConfirmOpen(false)
     setGenerating(true)
     setError(null)
 
@@ -230,8 +248,8 @@ export function PreviewClient({
     return (
       <div className="space-y-6">
         <Alert variant="info" title="Pismo gotowe do wygenerowania">
-          Zebrane dane przekażemy do AI Claude. W ciągu kilkunastu sekund otrzymasz pełne pismo
-          z podstawą prawną, argumentacją i scoringiem szans powodzenia.
+          Zebrane dane przekażemy do AI Claude. W ciągu kilkunastu sekund otrzymasz pełne pismo z
+          podstawą prawną, argumentacją i scoringiem szans powodzenia.
         </Alert>
 
         {error ? (
@@ -363,9 +381,7 @@ export function PreviewClient({
         </TabButton>
         <div className="ml-auto pb-2 text-xs text-iron-500">
           {doc.ai_cost_usd != null ? (
-            <span className="font-mono tabular-nums">
-              koszt AI: ${doc.ai_cost_usd.toFixed(4)}
-            </span>
+            <span className="font-mono tabular-nums">koszt AI: ${doc.ai_cost_usd.toFixed(4)}</span>
           ) : null}
         </div>
       </div>
@@ -388,12 +404,7 @@ export function PreviewClient({
             spellCheck
           />
           <div className="flex items-center justify-between gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleResetEdit}
-              disabled={!hasUnsavedEdits}
-            >
+            <Button variant="ghost" size="sm" onClick={handleResetEdit} disabled={!hasUnsavedEdits}>
               Przywróć oryginał
             </Button>
             <Button variant="primary" size="md" onClick={() => setTab('preview')}>
@@ -409,12 +420,7 @@ export function PreviewClient({
           ← Wróć do pulpitu
         </Button>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Button
-            variant="outline"
-            size="md"
-            onClick={handleGenerate}
-            disabled={generating}
-          >
+          <Button variant="outline" size="md" onClick={handleGenerateClick} disabled={generating}>
             {generating ? (
               <>
                 <Spinner className="h-4 w-4" />
@@ -429,6 +435,29 @@ export function PreviewClient({
           </Button>
         </div>
       </div>
+
+      {/* T3-FE-045: regenerate confirm — modal kosztu/nadpisania */}
+      <ConfirmDialog
+        open={regenerateConfirmOpen}
+        title="Wygenerować pismo ponownie?"
+        description={
+          <div className="space-y-2">
+            <p>
+              Aktualna wersja dokumentu zostanie <strong>zastąpiona nową</strong>. Twoje edycje w
+              polu tekstowym (jeśli były) — zostaną utracone.
+            </p>
+            <p className="text-xs text-iron-500 dark:text-iron-400">
+              Regeneracja kosztuje token AI z Twojego limitu. Średni koszt: ~$0.03–0.05.
+            </p>
+          </div>
+        }
+        confirmLabel="Tak, wygeneruj ponownie"
+        cancelLabel="Anuluj"
+        variant="warning"
+        isProcessing={generating}
+        onConfirm={() => void handleGenerate()}
+        onCancel={() => setRegenerateConfirmOpen(false)}
+      />
     </div>
   )
 }
