@@ -2,10 +2,32 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 
+import { CrossSellBanner, type CrossSellProduct } from '@mandatomat/ui/cross-sell-banner'
+
+import { caseTypeFromDb } from '@/lib/cases/db-mapping'
+import { getCaseTypeMeta } from '@/lib/cases/catalog'
 import { createClient } from '@/lib/supabase/server'
 
 import { DownloadClient } from './download-client'
 import { FeedbackSection } from './feedback-section'
+
+/**
+ * Heurystyka dobierania wariantu cross-sell na podstawie kategorii sprawy:
+ *  - windykacja (W1-W5)        → Długomat (kanibalizacja działa w drugą stronę:
+ *                                 user który ma już sprawę windykacyjną na Mandatomat
+ *                                 jest idealnym targetem dla Długomatu)
+ *  - mandaty / parking / etoll → generic (ekosystem) — w przyszłości można dodać
+ *                                 dedykowane warianty (np. "Rozwodomat" dla persona-based cross-sell)
+ *  - alimentomat zostawiamy do osobnego placementu (np. blog / SEO landingi)
+ */
+function pickCrossSellProduct(caseTypeDb: string): CrossSellProduct {
+  const tsType = caseTypeFromDb(caseTypeDb)
+  if (!tsType) return 'generic'
+  const meta = getCaseTypeMeta(tsType)
+  if (!meta) return 'generic'
+  if (meta.category === 'windykacja') return 'dlugomat'
+  return 'generic'
+}
 
 interface PageProps {
   params: { caseId: string }
@@ -137,6 +159,14 @@ export default async function DownloadPage({ params, searchParams }: PageProps) 
       {/* Feedback widget — Faza 9 (T20): "Oceń pismo" 1-5★ + outcome + komentarz */}
       <div className="mt-8">
         <FeedbackSection caseId={caseTyped.id} />
+      </div>
+
+      {/* Cross-sell — P10 (T20 Faza 9): banner do siostrzanego produktu w ekosystemie */}
+      <div className="mt-8">
+        <CrossSellBanner
+          product={pickCrossSellProduct(caseTyped.case_type)}
+          utmCampaign={`pobranie_${caseTyped.case_type}`}
+        />
       </div>
 
       <div className="mt-6 flex justify-between text-sm">
