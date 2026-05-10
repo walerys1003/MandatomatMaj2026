@@ -73,6 +73,35 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
+const orgJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Mandatomat',
+  url: 'https://mandatomat.pl',
+  logo: 'https://mandatomat.pl/icon.png',
+  sameAs: ['https://github.com/mandatomat'],
+  contactPoint: {
+    '@type': 'ContactPoint',
+    email: 'kontakt@mandatomat.pl',
+    contactType: 'customer support',
+    areaServed: 'PL',
+    availableLanguage: ['Polish'],
+  },
+}
+
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Mandatomat',
+  url: 'https://mandatomat.pl',
+  inLanguage: 'pl-PL',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: 'https://mandatomat.pl/szukaj?q={search_term_string}',
+    'query-input': 'required name=search_term_string',
+  },
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
@@ -80,6 +109,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${displayFont.variable} ${bodyFont.variable} ${monoFont.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+      </head>
       <body className="min-h-dvh bg-white text-iron-900 antialiased dark:bg-iron-950 dark:text-iron-50">
         {children}
       </body>

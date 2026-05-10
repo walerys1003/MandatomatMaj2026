@@ -5,7 +5,8 @@
 
 ## 🎯 Status projektu
 
-**Tier 1 — Foundation: w toku** (kod aplikacji powstaje pod tym commitem)
+**Tier 1 — Foundation: ✅ DONE** (`0de8de8`)
+**Tier 2 — Auth + Landing: ✅ DONE** (kod pod tym commitem)
 
 - [x] Knowledge base (30 chunków, tag/agent indexes, retrieval CLI)
 - [x] Plan 5×50 zadań (Tier 1–5)
@@ -15,14 +16,24 @@
 - [x] **TypeScript strict + ESLint + Prettier + Commitlint + Husky**
 - [x] **Next.js 14 App Router skeleton** (RSC, middleware, error boundaries)
 - [x] **Design tokens** (Precision Blue + Iron + Volt + Inter Tight, animacja 150ms)
-- [x] **Bazowe komponenty UI** (Button, Card, Badge, StatusBadge, Spinner, Input)
+- [x] **UI library — 14 komponentów** (Button, Card, Badge, Spinner, Input, Logo, Checkbox, Textarea, Select, Stepper, Accordion, Alert, StatusBadge)
 - [x] **Supabase: 16 migracji SQL** (15 z planu + 1 storage), seed 5 typów MVP
+- [x] **Auth — pełen flow** (login, rejestracja, reset hasła + confirm, magic-link callback `/api/auth/callback`)
+- [x] **Server Actions auth** z Zod validation, IP rate-limit (Upstash + memory fallback), enumeration prevention
+- [x] **Middleware** chroniący `/panel`, `/sprawy`, `/profil`, `/ustawienia`, `/kreator` z `?next=`
+- [x] **Landing page** (Hero + siatka perspektywiczna + SocialProof + HowItWorks + CategoryGrid + SuccessRateTracker + PricingSection + FAQ + CtaFooter)
+- [x] **Marketing layout** (sticky Navbar 72px + Footer iron-950 4-kolumnowy)
+- [x] **Strony statyczne** (regulamin, polityka prywatności, RODO, kontakt, o-nas, jak-to-dziala)
+- [x] **App layout** (Sidebar 240px + Topbar 64px + Dashboard `/panel`)
+- [x] **Profil + Ustawienia** + RODO export (JSON) + RODO delete (anonimizacja + auth.users)
+- [x] **API routes**: `/api/auth/callback`, `/api/profile` GET/PATCH, `/api/profile/export`, `/api/profile/delete`, `/api/health`
+- [x] **SEO**: sitemap.ts (9 statycznych + 9 kategorii), robots.ts (preview noindex / prod allow), opengraph-image.tsx (1200×630 edge), JSON-LD Organization + WebSite + FAQPage
+- [x] **AI client wrapper** (Anthropic Claude — Edge-compatible fetch wrapper) + M1 prompt seed (sprzeciw za prędkość) + Zod scoring schema
 - [x] **Observability stubs** (Sentry client/server/edge, Vercel cron config)
 - [ ] Storybook + Vercel preview pipeline (Tier 1.5)
-- [ ] Tier 2 — Auth + Landing
-- [ ] Tier 3 — Wizard + AI generation pipeline
-- [ ] Tier 4 — Stripe + Dashboard
-- [ ] Tier 5 — SEO + Security audit
+- [ ] Tier 3 — Wizard + AI generation pipeline + Stripe checkout
+- [ ] Tier 4 — Admin + Inngest + Webhook reliability
+- [ ] Tier 5 — SEO content + Security audit + Production launch
 
 ## 🏗️ Architektura
 
