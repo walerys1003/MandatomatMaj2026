@@ -17,6 +17,7 @@ const serverSchema = z.object({
 
   // AI
   ANTHROPIC_API_KEY: z.string().startsWith('sk-ant-').optional(),
+  OPENAI_API_KEY: z.string().startsWith('sk-').optional(),
 
   // Stripe
   STRIPE_SECRET_KEY: z.string().startsWith('sk_').optional(),
