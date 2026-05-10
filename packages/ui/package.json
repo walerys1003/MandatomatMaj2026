@@ -22,6 +22,7 @@
     "./markdown-preview": "./src/components/markdown-preview.tsx",
     "./scoring-gauge": "./src/components/scoring-gauge.tsx",
     "./select": "./src/components/select.tsx",
+    "./skeleton": "./src/components/skeleton.tsx",
     "./spinner": "./src/components/spinner.tsx",
     "./stepper": "./src/components/stepper.tsx",
     "./textarea": "./src/components/textarea.tsx",
