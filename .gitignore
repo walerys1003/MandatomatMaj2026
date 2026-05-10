@@ -1,43 +1,73 @@
 # Dependencies
 node_modules/
+.pnpm-store/
 
 # Build outputs
 .next/
-.vercel/
-.wrangler/
+out/
 dist/
 build/
+.turbo/
+*.tsbuildinfo
 
-# Environment
+# Env / secrets
 .env
 .env.local
 .env.*.local
 .dev.vars
 
-# Logs
-*.log
-.pm2/
-pids/
-logs/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-*.swp
+# Vercel
+.vercel/
 
 # Supabase
 supabase/.branches/
 supabase/.temp/
+supabase/.env
 
-# Testing
+# Wrangler / Cloudflare (legacy from template — not used)
+.wrangler/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# PM2
+.pm2/
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Testing / coverage
 coverage/
 .nyc_output/
+playwright-report/
+test-results/
 
-# Backups
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.swp
+*.swo
+Thumbs.db
+
+# Backup / archive
 *.backup
 *.bak
 *.tar.gz
+*.zip
+
+# Sentry
+.sentryclirc
+
+# AI / temp
+.claude/
+.cursor/
+*.tmp

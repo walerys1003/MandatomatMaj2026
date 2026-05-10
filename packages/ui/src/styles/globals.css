@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Color tokens — Precision Blue / Iron / Volt / Signal / Amber */
+    --blue-600: #2563eb;
+    --blue-500: #3b82f6;
+    --blue-100: #dbeafe;
+    --blue-50: #eff6ff;
+
+    --iron-950: #09090b;
+    --iron-900: #18181b;
+    --iron-800: #27272a;
+    --iron-700: #3f3f46;
+    --iron-600: #52525b;
+    --iron-500: #71717a;
+    --iron-400: #a1a1aa;
+    --iron-300: #d4d4d8;
+    --iron-200: #e4e4e7;
+    --iron-100: #f4f4f5;
+    --iron-50: #fafafa;
+
+    --volt-600: #16a34a;
+    --signal-600: #dc2626;
+    --status-amber-600: #d97706;
+
+    /* Motion */
+    --duration-snap: 150ms;
+    --duration-instant: 80ms;
+    --ease-snap: cubic-bezier(0.12, 0.8, 0.3, 1);
+
+    /* Theme — light */
+    --background: #ffffff;
+    --foreground: var(--iron-950);
+    --muted: var(--iron-100);
+    --muted-foreground: var(--iron-500);
+    --border: var(--iron-200);
+    --ring: var(--blue-600);
+  }
+
+  .dark {
+    --background: var(--iron-950);
+    --foreground: var(--iron-50);
+    --muted: var(--iron-900);
+    --muted-foreground: var(--iron-400);
+    --border: var(--iron-800);
+    --ring: var(--blue-500);
+  }
+
+  *,
+  *::before,
+  *::after {
+    @apply border-iron-200 dark:border-iron-800;
+  }
+
+  html {
+    @apply antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display, 'Inter Tight', 'Inter', system-ui, sans-serif);
+  }
+
+  /* Tabular nums on monetary / case numbers */
+  .tabular-nums {
+    font-feature-settings: 'tnum';
+  }
+
+  /* Focus ring */
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+  }
+}

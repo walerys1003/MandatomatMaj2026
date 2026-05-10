@@ -1,20 +1,52 @@
 {
-  "name": "webapp",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "wrangler pages dev",
-    "deploy": "npm run build && wrangler pages deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+  "name": "mandatomat",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mandatomat.pl — Polish LegalTech SaaS for AI-generated legal documents",
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
   },
-  "dependencies": {
-    "hono": "^4.12.12"
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,md,json,yml,yaml}\"",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:migrate:local": "supabase db reset",
+    "db:migrate:prod": "supabase db push",
+    "db:diff": "supabase db diff",
+    "db:types": "supabase gen types typescript --local > packages/db-types/src/database.types.ts",
+    "kb:retrieve": "node spec/index/retrieve.mjs",
+    "kb:integrity": "node scripts/kb-integrity.mjs",
+    "evals": "node evals/run.mjs",
+    "prepare": "husky || true"
   },
   "devDependencies": {
-    "@hono/vite-build": "^1.2.0",
-    "@hono/vite-dev-server": "^0.18.2",
-    "vite": "^6.3.5",
-    "wrangler": "^4.4.0"
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
+    "@types/node": "^20.16.10",
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.6.8",
+    "turbo": "^2.1.3",
+    "typescript": "^5.6.2"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{md,json,yml,yaml}": [
+      "prettier --write"
+    ]
   }
 }

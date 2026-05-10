@@ -1,0 +1,12 @@
+{
+  "extends": "@mandatomat/config/tsconfig-react-lib",
+  "compilerOptions": {
+    "noEmit": true,
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "dist"]
+}

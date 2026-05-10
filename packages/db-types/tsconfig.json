@@ -1,0 +1,10 @@
+{
+  "extends": "@mandatomat/config/tsconfig-base",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

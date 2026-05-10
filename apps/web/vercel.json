@@ -1,0 +1,30 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": ["fra1"],
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/deadlines/check",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/monthly/reset-document-counts",
+      "schedule": "0 3 1 * *"
+    },
+    {
+      "path": "/api/cron/daily-stats/aggregate",
+      "schedule": "0 1 * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ]
+}
