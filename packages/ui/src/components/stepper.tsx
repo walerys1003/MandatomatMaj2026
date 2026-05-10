@@ -22,11 +22,20 @@ export interface StepperStep {
 export interface StepperProps {
   steps: ReadonlyArray<StepperStep>
   currentIndex: number
+  /** Indeks ostatniego ukończonego kroku (default: currentIndex - 1). */
+  completedThrough?: number
   className?: string
   onStepClick?: (index: number) => void
 }
 
-export function Stepper({ steps, currentIndex, className, onStepClick }: StepperProps) {
+export function Stepper({
+  steps,
+  currentIndex,
+  completedThrough,
+  className,
+  onStepClick,
+}: StepperProps) {
+  const doneIndex = completedThrough ?? currentIndex - 1
   return (
     <ol
       className={cn('flex flex-wrap items-center gap-x-2 gap-y-3 font-mono text-xs', className)}
@@ -34,8 +43,8 @@ export function Stepper({ steps, currentIndex, className, onStepClick }: Stepper
     >
       {steps.map((step, idx) => {
         const isActive = idx === currentIndex
-        const isDone = idx < currentIndex
-        const isUpcoming = idx > currentIndex
+        const isDone = idx <= doneIndex
+        const isUpcoming = !isActive && !isDone
         const clickable = onStepClick != null && (isDone || isActive)
 
         return (

@@ -23,6 +23,8 @@ const LIMITS: Record<Bucket, { tokens: number; windowSec: number }> = {
 
 export interface RateLimitResult {
   ok: boolean
+  /** Alias dla `ok` — zachowany dla kompatybilności z istniejącymi consumerami. */
+  success: boolean
   remaining: number
   limit: number
   reset: number
@@ -38,6 +40,7 @@ function memoryLimit(key: string, limit: { tokens: number; windowSec: number }):
     MEMORY_FALLBACK.set(key, { count: 1, expiresAt: now + limit.windowSec * 1000 })
     return {
       ok: true,
+      success: true,
       remaining: limit.tokens - 1,
       limit: limit.tokens,
       reset: Math.floor((now + limit.windowSec * 1000) / 1000),
@@ -45,8 +48,10 @@ function memoryLimit(key: string, limit: { tokens: number; windowSec: number }):
     }
   }
   entry.count += 1
+  const ok = entry.count <= limit.tokens
   return {
-    ok: entry.count <= limit.tokens,
+    ok,
+    success: ok,
     remaining: Math.max(0, limit.tokens - entry.count),
     limit: limit.tokens,
     reset: Math.floor(entry.expiresAt / 1000),
@@ -82,14 +87,16 @@ export async function rateLimit(
 
   if (!res || !res.ok) {
     // Network failure — fail-open (lepiej puścić niż zablokować legalny ruch)
-    return { ok: true, remaining: limit.tokens, limit: limit.tokens, reset: 0, bucket }
+    return { ok: true, success: true, remaining: limit.tokens, limit: limit.tokens, reset: 0, bucket }
   }
 
   const json = (await res.json()) as Array<{ result: number }>
   const count = json[0]?.result ?? 0
   const ttlMs = json[2]?.result ?? limit.windowSec * 1000
+  const ok = count <= limit.tokens
   return {
-    ok: count <= limit.tokens,
+    ok,
+    success: ok,
     remaining: Math.max(0, limit.tokens - count),
     limit: limit.tokens,
     reset: Math.floor((Date.now() + ttlMs) / 1000),

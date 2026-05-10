@@ -65,7 +65,7 @@ export default async function CasesListPage() {
     return {
       id: c.id,
       type: c.case_type,
-      typeLabel: meta?.label ?? c.case_type,
+      typeLabel: meta?.title ?? c.case_type,
       createdAt: c.created_at,
       institution: c.institution,
       status: c.status,

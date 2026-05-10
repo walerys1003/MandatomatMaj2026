@@ -59,10 +59,13 @@ export type CaseStatusLite =
   | 'archived'
   | 'failed'
 
-const STATUS_MAP: Record<
-  CaseStatusLite,
-  { label: string; variant: NonNullable<VariantProps<typeof badgeVariants>['variant']> }
-> = {
+type StatusEntry = {
+  label: string
+  variant: NonNullable<VariantProps<typeof badgeVariants>['variant']>
+}
+
+const STATUS_MAP: Record<string, StatusEntry> = {
+  // CaseStatusLite (UI-friendly)
   draft: { label: 'Szkic', variant: 'neutral' },
   in_progress: { label: 'W toku', variant: 'info' },
   awaiting_payment: { label: 'Oczekuje płatności', variant: 'warning' },
@@ -71,18 +74,38 @@ const STATUS_MAP: Record<
   sent: { label: 'Wysłane', variant: 'success' },
   archived: { label: 'Zarchiwizowane', variant: 'neutral' },
   failed: { label: 'Błąd', variant: 'danger' },
+  // case_status enum (DB) — dodatkowe wartości spoza CaseStatusLite
+  form_completed: { label: 'Formularz wypełniony', variant: 'info' },
+  preview: { label: 'Podgląd', variant: 'info' },
+  editing: { label: 'Edycja', variant: 'info' },
+  payment_pending: { label: 'Oczekuje płatności', variant: 'warning' },
+  paid: { label: 'Opłacone', variant: 'success' },
+  downloaded: { label: 'Pobrane', variant: 'success' },
+  waiting: { label: 'Oczekiwanie', variant: 'warning' },
+  resolved: { label: 'Rozstrzygnięte', variant: 'success' },
+  // payment status
+  succeeded: { label: 'Zrealizowane', variant: 'success' },
+  pending: { label: 'Oczekuje', variant: 'warning' },
+  refunded: { label: 'Zwrócone', variant: 'neutral' },
+  disputed: { label: 'Sporne', variant: 'danger' },
+  processing: { label: 'Przetwarzanie', variant: 'info' },
 }
 
 export interface StatusBadgeProps extends Omit<BadgeProps, 'variant' | 'children'> {
-  status: CaseStatusLite
+  /** Akceptuje CaseStatusLite, case_status (DB enum) lub dowolny string (fallback). */
+  status: CaseStatusLite | string | null | undefined
 }
 
 export const StatusBadge = React.forwardRef<HTMLSpanElement, StatusBadgeProps>(
   ({ status, className, ...props }, ref) => {
-    const { label, variant } = STATUS_MAP[status]
+    const key = typeof status === 'string' ? status : ''
+    const entry: StatusEntry = STATUS_MAP[key] ?? {
+      label: key || 'Nieznany',
+      variant: 'neutral',
+    }
     return (
-      <Badge ref={ref} variant={variant} className={className} {...props}>
-        {label}
+      <Badge ref={ref} variant={entry.variant} className={className} {...props}>
+        {entry.label}
       </Badge>
     )
   },

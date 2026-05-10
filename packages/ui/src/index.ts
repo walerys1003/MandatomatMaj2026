@@ -2,7 +2,17 @@ export * from './lib/cn'
 export * from './tokens'
 export * from './components/accordion'
 export * from './components/alert'
-export * from './components/badge'
+
+// Badge — eksportuje Badge, BadgeProps, StatusBadge (CaseStatusLite-based), StatusBadgeProps, CaseStatusLite
+export {
+  Badge,
+  badgeVariants,
+  StatusBadge,
+  type BadgeProps,
+  type StatusBadgeProps,
+  type CaseStatusLite,
+} from './components/badge'
+
 export * from './components/button'
 export * from './components/card'
 export * from './components/checkbox'
@@ -15,7 +25,14 @@ export * from './components/spinner'
 export * from './components/stepper'
 export * from './components/textarea'
 export * from './components/dashboard/metrics-grid'
-export * from './components/dashboard/status-badge'
+
+// Dashboard StatusBadge ma inny model statusów (CaseStatus z DB enum) — eksportujemy z aliasem
+export {
+  StatusBadge as DashboardStatusBadge,
+  type StatusBadgeProps as DashboardStatusBadgeProps,
+  type CaseStatus,
+} from './components/dashboard/status-badge'
+
 export * from './components/dashboard/deadline-countdown'
 export * from './components/dashboard/success-rate-widget'
 export * from './components/dashboard/quick-action-bar'

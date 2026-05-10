@@ -6,7 +6,16 @@ import Link from 'next/link'
  * Hover: -1px translate, border precision-blue-200.
  */
 
-const CATEGORIES = [
+type Category = {
+  slug: string
+  icon: string
+  title: string
+  desc: string
+  count: string
+  highlight?: boolean
+}
+
+const CATEGORIES: readonly Category[] = [
   {
     slug: 'mandaty-karne',
     icon: '🚓',

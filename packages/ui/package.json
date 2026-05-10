@@ -9,7 +9,22 @@
     ".": "./src/index.ts",
     "./tokens": "./src/tokens/index.ts",
     "./tailwind-preset": "./tailwind.preset.cjs",
-    "./globals.css": "./src/styles/globals.css"
+    "./globals.css": "./src/styles/globals.css",
+    "./accordion": "./src/components/accordion.tsx",
+    "./alert": "./src/components/alert.tsx",
+    "./badge": "./src/components/badge.tsx",
+    "./button": "./src/components/button.tsx",
+    "./card": "./src/components/card.tsx",
+    "./checkbox": "./src/components/checkbox.tsx",
+    "./input": "./src/components/input.tsx",
+    "./logo": "./src/components/logo.tsx",
+    "./markdown-preview": "./src/components/markdown-preview.tsx",
+    "./scoring-gauge": "./src/components/scoring-gauge.tsx",
+    "./select": "./src/components/select.tsx",
+    "./spinner": "./src/components/spinner.tsx",
+    "./stepper": "./src/components/stepper.tsx",
+    "./textarea": "./src/components/textarea.tsx",
+    "./cn": "./src/lib/cn.ts"
   },
   "scripts": {
     "lint": "eslint src --ext .ts,.tsx",
@@ -17,8 +32,14 @@
     "clean": "rm -rf dist .turbo"
   },
   "peerDependencies": {
+    "next": "^14.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
+  },
+  "peerDependenciesMeta": {
+    "next": {
+      "optional": false
+    }
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

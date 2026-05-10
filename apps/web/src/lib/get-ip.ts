@@ -18,3 +18,8 @@ export function getIp(request: NextRequest | Request): string {
 
   return 'unknown'
 }
+
+/**
+ * Alias dla `getIp`. Zachowany dla kompatybilności z istniejącymi importami.
+ */
+export const getClientIp = getIp

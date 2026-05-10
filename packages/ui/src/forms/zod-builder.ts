@@ -23,20 +23,22 @@ import type { FormField, FormStep } from '@mandatomat/db-types'
  */
 
 function baseStringSchema(field: FormField): z.ZodTypeAny {
-  let s = z.string()
+  // Najpierw konfigurujemy ZodString (min/max), potem ewentualnie refine — refine
+  // zwraca ZodEffects, więc musi być ostatnim krokiem łańcucha.
+  let zStr: z.ZodString = z.string()
   if (field.validation?.minLength != null) {
-    s = s.min(field.validation.minLength, `Minimum ${field.validation.minLength} znaków`)
+    zStr = zStr.min(field.validation.minLength, `Minimum ${field.validation.minLength} znaków`)
   }
   if (field.validation?.maxLength != null) {
-    s = s.max(field.validation.maxLength, `Maksimum ${field.validation.maxLength} znaków`)
+    zStr = zStr.max(field.validation.maxLength, `Maksimum ${field.validation.maxLength} znaków`)
   }
   if (field.validation?.pattern) {
     const re = new RegExp(field.validation.pattern)
-    s = s.refine((v) => re.test(v), {
+    return zStr.refine((v) => re.test(v), {
       message: field.validation.patternMessage ?? 'Nieprawidłowy format',
     })
   }
-  return s
+  return zStr
 }
 
 function baseNumberSchema(field: FormField): z.ZodTypeAny {

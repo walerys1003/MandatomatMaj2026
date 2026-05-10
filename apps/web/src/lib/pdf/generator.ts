@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
+import { PDFDocument, StandardFonts, degrees, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
 
 import { parseMarkdown, type MdBlock, type MdInline } from './markdown'
 
@@ -187,7 +187,7 @@ function drawWatermark(ctx: RenderCtx): void {
     size,
     font: ctx.fontBold,
     color: rgb(0.92, 0.92, 0.92),
-    rotate: { type: 'degrees', angle: 45 } as { type: 'degrees'; angle: number },
+    rotate: degrees(45),
   })
 }
 

@@ -61,7 +61,7 @@ export default async function ProfilePage() {
               <CardTitle className="font-display text-2xl">{profile?.plan ?? 'free'}</CardTitle>
             </CardHeader>
             <CardContent>
-              <Badge variant="default" mono>
+              <Badge variant="neutral" mono>
                 {profile?.role ?? 'user'}
               </Badge>
             </CardContent>

@@ -55,5 +55,12 @@
     "*.{md,json,yml,yaml}": [
       "prettier --write"
     ]
+  },
+  "pnpm": {
+    "overrides": {
+      "@supabase/supabase-js": "2.45.4",
+      "@supabase/postgrest-js": "1.16.1",
+      "@supabase/ssr": "0.5.1"
+    }
   }
 }

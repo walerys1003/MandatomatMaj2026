@@ -169,9 +169,12 @@ export function DynamicForm({
     return () => sub.unsubscribe()
   }, [form, storageKey])
 
-  // Stepper labels: dane steps + extra (preview/payment)
+  // Stepper steps: dane steps + extra (preview/payment) — obiekty {id, label}
   const stepperLabels = React.useMemo(
-    () => [...schema.steps.map((s) => s.title), ...(extraSteps ?? [])],
+    () => [
+      ...schema.steps.map((s, idx) => ({ id: `data-${idx}`, label: s.title })),
+      ...(extraSteps ?? []).map((label, idx) => ({ id: `extra-${idx}`, label })),
+    ],
     [schema, extraSteps],
   )
 
@@ -192,7 +195,7 @@ export function DynamicForm({
     // Wymagane pola warunkowe — Zod sam tego nie złapie (są optional w schemie)
     for (const f of visibleFields) {
       if (f.required) {
-        const v = form.getValues(f.name as never)
+        const v: unknown = form.getValues(f.name as never)
         if (v === undefined || v === null || v === '' || (Array.isArray(v) && v.length === 0)) {
           form.setError(f.name as never, { type: 'manual', message: 'To pole jest wymagane' })
           return

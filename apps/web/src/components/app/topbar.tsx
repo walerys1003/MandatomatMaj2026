@@ -19,10 +19,10 @@ export async function Topbar() {
     ? await supabase.from('profiles').select('full_name, email, plan').eq('id', user.id).single()
     : { data: null }
 
-  const name = profile?.full_name ?? user?.email ?? ''
+  const name: string = profile?.full_name ?? user?.email ?? ''
   const initials = name
     .split(' ')
-    .map((s) => s[0])
+    .map((s: string) => s[0])
     .filter(Boolean)
     .slice(0, 2)
     .join('')
