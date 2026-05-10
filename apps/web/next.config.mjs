@@ -83,6 +83,120 @@ const nextConfig = {
       },
     ]
   },
+  /**
+   * T5-SEO-035: Stałe przekierowania 301 dla starych URL-i.
+   * Mapuje legacy / spodziewane warianty na docelowe ścieżki.
+   * Wszystkie przekierowania są permanent (HTTP 301) — sygnał dla Google
+   * o trwałej zmianie. Nigdy nie należy ich usuwać po rok od deployu.
+   */
+  async redirects() {
+    return [
+      // Legacy: /artykul/* (stary blog) -> /blog/*
+      {
+        source: '/artykul/:slug',
+        destination: '/blog/:slug',
+        permanent: true,
+      },
+      // Legacy: /blog-archiwum -> /blog
+      {
+        source: '/blog-archiwum',
+        destination: '/blog',
+        permanent: true,
+      },
+      // Legacy: /artykuly -> /blog
+      {
+        source: '/artykuly',
+        destination: '/blog',
+        permanent: true,
+      },
+      // Legacy: /faq -> /jak-to-dziala
+      {
+        source: '/faq',
+        destination: '/jak-to-dziala',
+        permanent: true,
+      },
+      // Legacy: /pomoc -> /jak-to-dziala
+      {
+        source: '/pomoc',
+        destination: '/jak-to-dziala',
+        permanent: true,
+      },
+      // Legacy: /cennik -> / (#cennik anchor)
+      {
+        source: '/cennik',
+        destination: '/#cennik',
+        permanent: true,
+      },
+      // Legacy: /rejestracja -> /signup
+      {
+        source: '/rejestracja',
+        destination: '/signup',
+        permanent: true,
+      },
+      // Legacy: /logowanie -> /login
+      {
+        source: '/logowanie',
+        destination: '/login',
+        permanent: true,
+      },
+      // Legacy: /panel -> /panel (już istnieje, ale stary alias /dashboard)
+      {
+        source: '/dashboard',
+        destination: '/panel',
+        permanent: true,
+      },
+      // Legacy: /sprawa/:id -> /sprawy/:id
+      {
+        source: '/sprawa/:id',
+        destination: '/sprawy/:id',
+        permanent: true,
+      },
+      // Legacy kategorie: /mandat -> /kategoria/mandat
+      {
+        source: '/mandat',
+        destination: '/kategoria/mandat',
+        permanent: true,
+      },
+      {
+        source: '/fotoradar',
+        destination: '/kategoria/fotoradar',
+        permanent: true,
+      },
+      {
+        source: '/parking',
+        destination: '/kategoria/parking',
+        permanent: true,
+      },
+      {
+        source: '/windykacja',
+        destination: '/kategoria/windykacja',
+        permanent: true,
+      },
+      {
+        source: '/epu',
+        destination: '/kategoria/epu',
+        permanent: true,
+      },
+      // Legacy: /privacy -> /polityka-prywatnosci
+      {
+        source: '/privacy',
+        destination: '/polityka-prywatnosci',
+        permanent: true,
+      },
+      // Legacy: /terms -> /regulamin
+      {
+        source: '/terms',
+        destination: '/regulamin',
+        permanent: true,
+      },
+      // Legacy: /gdpr -> /rodo
+      {
+        source: '/gdpr',
+        destination: '/rodo',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 export default nextConfig
