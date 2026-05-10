@@ -31,6 +31,7 @@ function readConsent(): ConsentSnapshot | null {
 }
 
 let posthogLoaded = false
+let plausibleLoaded = false
 
 /**
  * Lazy-init PostHog tylko po zgodzie + tylko gdy klucz jest skonfigurowany.
@@ -63,7 +64,54 @@ export function initPostHogIfConsent(): void {
 }
 
 /**
+ * Lazy-init Plausible (privacy-first) — tylko po zgodzie + tylko z domeną.
+ *
+ * Plausible nie używa ciasteczek, ale zgodnie z dobrymi praktykami i RODO
+ * gate-ujemy go również przez `analytics: true` (transparentność dla usera).
+ *
+ * Wymaga NEXT_PUBLIC_PLAUSIBLE_DOMAIN (np. "mandatomat.pl").
+ * Opcjonalnie NEXT_PUBLIC_PLAUSIBLE_SRC (domyślnie https://plausible.io/js/script.js).
+ */
+export function initPlausibleIfConsent(): void {
+  if (typeof window === 'undefined') return
+  if (plausibleLoaded) return
+  const consent = readConsent()
+  if (!consent || !consent.analytics) return
+
+  const domain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN
+  if (!domain) return
+
+  const src = process.env.NEXT_PUBLIC_PLAUSIBLE_SRC ?? 'https://plausible.io/js/script.js'
+
+  // Idempotent — jeśli skrypt już jest w DOM, nie dubluj
+  if (document.querySelector(`script[data-domain="${domain}"]`)) {
+    plausibleLoaded = true
+    return
+  }
+
+  const script = document.createElement('script')
+  script.defer = true
+  script.async = true
+  script.setAttribute('data-domain', domain)
+  script.src = src
+  document.head.appendChild(script)
+
+  // Stub plausible() dla custom events przed załadowaniem skryptu
+  // @ts-expect-error — Plausible udostępnia window.plausible po załadowaniu
+  window.plausible =
+    // @ts-expect-error
+    window.plausible ||
+    function () {
+      // @ts-expect-error
+      ;(window.plausible.q = window.plausible.q || []).push(arguments)
+    }
+
+  plausibleLoaded = true
+}
+
+/**
  * Track custom event — no-op bez zgody / bez SDK.
+ * Wysyła do PostHog (jeśli załadowany) ORAZ do Plausible (jeśli załadowany).
  */
 export function track(event: string, props?: Record<string, unknown>): void {
   if (typeof window === 'undefined') return
