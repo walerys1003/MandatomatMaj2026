@@ -1,33 +1,43 @@
-# prod
-dist/
-
-# dev
-.yarn/
-!.yarn/releases
-.vscode/*
-!.vscode/launch.json
-!.vscode/*.code-snippets
-.idea/workspace.xml
-.idea/usage.statistics.xml
-.idea/shelf
-
-# deps
+# Dependencies
 node_modules/
-.wrangler
 
-# env
+# Build outputs
+.next/
+.vercel/
+.wrangler/
+dist/
+build/
+
+# Environment
 .env
-.env.production
+.env.local
+.env.*.local
 .dev.vars
 
-# logs
-logs/
+# Logs
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+.pm2/
+pids/
+logs/
 
-# misc
+# OS
 .DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Supabase
+supabase/.branches/
+supabase/.temp/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Backups
+*.backup
+*.bak
+*.tar.gz

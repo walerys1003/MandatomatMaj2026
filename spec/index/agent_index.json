@@ -1,0 +1,96 @@
+{
+  "orchestrator": [
+    "T01_wizja_strategia",
+    "T02_architektura_stack",
+    "T20_roadmap_instrukcje"
+  ],
+  "product": [
+    "T01_wizja_strategia"
+  ],
+  "frontend": [
+    "T02_architektura_stack",
+    "T12_frontend_landing_dynamic_form",
+    "T13_frontend_markdown_scoring",
+    "T14_dashboard_admin",
+    "T16_katalog_pism_mandaty",
+    "T17_katalog_pism_windykacja_etoll",
+    "T18_seo_marketing",
+    "D01_tozsamosc_kolory",
+    "D02_typografia_layout",
+    "D03_hero_section",
+    "D04_kategorie_pism",
+    "D05_cennik",
+    "D06_dashboard_b2c",
+    "D07_wizard",
+    "D08_komponenty_unikalne",
+    "D09_b2b_panel",
+    "D10_animacje_dark_responsive"
+  ],
+  "backend": [
+    "T02_architektura_stack",
+    "T03_db_schema_001_002",
+    "T04_db_schema_003_004",
+    "T05_db_schema_005_006",
+    "T06_db_schema_007_008_009",
+    "T07_db_schema_010_011",
+    "T08_backend_middleware_claude",
+    "T09_backend_api_generate_scoring",
+    "T10_backend_api_pdf_billing",
+    "T11_backend_api_deadlines_ocr_pdf",
+    "T15_ai_prompts_pipeline",
+    "T16_katalog_pism_mandaty",
+    "T17_katalog_pism_windykacja_etoll"
+  ],
+  "devops": [
+    "T02_architektura_stack"
+  ],
+  "database": [
+    "T03_db_schema_001_002",
+    "T04_db_schema_003_004",
+    "T05_db_schema_005_006",
+    "T06_db_schema_007_008_009",
+    "T07_db_schema_010_011"
+  ],
+  "payments": [
+    "T05_db_schema_005_006",
+    "T10_backend_api_pdf_billing"
+  ],
+  "security": [
+    "T07_db_schema_010_011",
+    "T19_security_rodo_design"
+  ],
+  "ai": [
+    "T08_backend_middleware_claude",
+    "T09_backend_api_generate_scoring",
+    "T15_ai_prompts_pipeline",
+    "T16_katalog_pism_mandaty",
+    "T17_katalog_pism_windykacja_etoll"
+  ],
+  "notifications": [
+    "T11_backend_api_deadlines_ocr_pdf"
+  ],
+  "ocr": [
+    "T11_backend_api_deadlines_ocr_pdf"
+  ],
+  "design": [
+    "T12_frontend_landing_dynamic_form",
+    "T14_dashboard_admin",
+    "T19_security_rodo_design",
+    "D01_tozsamosc_kolory",
+    "D02_typografia_layout",
+    "D03_hero_section",
+    "D04_kategorie_pism",
+    "D05_cennik",
+    "D06_dashboard_b2c",
+    "D07_wizard",
+    "D08_komponenty_unikalne",
+    "D09_b2b_panel",
+    "D10_animacje_dark_responsive"
+  ],
+  "admin": [
+    "T14_dashboard_admin"
+  ],
+  "seo": [
+    "T18_seo_marketing"
+  ]
+}

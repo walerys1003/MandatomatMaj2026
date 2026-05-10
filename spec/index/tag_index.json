@@ -1,0 +1,444 @@
+{
+  "strategia": [
+    "T01_wizja_strategia"
+  ],
+  "persony": [
+    "T01_wizja_strategia"
+  ],
+  "metryki": [
+    "T01_wizja_strategia",
+    "D06_dashboard_b2c"
+  ],
+  "biznes": [
+    "T01_wizja_strategia"
+  ],
+  "elevator_pitch": [
+    "T01_wizja_strategia"
+  ],
+  "stack": [
+    "T02_architektura_stack"
+  ],
+  "nextjs": [
+    "T02_architektura_stack"
+  ],
+  "supabase": [
+    "T02_architektura_stack",
+    "T03_db_schema_001_002"
+  ],
+  "tailwind": [
+    "T02_architektura_stack"
+  ],
+  "structure": [
+    "T02_architektura_stack"
+  ],
+  "env_vars": [
+    "T02_architektura_stack"
+  ],
+  "konwencje": [
+    "T02_architektura_stack"
+  ],
+  "database": [
+    "T03_db_schema_001_002",
+    "T04_db_schema_003_004",
+    "T05_db_schema_005_006",
+    "T06_db_schema_007_008_009",
+    "T07_db_schema_010_011"
+  ],
+  "schema": [
+    "T03_db_schema_001_002"
+  ],
+  "profiles": [
+    "T03_db_schema_001_002"
+  ],
+  "cases": [
+    "T03_db_schema_001_002"
+  ],
+  "case_type_enum": [
+    "T03_db_schema_001_002"
+  ],
+  "rls": [
+    "T03_db_schema_001_002",
+    "T07_db_schema_010_011"
+  ],
+  "documents": [
+    "T04_db_schema_003_004"
+  ],
+  "uploads": [
+    "T04_db_schema_003_004"
+  ],
+  "ocr": [
+    "T04_db_schema_003_004",
+    "T11_backend_api_deadlines_ocr_pdf"
+  ],
+  "storage": [
+    "T04_db_schema_003_004"
+  ],
+  "deadlines": [
+    "T05_db_schema_005_006",
+    "T11_backend_api_deadlines_ocr_pdf"
+  ],
+  "payments": [
+    "T05_db_schema_005_006"
+  ],
+  "stripe": [
+    "T05_db_schema_005_006",
+    "T10_backend_api_pdf_billing"
+  ],
+  "promo_codes": [
+    "T05_db_schema_005_006"
+  ],
+  "events": [
+    "T06_db_schema_007_008_009"
+  ],
+  "case_type_config": [
+    "T06_db_schema_007_008_009"
+  ],
+  "admin": [
+    "T06_db_schema_007_008_009",
+    "T14_dashboard_admin"
+  ],
+  "feedback": [
+    "T06_db_schema_007_008_009"
+  ],
+  "triggers": [
+    "T07_db_schema_010_011"
+  ],
+  "functions": [
+    "T07_db_schema_010_011"
+  ],
+  "storage_buckets": [
+    "T07_db_schema_010_011"
+  ],
+  "security": [
+    "T07_db_schema_010_011",
+    "T19_security_rodo_design"
+  ],
+  "middleware": [
+    "T08_backend_middleware_claude"
+  ],
+  "auth": [
+    "T08_backend_middleware_claude"
+  ],
+  "claude": [
+    "T08_backend_middleware_claude",
+    "T09_backend_api_generate_scoring",
+    "T15_ai_prompts_pipeline"
+  ],
+  "ai": [
+    "T08_backend_middleware_claude",
+    "T09_backend_api_generate_scoring",
+    "T15_ai_prompts_pipeline"
+  ],
+  "anthropic": [
+    "T08_backend_middleware_claude"
+  ],
+  "api": [
+    "T09_backend_api_generate_scoring",
+    "T10_backend_api_pdf_billing",
+    "D09_b2b_panel"
+  ],
+  "generate": [
+    "T09_backend_api_generate_scoring"
+  ],
+  "scoring": [
+    "T09_backend_api_generate_scoring",
+    "T13_frontend_markdown_scoring"
+  ],
+  "pdf": [
+    "T10_backend_api_pdf_billing",
+    "T11_backend_api_deadlines_ocr_pdf"
+  ],
+  "puppeteer": [
+    "T10_backend_api_pdf_billing",
+    "T11_backend_api_deadlines_ocr_pdf"
+  ],
+  "billing": [
+    "T10_backend_api_pdf_billing"
+  ],
+  "webhook": [
+    "T10_backend_api_pdf_billing"
+  ],
+  "fakturownia": [
+    "T10_backend_api_pdf_billing"
+  ],
+  "cron": [
+    "T11_backend_api_deadlines_ocr_pdf"
+  ],
+  "reminders": [
+    "T11_backend_api_deadlines_ocr_pdf"
+  ],
+  "tesseract": [
+    "T11_backend_api_deadlines_ocr_pdf"
+  ],
+  "frontend": [
+    "T12_frontend_landing_dynamic_form",
+    "T13_frontend_markdown_scoring"
+  ],
+  "landing": [
+    "T12_frontend_landing_dynamic_form",
+    "D03_hero_section",
+    "D04_kategorie_pism"
+  ],
+  "dynamic_form": [
+    "T12_frontend_landing_dynamic_form"
+  ],
+  "wizard": [
+    "T12_frontend_landing_dynamic_form",
+    "D07_wizard"
+  ],
+  "react_hook_form": [
+    "T12_frontend_landing_dynamic_form"
+  ],
+  "zod": [
+    "T12_frontend_landing_dynamic_form"
+  ],
+  "markdown": [
+    "T13_frontend_markdown_scoring",
+    "T15_ai_prompts_pipeline"
+  ],
+  "editor": [
+    "T13_frontend_markdown_scoring"
+  ],
+  "gauge": [
+    "T13_frontend_markdown_scoring"
+  ],
+  "framer_motion": [
+    "T13_frontend_markdown_scoring"
+  ],
+  "dashboard": [
+    "T14_dashboard_admin",
+    "D06_dashboard_b2c"
+  ],
+  "user_panel": [
+    "T14_dashboard_admin"
+  ],
+  "kpi": [
+    "T14_dashboard_admin",
+    "T20_roadmap_instrukcje"
+  ],
+  "tabele": [
+    "T14_dashboard_admin"
+  ],
+  "wykresy": [
+    "T14_dashboard_admin"
+  ],
+  "prompty": [
+    "T15_ai_prompts_pipeline"
+  ],
+  "pipeline": [
+    "T15_ai_prompts_pipeline"
+  ],
+  "frontmatter": [
+    "T15_ai_prompts_pipeline"
+  ],
+  "katalog": [
+    "T16_katalog_pism_mandaty",
+    "T17_katalog_pism_windykacja_etoll"
+  ],
+  "mandaty": [
+    "T16_katalog_pism_mandaty"
+  ],
+  "parking": [
+    "T16_katalog_pism_mandaty"
+  ],
+  "formularze": [
+    "T16_katalog_pism_mandaty"
+  ],
+  "case_types": [
+    "T16_katalog_pism_mandaty",
+    "T17_katalog_pism_windykacja_etoll"
+  ],
+  "windykacja": [
+    "T17_katalog_pism_windykacja_etoll"
+  ],
+  "ubezpieczenia": [
+    "T17_katalog_pism_windykacja_etoll"
+  ],
+  "etoll": [
+    "T17_katalog_pism_windykacja_etoll"
+  ],
+  "kontrole": [
+    "T17_katalog_pism_windykacja_etoll"
+  ],
+  "seo": [
+    "T18_seo_marketing"
+  ],
+  "marketing": [
+    "T18_seo_marketing"
+  ],
+  "blog": [
+    "T18_seo_marketing"
+  ],
+  "structured_data": [
+    "T18_seo_marketing"
+  ],
+  "metadata": [
+    "T18_seo_marketing"
+  ],
+  "epuap": [
+    "T18_seo_marketing"
+  ],
+  "rodo": [
+    "T19_security_rodo_design"
+  ],
+  "design_system": [
+    "T19_security_rodo_design"
+  ],
+  "kolory": [
+    "T19_security_rodo_design",
+    "D01_tozsamosc_kolory"
+  ],
+  "typografia": [
+    "T19_security_rodo_design",
+    "D02_typografia_layout"
+  ],
+  "roadmap": [
+    "T20_roadmap_instrukcje"
+  ],
+  "fazy": [
+    "T20_roadmap_instrukcje"
+  ],
+  "instrukcje": [
+    "T20_roadmap_instrukcje"
+  ],
+  "kontekst": [
+    "T20_roadmap_instrukcje"
+  ],
+  "design": [
+    "D01_tozsamosc_kolory",
+    "D02_typografia_layout",
+    "D03_hero_section",
+    "D04_kategorie_pism",
+    "D05_cennik",
+    "D06_dashboard_b2c",
+    "D07_wizard",
+    "D08_komponenty_unikalne",
+    "D09_b2b_panel",
+    "D10_animacje_dark_responsive"
+  ],
+  "brand": [
+    "D01_tozsamosc_kolory"
+  ],
+  "precision_blue": [
+    "D01_tozsamosc_kolory"
+  ],
+  "iron": [
+    "D01_tozsamosc_kolory"
+  ],
+  "volt_green": [
+    "D01_tozsamosc_kolory"
+  ],
+  "tozsamosc": [
+    "D01_tozsamosc_kolory"
+  ],
+  "inter_tight": [
+    "D02_typografia_layout"
+  ],
+  "jetbrains": [
+    "D02_typografia_layout"
+  ],
+  "layout": [
+    "D02_typografia_layout"
+  ],
+  "spacing": [
+    "D02_typografia_layout"
+  ],
+  "hero": [
+    "D03_hero_section"
+  ],
+  "phone_mockup": [
+    "D03_hero_section"
+  ],
+  "animacje": [
+    "D03_hero_section",
+    "D10_animacje_dark_responsive"
+  ],
+  "stats": [
+    "D03_hero_section"
+  ],
+  "kategorie": [
+    "D04_kategorie_pism"
+  ],
+  "search": [
+    "D04_kategorie_pism"
+  ],
+  "karty": [
+    "D04_kategorie_pism"
+  ],
+  "cennik": [
+    "D05_cennik"
+  ],
+  "pricing": [
+    "D05_cennik"
+  ],
+  "b2b": [
+    "D05_cennik",
+    "D09_b2b_panel"
+  ],
+  "subskrypcja": [
+    "D05_cennik"
+  ],
+  "sidebar": [
+    "D06_dashboard_b2c"
+  ],
+  "tabela": [
+    "D06_dashboard_b2c"
+  ],
+  "skutecznosc": [
+    "D06_dashboard_b2c"
+  ],
+  "formularz": [
+    "D07_wizard"
+  ],
+  "stepper": [
+    "D07_wizard"
+  ],
+  "card_select": [
+    "D07_wizard"
+  ],
+  "preview": [
+    "D07_wizard"
+  ],
+  "platnosc": [
+    "D07_wizard"
+  ],
+  "komponenty": [
+    "D08_komponenty_unikalne"
+  ],
+  "success_rate": [
+    "D08_komponenty_unikalne"
+  ],
+  "timeline": [
+    "D08_komponenty_unikalne"
+  ],
+  "estimator": [
+    "D08_komponenty_unikalne"
+  ],
+  "panel": [
+    "D09_b2b_panel"
+  ],
+  "flota": [
+    "D09_b2b_panel"
+  ],
+  "raporty": [
+    "D09_b2b_panel"
+  ],
+  "dark_mode": [
+    "D10_animacje_dark_responsive"
+  ],
+  "empty_state": [
+    "D10_animacje_dark_responsive"
+  ],
+  "error": [
+    "D10_animacje_dark_responsive"
+  ],
+  "mobile": [
+    "D10_animacje_dark_responsive"
+  ],
+  "responsive": [
+    "D10_animacje_dark_responsive"
+  ],
+  "case_study": [
+    "D10_animacje_dark_responsive"
+  ]
+}

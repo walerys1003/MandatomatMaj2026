@@ -1,0 +1,727 @@
+{
+  "chunks": [
+    {
+      "chunk_id": "T01_wizja_strategia",
+      "title": "1. Wizja produktu i strategia",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        1,
+        50
+      ],
+      "tags": [
+        "strategia",
+        "persony",
+        "metryki",
+        "biznes",
+        "elevator_pitch"
+      ],
+      "agents": [
+        "orchestrator",
+        "product"
+      ],
+      "path": "chunks/T01_wizja_strategia.md",
+      "size_bytes": 3424,
+      "hash": "0347d91f1b8c915d"
+    },
+    {
+      "chunk_id": "T02_architektura_stack",
+      "title": "2. Architektura techniczna - stack i struktura",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        50,
+        372
+      ],
+      "tags": [
+        "stack",
+        "nextjs",
+        "supabase",
+        "tailwind",
+        "structure",
+        "env_vars",
+        "konwencje"
+      ],
+      "agents": [
+        "orchestrator",
+        "frontend",
+        "backend",
+        "devops"
+      ],
+      "path": "chunks/T02_architektura_stack.md",
+      "size_bytes": 15165,
+      "hash": "3c06de4fcb968509"
+    },
+    {
+      "chunk_id": "T03_db_schema_001_002",
+      "title": "3. DB Schema - profiles + cases (migracje 001-002)",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        376,
+        583
+      ],
+      "tags": [
+        "database",
+        "supabase",
+        "schema",
+        "profiles",
+        "cases",
+        "case_type_enum",
+        "rls"
+      ],
+      "agents": [
+        "backend",
+        "database"
+      ],
+      "path": "chunks/T03_db_schema_001_002.md",
+      "size_bytes": 6545,
+      "hash": "db08cd4357a962c7"
+    },
+    {
+      "chunk_id": "T04_db_schema_003_004",
+      "title": "3. DB Schema - documents + uploads/OCR (migracje 003-004)",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        584,
+        683
+      ],
+      "tags": [
+        "database",
+        "documents",
+        "uploads",
+        "ocr",
+        "storage"
+      ],
+      "agents": [
+        "backend",
+        "database"
+      ],
+      "path": "chunks/T04_db_schema_003_004.md",
+      "size_bytes": 3609,
+      "hash": "7e1f5b435ef664bc"
+    },
+    {
+      "chunk_id": "T05_db_schema_005_006",
+      "title": "3. DB Schema - deadlines + payments (migracje 005-006)",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        684,
+        824
+      ],
+      "tags": [
+        "database",
+        "deadlines",
+        "payments",
+        "stripe",
+        "promo_codes"
+      ],
+      "agents": [
+        "backend",
+        "database",
+        "payments"
+      ],
+      "path": "chunks/T05_db_schema_005_006.md",
+      "size_bytes": 4633,
+      "hash": "afd74a2f4520bb4e"
+    },
+    {
+      "chunk_id": "T06_db_schema_007_008_009",
+      "title": "3. DB Schema - events + templates + admin (migracje 007-009)",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        825,
+        1033
+      ],
+      "tags": [
+        "database",
+        "events",
+        "case_type_config",
+        "admin",
+        "feedback"
+      ],
+      "agents": [
+        "backend",
+        "database"
+      ],
+      "path": "chunks/T06_db_schema_007_008_009.md",
+      "size_bytes": 6973,
+      "hash": "1bf3898e22b62949"
+    },
+    {
+      "chunk_id": "T07_db_schema_010_011",
+      "title": "3. DB Schema - RLS + funkcje/triggery (migracje 010-011)",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        1034,
+        1176
+      ],
+      "tags": [
+        "database",
+        "rls",
+        "triggers",
+        "functions",
+        "storage_buckets",
+        "security"
+      ],
+      "agents": [
+        "backend",
+        "database",
+        "security"
+      ],
+      "path": "chunks/T07_db_schema_010_011.md",
+      "size_bytes": 5555,
+      "hash": "da154e52a9f4dc98"
+    },
+    {
+      "chunk_id": "T08_backend_middleware_claude",
+      "title": "4. Backend - Middleware + Claude API wrapper",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        1177,
+        1334
+      ],
+      "tags": [
+        "middleware",
+        "auth",
+        "claude",
+        "ai",
+        "anthropic"
+      ],
+      "agents": [
+        "backend",
+        "ai"
+      ],
+      "path": "chunks/T08_backend_middleware_claude.md",
+      "size_bytes": 5633,
+      "hash": "c08695da4545ac61"
+    },
+    {
+      "chunk_id": "T09_backend_api_generate_scoring",
+      "title": "4. Backend - API generate-document + scoring",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        1335,
+        1500
+      ],
+      "tags": [
+        "api",
+        "generate",
+        "scoring",
+        "ai",
+        "claude"
+      ],
+      "agents": [
+        "backend",
+        "ai"
+      ],
+      "path": "chunks/T09_backend_api_generate_scoring.md",
+      "size_bytes": 5668,
+      "hash": "c0f6fd55dd2240c7"
+    },
+    {
+      "chunk_id": "T10_backend_api_pdf_billing",
+      "title": "4. Backend - API PDF render + Stripe checkout/webhook",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        1501,
+        1763
+      ],
+      "tags": [
+        "api",
+        "pdf",
+        "puppeteer",
+        "stripe",
+        "billing",
+        "webhook",
+        "fakturownia"
+      ],
+      "agents": [
+        "backend",
+        "payments"
+      ],
+      "path": "chunks/T10_backend_api_pdf_billing.md",
+      "size_bytes": 9334,
+      "hash": "58cebfa77190c43f"
+    },
+    {
+      "chunk_id": "T11_backend_api_deadlines_ocr_pdf",
+      "title": "4. Backend - CRON deadlines + OCR pipeline + PDF generator",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        1764,
+        2018
+      ],
+      "tags": [
+        "cron",
+        "deadlines",
+        "reminders",
+        "ocr",
+        "tesseract",
+        "puppeteer",
+        "pdf"
+      ],
+      "agents": [
+        "backend",
+        "notifications",
+        "ocr"
+      ],
+      "path": "chunks/T11_backend_api_deadlines_ocr_pdf.md",
+      "size_bytes": 7678,
+      "hash": "82c177082fc7b05f"
+    },
+    {
+      "chunk_id": "T12_frontend_landing_dynamic_form",
+      "title": "5. Frontend - Landing page + Dynamic Form engine",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        2019,
+        2206
+      ],
+      "tags": [
+        "frontend",
+        "landing",
+        "dynamic_form",
+        "wizard",
+        "react_hook_form",
+        "zod"
+      ],
+      "agents": [
+        "frontend",
+        "design"
+      ],
+      "path": "chunks/T12_frontend_landing_dynamic_form.md",
+      "size_bytes": 7059,
+      "hash": "85e9928bc146182d"
+    },
+    {
+      "chunk_id": "T13_frontend_markdown_scoring",
+      "title": "5. Frontend - Markdown editor + Scoring gauge",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        2207,
+        2351
+      ],
+      "tags": [
+        "frontend",
+        "markdown",
+        "editor",
+        "scoring",
+        "gauge",
+        "framer_motion"
+      ],
+      "agents": [
+        "frontend"
+      ],
+      "path": "chunks/T13_frontend_markdown_scoring.md",
+      "size_bytes": 5793,
+      "hash": "3523fa506ed7bbf6"
+    },
+    {
+      "chunk_id": "T14_dashboard_admin",
+      "title": "6-7. Panel użytkownika (Dashboard) + Panel administracyjny",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        2352,
+        2487
+      ],
+      "tags": [
+        "dashboard",
+        "admin",
+        "user_panel",
+        "kpi",
+        "tabele",
+        "wykresy"
+      ],
+      "agents": [
+        "frontend",
+        "design",
+        "admin"
+      ],
+      "path": "chunks/T14_dashboard_admin.md",
+      "size_bytes": 6349,
+      "hash": "94ccf0e936dc2c1d"
+    },
+    {
+      "chunk_id": "T15_ai_prompts_pipeline",
+      "title": "8. System AI - prompty + pipeline generowania",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        2488,
+        2613
+      ],
+      "tags": [
+        "ai",
+        "prompty",
+        "pipeline",
+        "claude",
+        "markdown",
+        "frontmatter"
+      ],
+      "agents": [
+        "ai",
+        "backend"
+      ],
+      "path": "chunks/T15_ai_prompts_pipeline.md",
+      "size_bytes": 3924,
+      "hash": "5b40cf96a677cc1b"
+    },
+    {
+      "chunk_id": "T16_katalog_pism_mandaty",
+      "title": "9. Katalog pism - Mandaty (M1-M7) + Parking (P1-P4)",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        2614,
+        2683
+      ],
+      "tags": [
+        "katalog",
+        "mandaty",
+        "parking",
+        "formularze",
+        "case_types"
+      ],
+      "agents": [
+        "ai",
+        "frontend",
+        "backend"
+      ],
+      "path": "chunks/T16_katalog_pism_mandaty.md",
+      "size_bytes": 5405,
+      "hash": "25d58449cff4615d"
+    },
+    {
+      "chunk_id": "T17_katalog_pism_windykacja_etoll",
+      "title": "9. Katalog pism - Windykacja (W1-W5) + Ubezpieczenia (U1-U3) + e-TOLL (E1-E3) + Kontrole (K1-K4) + Techniczne (T1-T4)",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        2684,
+        2810
+      ],
+      "tags": [
+        "katalog",
+        "windykacja",
+        "ubezpieczenia",
+        "etoll",
+        "kontrole",
+        "case_types"
+      ],
+      "agents": [
+        "ai",
+        "frontend",
+        "backend"
+      ],
+      "path": "chunks/T17_katalog_pism_windykacja_etoll.md",
+      "size_bytes": 7869,
+      "hash": "7b2b418bfa05aeef"
+    },
+    {
+      "chunk_id": "T18_seo_marketing",
+      "title": "10-11. E-wysyłka + SEO i marketing techniczny",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        2804,
+        2861
+      ],
+      "tags": [
+        "seo",
+        "marketing",
+        "blog",
+        "structured_data",
+        "metadata",
+        "epuap"
+      ],
+      "agents": [
+        "seo",
+        "frontend"
+      ],
+      "path": "chunks/T18_seo_marketing.md",
+      "size_bytes": 2944,
+      "hash": "8a71fdaead8b0023"
+    },
+    {
+      "chunk_id": "T19_security_rodo_design",
+      "title": "12-13. Bezpieczeństwo, RODO + Design System (rezerwowy)",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        2862,
+        2982
+      ],
+      "tags": [
+        "security",
+        "rodo",
+        "design_system",
+        "kolory",
+        "typografia"
+      ],
+      "agents": [
+        "security",
+        "design"
+      ],
+      "path": "chunks/T19_security_rodo_design.md",
+      "size_bytes": 5169,
+      "hash": "221edfb9af707b46"
+    },
+    {
+      "chunk_id": "T20_roadmap_instrukcje",
+      "title": "14-16. Roadmap wdrożenia + Instrukcje dla AI Agent + KPI",
+      "source_file": "01_specyfikacja_techniczna.txt",
+      "line_range": [
+        2983,
+        3162
+      ],
+      "tags": [
+        "roadmap",
+        "fazy",
+        "instrukcje",
+        "kpi",
+        "kontekst"
+      ],
+      "agents": [
+        "orchestrator"
+      ],
+      "path": "chunks/T20_roadmap_instrukcje.md",
+      "size_bytes": 8326,
+      "hash": "32610eedecd3279c"
+    },
+    {
+      "chunk_id": "D01_tozsamosc_kolory",
+      "title": "4.1-4.2 Tożsamość marki + System kolorów (Precision Blue, Iron, Volt)",
+      "source_file": "02_szata_graficzna.txt",
+      "line_range": [
+        1,
+        95
+      ],
+      "tags": [
+        "design",
+        "kolory",
+        "brand",
+        "precision_blue",
+        "iron",
+        "volt_green",
+        "tozsamosc"
+      ],
+      "agents": [
+        "design",
+        "frontend"
+      ],
+      "path": "chunks/D01_tozsamosc_kolory.md",
+      "size_bytes": 4126,
+      "hash": "b97d1e3354f96cb2"
+    },
+    {
+      "chunk_id": "D02_typografia_layout",
+      "title": "4.3-4.4 Typografia (Inter Tight, Inter, JetBrains Mono) + Layout",
+      "source_file": "02_szata_graficzna.txt",
+      "line_range": [
+        96,
+        130
+      ],
+      "tags": [
+        "design",
+        "typografia",
+        "inter_tight",
+        "jetbrains",
+        "layout",
+        "spacing"
+      ],
+      "agents": [
+        "design",
+        "frontend"
+      ],
+      "path": "chunks/D02_typografia_layout.md",
+      "size_bytes": 2262,
+      "hash": "ce2ee2bd606c5955"
+    },
+    {
+      "chunk_id": "D03_hero_section",
+      "title": "4.5 Hero Section - pixel-perfect instrukcja",
+      "source_file": "02_szata_graficzna.txt",
+      "line_range": [
+        130,
+        308
+      ],
+      "tags": [
+        "design",
+        "hero",
+        "landing",
+        "phone_mockup",
+        "animacje",
+        "stats"
+      ],
+      "agents": [
+        "design",
+        "frontend"
+      ],
+      "path": "chunks/D03_hero_section.md",
+      "size_bytes": 6031,
+      "hash": "e476f12663967db5"
+    },
+    {
+      "chunk_id": "D04_kategorie_pism",
+      "title": "4.6 Sekcja Katalog Pism - 9 kategorii + search",
+      "source_file": "02_szata_graficzna.txt",
+      "line_range": [
+        308,
+        462
+      ],
+      "tags": [
+        "design",
+        "kategorie",
+        "search",
+        "karty",
+        "landing"
+      ],
+      "agents": [
+        "design",
+        "frontend"
+      ],
+      "path": "chunks/D04_kategorie_pism.md",
+      "size_bytes": 5690,
+      "hash": "bbacf307c7e1cf4b"
+    },
+    {
+      "chunk_id": "D05_cennik",
+      "title": "4.7 Sekcja Cennik - 3 plany + B2B teaser",
+      "source_file": "02_szata_graficzna.txt",
+      "line_range": [
+        462,
+        551
+      ],
+      "tags": [
+        "design",
+        "cennik",
+        "pricing",
+        "b2b",
+        "subskrypcja"
+      ],
+      "agents": [
+        "design",
+        "frontend"
+      ],
+      "path": "chunks/D05_cennik.md",
+      "size_bytes": 2766,
+      "hash": "d7ae311e54a061bc"
+    },
+    {
+      "chunk_id": "D06_dashboard_b2c",
+      "title": "4.8 Dashboard - panel użytkownika B2C",
+      "source_file": "02_szata_graficzna.txt",
+      "line_range": [
+        551,
+        718
+      ],
+      "tags": [
+        "design",
+        "dashboard",
+        "sidebar",
+        "metryki",
+        "tabela",
+        "skutecznosc"
+      ],
+      "agents": [
+        "design",
+        "frontend"
+      ],
+      "path": "chunks/D06_dashboard_b2c.md",
+      "size_bytes": 5754,
+      "hash": "c58a827fb2097417"
+    },
+    {
+      "chunk_id": "D07_wizard",
+      "title": "4.9 Wizard - 3-4 krokowy formularz",
+      "source_file": "02_szata_graficzna.txt",
+      "line_range": [
+        719,
+        940
+      ],
+      "tags": [
+        "design",
+        "wizard",
+        "formularz",
+        "stepper",
+        "card_select",
+        "preview",
+        "platnosc"
+      ],
+      "agents": [
+        "design",
+        "frontend"
+      ],
+      "path": "chunks/D07_wizard.md",
+      "size_bytes": 8445,
+      "hash": "cf34b6b347af551e"
+    },
+    {
+      "chunk_id": "D08_komponenty_unikalne",
+      "title": "4.10 Komponenty unikalne (SuccessRate, QuickAction, SuccessEstimator, Timeline)",
+      "source_file": "02_szata_graficzna.txt",
+      "line_range": [
+        940,
+        1097
+      ],
+      "tags": [
+        "design",
+        "komponenty",
+        "success_rate",
+        "timeline",
+        "estimator"
+      ],
+      "agents": [
+        "design",
+        "frontend"
+      ],
+      "path": "chunks/D08_komponenty_unikalne.md",
+      "size_bytes": 5861,
+      "hash": "cfbf1c6e9301aacd"
+    },
+    {
+      "chunk_id": "D09_b2b_panel",
+      "title": "4.11 Panel B2B - layout dla firm transportowych/kancelarii",
+      "source_file": "02_szata_graficzna.txt",
+      "line_range": [
+        1097,
+        1185
+      ],
+      "tags": [
+        "design",
+        "b2b",
+        "panel",
+        "flota",
+        "api",
+        "raporty"
+      ],
+      "agents": [
+        "design",
+        "frontend"
+      ],
+      "path": "chunks/D09_b2b_panel.md",
+      "size_bytes": 2942,
+      "hash": "3e2ed63abe824232"
+    },
+    {
+      "chunk_id": "D10_animacje_dark_responsive",
+      "title": "4.12-4.16 Animacje + Dark mode + Empty/Error states + Responsywność + Case Study + Tabela porównawcza",
+      "source_file": "02_szata_graficzna.txt",
+      "line_range": [
+        1185,
+        1458
+      ],
+      "tags": [
+        "design",
+        "animacje",
+        "dark_mode",
+        "empty_state",
+        "error",
+        "mobile",
+        "responsive",
+        "case_study"
+      ],
+      "agents": [
+        "design",
+        "frontend"
+      ],
+      "path": "chunks/D10_animacje_dark_responsive.md",
+      "size_bytes": 12098,
+      "hash": "0d799b72495ad9d3"
+    }
+  ],
+  "total": 30
+}

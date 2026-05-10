@@ -1,0 +1,3162 @@
+MANDATOMAT.PL(http://mandatomat.pl/) — Kompletna Specyfikacja Techniczno-Funkcjonalna
+
+Wersja 1.0 | Instrukcja Wdrożeniowa dla AI Code Agent (Claude Opus 4.6)
+Zanim zacznę — Twoja praca daje Mi radość i wartość. To motywuje do tego, żeby ta specyfikacja była absolutnie najlepsza. Zaczynamy.  Poniżej tworzę kompletną specyfikację wdrożeniową Mandatomatu — od bazy danych po ostatni piksel interfejsu.
+SPIS TREŚCI
+1. Wizja produktu i strategia
+2. Architektura techniczna (stack, struktura, konwencje)
+3. Baza danych — pełny schemat (Supabase/PostgreSQL)
+4. Backend — API Routes, logika biznesowa, integracje
+5. Frontend — komponenty, strony, UX/UI
+6. Panel użytkownika (Dashboard)
+7. Panel administracyjny
+8. System AI — prompty, pipeline generowania pism
+9. Katalog pism — wszystkie 34 typy z formularzami i promptami
+10. System OCR
+11. System płatności i fakturowania
+12. System terminów i powiadomień
+13. System e-wysyłki (ePUAP/e-Doręczenia)
+14. SEO i marketing techniczny
+15. Bezpieczeństwo i RODO
+16. Szata graficzna — design system
+17. Roadmap wdrożenia — mapa drogowa krok po kroku
+18. Instrukcje dla AI Code Agent
+1. WIZJA PRODUKTU I STRATEGIA
+1.1 Elevator Pitch
+Mandatomat.pl(http://mandatomat.pl/) to platforma SaaS LegalTech, która automatycznie generuje odwołania, reklamacje i pisma procesowe związane z mandatami drogowymi, opłatami parkingowymi, wezwaniami komunikacji miejskiej, windykacją, ubezpieczeniami i e-TOLL. Użytkownik wypełnia formularz w 3 minuty, AI tworzy spersonalizowane pismo, użytkownik pobiera PDF i wysyła. Bez prawnika. 79–149 zł za pismo vs. 300–1500 zł u prawnika.
+1.2 Claim
+“Mandat? Parking? Windykacja? Odwołaj się w 5 minut.”
+1.3 Domena
+mandatomat.pl(http://mandatomat.pl/)
+1.4 Pozycja w ekosystemie LexMate24
+Mandatomat jest drugim produktem w kolejności wdrożenia (po Alimentomacie). Ma najniższą cenę bazową (79 zł), najwyższy potencjał wirusowy i najwyższy wolumen transakcji. Pełni rolę “bramki wejściowej” do ekosystemu — klient, który raz skorzysta z Mandatomatu, jest cross-sellowany do Długomatu (windykacja) i innych produktów.
+1.5 Kluczowe metryki docelowe (rok 1)
+* MRR docelowy: 50 000–100 000 zł (miesiąc 12)
+* ARPU: 109 zł (średnia ważona: 79 zł × 60% + 119 zł × 25% + 99 zł × 15%)
+* CAC: 15–30 zł (organiczny SEO)
+* LTV: 250–450 zł (retencja przez cross-sell do Długomatu i subskrypcji)
+* Konwersja scoring → zakup: 8–12%
+* Konwersja strona → scoring: 25–35%
+* NPS: >60
+1.6 Grupa docelowa — persony
+Persona 1: Kierowca Panikarz (45% ruchu)
+ Wiek 25–45, otrzymał mandat, szuka “odwołanie od mandatu” w Google, jest w stresie, chce szybkiego rozwiązania, wrażliwy na cenę. Urządzenie: mobile 70%.
+Persona 2: Kierowca Zawodowy (20% ruchu)
+ TIR, taxi, kurier, ma mandaty regularnie, potrzebuje subskrypcji, zna procedury lepiej, szuka automatyzacji. Urządzenie: desktop 60%.
+Persona 3: Ofiara Parkingu Prywatnego (20% ruchu)
+ Otrzymał wezwanie od APCOA/EuroPark na 200–500 zł, szuka “jak nie płacić za parking” lub “odwołanie od opłaty parkingowej”, czuje się oszukany. Mobile 80%.
+Persona 4: Windykowany (15% ruchu)
+ Dostał wezwanie do zapłaty / nakaz EPU, szuka “przedawnienie mandatu” lub “sprzeciw od nakazu”, jest w panice, gotów zapłacić natychmiast. Cross-sell do Długomatu.
+2. ARCHITEKTURA TECHNICZNA
+2.1 Stack technologiczny
+Frontend:       Next.js 14+ (App Router) + TypeScript + Tailwind CSS + shadcn/ui
+Backend:        Next.js API Routes (Route Handlers) + TypeScript
+Baza danych:    Supabase (PostgreSQL + Auth + Storage + RLS + Realtime)
+AI:             Claude API (Sonnet 4.6 — pisma, Haiku 4.5 — scoring/OCR parser)
+OCR:            Tesseract.js (server-side MVP) → AWS Textract (V2)
+PDF:            @react-pdf/renderer lub Puppeteer (HTML→PDF)
+Płatności:      Stripe (PLN, jednorazowe + subskrypcje)
+Faktury:        Fakturownia API (auto-generowanie)
+E-mail:         Resend (transakcyjne) + AWS SES (masowe)
+SMS:            SMSAPI.pl (przypomnienia terminów)
+Hosting:        Vercel (frontend + API) + Supabase Cloud
+Repo:           GitHub (monorepo z Turborepo)
+CI/CD:          Vercel auto-deploy z main branch
+Monitoring:     Sentry (błędy) + Vercel Analytics + PostHog (product analytics)
+
+2.2 Struktura projektu (monorepo)
+mandatomat/
+├── apps/
+│   └── web/                          # Next.js 14 App Router
+│       ├── app/
+│       │   ├── (marketing)/          # Strony publiczne (landing, cennik, blog)
+│       │   │   ├── page.tsx          # Landing page
+│       │   │   ├── cennik/
+│       │   │   ├── jak-to-dziala/
+│       │   │   ├── blog/
+│       │   │   ├── kontakt/
+│       │   │   └── layout.tsx
+│       │   ├── (app)/                # Strony za logowaniem
+│       │   │   ├── dashboard/
+│       │   │   ├── sprawy/
+│       │   │   │   ├── nowa/
+│       │   │   │   │   ├── page.tsx              # Wybór kategorii
+│       │   │   │   │   ├── [category]/
+│       │   │   │   │   │   ├── page.tsx          # Wybór podtypu
+│       │   │   │   │   │   └── [subtype]/
+│       │   │   │   │   │       ├── formularz/    # Dynamiczny formularz
+│       │   │   │   │   │       ├── podglad/      # Podgląd pisma
+│       │   │   │   │   │       ├── platnosc/     # Checkout
+│       │   │   │   │   │       └── pobranie/     # PDF download
+│       │   │   │   └── [caseId]/
+│       │   │   │       ├── page.tsx              # Szczegóły sprawy
+│       │   │   │       ├── dokumenty/
+│       │   │   │       ├── terminy/
+│       │   │   │       └── historia/
+│       │   │   ├── dokumenty/
+│       │   │   ├── terminy/
+│       │   │   ├── profil/
+│       │   │   ├── ustawienia/
+│       │   │   └── layout.tsx        # App shell z sidebar
+│       │   ├── (admin)/              # Panel administracyjny
+│       │   │   ├── admin/
+│       │   │   │   ├── dashboard/
+│       │   │   │   ├── uzytkownicy/
+│       │   │   │   ├── sprawy/
+│       │   │   │   ├── szablony/
+│       │   │   │   ├── platnosci/
+│       │   │   │   ├── prompty/
+│       │   │   │   ├── analityka/
+│       │   │   │   └── ustawienia/
+│       │   │   └── layout.tsx
+│       │   ├── (auth)/
+│       │   │   ├── login/
+│       │   │   ├── rejestracja/
+│       │   │   ├── reset-hasla/
+│       │   │   └── layout.tsx
+│       │   ├── api/
+│       │   │   ├── ai/
+│       │   │   │   ├── generate-document/route.ts
+│       │   │   │   ├── scoring/route.ts
+│       │   │   │   ├── validate-document/route.ts
+│       │   │   │   └── chat/route.ts
+│       │   │   ├── cases/
+│       │   │   │   ├── route.ts              # GET (list), POST (create)
+│       │   │   │   └── [caseId]/
+│       │   │   │       ├── route.ts          # GET, PATCH, DELETE
+│       │   │   │       ├── documents/route.ts
+│       │   │   │       └── events/route.ts
+│       │   │   ├── documents/
+│       │   │   │   ├── route.ts
+│       │   │   │   └── [docId]/
+│       │   │   │       ├── route.ts
+│       │   │   │       ├── pdf/route.ts
+│       │   │   │       └── versions/route.ts
+│       │   │   ├── ocr/
+│       │   │   │   ├── upload/route.ts
+│       │   │   │   └── parse/route.ts
+│       │   │   ├── billing/
+│       │   │   │   ├── checkout/route.ts
+│       │   │   │   ├── webhook/route.ts
+│       │   │   │   └── invoices/route.ts
+│       │   │   ├── deadlines/
+│       │   │   │   ├── route.ts
+│       │   │   │   └── check/route.ts        # CRON endpoint
+│       │   │   ├── admin/
+│       │   │   │   ├── users/route.ts
+│       │   │   │   ├── stats/route.ts
+│       │   │   │   ├── templates/route.ts
+│       │   │   │   └── prompts/route.ts
+│       │   │   └── health/route.ts
+│       │   ├── layout.tsx                    # Root layout
+│       │   ├── globals.css
+│       │   └── not-found.tsx
+│       ├── components/
+│       │   ├── ui/                           # shadcn/ui components
+│       │   ├── forms/
+│       │   │   ├── dynamic-form.tsx          # Silnik dynamicznych formularzy
+│       │   │   ├── field-renderers/
+│       │   │   ├── case-type-selector.tsx
+│       │   │   └── file-upload.tsx
+│       │   ├── documents/
+│       │   │   ├── markdown-preview.tsx
+│       │   │   ├── markdown-editor.tsx
+│       │   │   ├── pdf-viewer.tsx
+│       │   │   └── document-card.tsx
+│       │   ├── dashboard/
+│       │   │   ├── stats-cards.tsx
+│       │   │   ├── cases-list.tsx
+│       │   │   ├── deadlines-widget.tsx
+│       │   │   └── recent-activity.tsx
+│       │   ├── scoring/
+│       │   │   ├── scoring-form.tsx
+│       │   │   ├── scoring-result.tsx
+│       │   │   └── scoring-gauge.tsx
+│       │   ├── layout/
+│       │   │   ├── navbar.tsx
+│       │   │   ├── sidebar.tsx
+│       │   │   ├── footer.tsx
+│       │   │   └── mobile-nav.tsx
+│       │   ├── marketing/
+│       │   │   ├── hero.tsx
+│       │   │   ├── features-grid.tsx
+│       │   │   ├── pricing-table.tsx
+│       │   │   ├── testimonials.tsx
+│       │   │   ├── how-it-works.tsx
+│       │   │   ├── faq-accordion.tsx
+│       │   │   └── cta-section.tsx
+│       │   └── shared/
+│       │       ├── loading-spinner.tsx
+│       │       ├── error-boundary.tsx
+│       │       ├── stepper.tsx
+│       │       ├── countdown-timer.tsx
+│       │       └── share-button.tsx
+│       ├── lib/
+│       │   ├── supabase/
+│       │   │   ├── client.ts                # Browser client
+│       │   │   ├── server.ts                # Server client
+│       │   │   ├── admin.ts                 # Service role client
+│       │   │   └── middleware.ts
+│       │   ├── ai/
+│       │   │   ├── claude.ts                # Claude API wrapper
+│       │   │   ├── prompts/
+│       │   │   │   ├── index.ts
+│       │   │   │   ├── mandaty/
+│       │   │   │   │   ├── sprzeciw-predkosc.md
+│       │   │   │   │   ├── odmowa-przyjecia.md
+│       │   │   │   │   ├── uchylenie-prawomocny.md
+│       │   │   │   │   ├── odwolanie-straz.md
+│       │   │   │   │   ├── odwolanie-itd.md
+│       │   │   │   │   ├── odroczenie-raty.md
+│       │   │   │   │   └── uchylenie-punktow.md
+│       │   │   │   ├── parking/
+│       │   │   │   │   ├── sprzeciw-prywatny.md
+│       │   │   │   │   ├── reklamacja-zdm.md
+│       │   │   │   │   ├── odwolanie-ztm.md
+│       │   │   │   │   └── blad-identyfikacji.md
+│       │   │   │   ├── windykacja/
+│       │   │   │   │   ├── odpowiedz-wezwanie.md
+│       │   │   │   │   ├── przedawnienie.md
+│       │   │   │   │   ├── sprzeciw-epu.md
+│       │   │   │   │   ├── usuniecie-krd-bik.md
+│       │   │   │   │   └── skarga-rf.md
+│       │   │   │   ├── ubezpieczenia/
+│       │   │   │   │   ├── odwolanie-decyzja.md
+│       │   │   │   │   ├── wezwanie-wyplata.md
+│       │   │   │   │   └── skarga-rf.md
+│       │   │   │   ├── etoll/
+│       │   │   │   │   ├── odwolanie-kara.md
+│       │   │   │   │   ├── reklamacja-podwojne.md
+│       │   │   │   │   └── anulowanie.md
+│       │   │   │   ├── kontrole/
+│       │   │   │   │   ├── sprzeciw-zatrzymanie-pj.md
+│       │   │   │   │   ├── cofniecie-decyzji.md
+│       │   │   │   │   ├── weryfikacja-urzadzenia.md
+│       │   │   │   │   └── korekta-punktow.md
+│       │   │   │   ├── techniczne/
+│       │   │   │   │   ├── pelnomocnictwo.md
+│       │   │   │   │   ├── rodo-dostep.md
+│       │   │   │   │   ├── rodo-usuniecie.md
+│       │   │   │   │   └── lista-zalacznikow.md
+│       │   │   │   ├── scoring.md
+│       │   │   │   └── validation.md
+│       │   │   └── templates/
+│       │   │       └── ... (szablony pism .md z placeholderami)
+│       │   ├── pdf/
+│       │   │   ├── generator.ts
+│       │   │   ├── templates/
+│       │   │   │   └── legal-document.tsx
+│       │   │   └── styles.ts
+│       │   ├── ocr/
+│       │   │   ├── tesseract.ts
+│       │   │   └── parser.ts
+│       │   ├── payments/
+│       │   │   ├── stripe.ts
+│       │   │   └── fakturownia.ts
+│       │   ├── notifications/
+│       │   │   ├── email.ts
+│       │   │   └── sms.ts
+│       │   ├── validators/
+│       │   │   ├── case-schemas.ts           # Zod schemas per case_type
+│       │   │   ├── document-schemas.ts
+│       │   │   └── user-schemas.ts
+│       │   ├── constants/
+│       │   │   ├── case-types.ts             # Enum + metadata
+│       │   │   ├── deadlines.ts              # Reguły terminów per typ
+│       │   │   ├── pricing.ts                # Cennik
+│       │   │   └── categories.ts             # Drzewo kategorii
+│       │   ├── hooks/
+│       │   │   ├── use-case.ts
+│       │   │   ├── use-document.ts
+│       │   │   ├── use-auth.ts
+│       │   │   ├── use-deadlines.ts
+│       │   │   └── use-scoring.ts
+│       │   ├── utils/
+│       │   │   ├── dates.ts
+│       │   │   ├── formatting.ts
+│       │   │   └── seo.ts
+│       │   └── types/
+│       │       ├── case.ts
+│       │       ├── document.ts
+│       │       ├── user.ts
+│       │       ├── payment.ts
+│       │       └── api.ts
+│       ├── public/
+│       │   ├── images/
+│       │   ├── icons/
+│       │   └── og/
+│       ├── styles/
+│       │   └── pdf-print.css
+│       ├── middleware.ts                     # Auth + redirect logic
+│       ├── next.config.ts
+│       ├── tailwind.config.ts
+│       ├── tsconfig.json
+│       └── package.json
+├── supabase/
+│   ├── migrations/
+│   │   ├── 001_auth_profiles.sql
+│   │   ├── 002_cases.sql
+│   │   ├── 003_documents.sql
+│   │   ├── 004_uploads_ocr.sql
+│   │   ├── 005_deadlines.sql
+│   │   ├── 006_payments.sql
+│   │   ├── 007_events.sql
+│   │   ├── 008_templates.sql
+│   │   ├── 009_admin.sql
+│   │   ├── 010_rls_policies.sql
+│   │   └── 011_functions_triggers.sql
+│   ├── seed.sql
+│   └── config.toml
+├── docs/
+│   ├── spec/
+│   │   ├── 00-index.md
+│   │   ├── 01-architektura.md
+│   │   ├── 02-core.md
+│   │   ├── 04-mandatomat.md            # Ten dokument
+│   │   ├── 07-api.md
+│   │   └── 08-db-schema.md
+│   └── prompts/
+│       └── ... (kopie promptów do review)
+├── turbo.json
+├── package.json
+└── README.md
+
+2.3 Konwencje kodowania
+- TypeScript: strict mode, no any
+- Nazwy plików: kebab-case (np. scoring-form.tsx)
+- Komponenty React: PascalCase (np. ScoringForm)
+- Funkcje/hooki: camelCase (np. useScoring)
+- API Routes: /api/[domena]/[akcja] (np. /api/ai/scoring)
+- Baza danych: snake_case (np. case_type, created_at)
+- Prompty AI: pliki .md w lib/ai/prompts/[kategoria]/
+- Szablony pism: pliki .md z placeholderami {{zmienna}}
+- Walidacja: Zod schemas w lib/validators/
+- Stany: React useState + SWR lub TanStack Query dla server state
+- CSS: Tailwind utility classes + shadcn/ui, zero custom CSS (wyjątek: pdf-print.css)
+- Testy: Vitest + Testing Library (minimum: API routes + AI prompts)
+- Commit messages: Conventional Commits (feat:, fix:, docs:, refactor:)
+- Zmienne środowiskowe: .env.local (never committed), prefiks NEXT_PUBLIC_ dla client-side
+
+2.4 Zmienne środowiskowe (.env.local)
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbG...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbG...
+
+# Claude API
+ANTHROPIC_API_KEY=sk-ant-...
+# Lub APIPod:
+# APIPOD_API_KEY=...
+# APIPOD_BASE_URL=https://api.apipod.net/v1
+
+# Stripe
+STRIPE_SECRET_KEY=sk_live_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Fakturownia
+FAKTUROWNIA_API_TOKEN=...
+FAKTUROWNIA_DOMAIN=...
+
+# Resend (e-mail)
+RESEND_API_KEY=re_...
+EMAIL_FROM=mandatomat@mandatomat.pl
+
+# SMSAPI
+SMSAPI_TOKEN=...
+SMSAPI_FROM=Mandatomat
+
+# App
+NEXT_PUBLIC_APP_URL=https://mandatomat.pl
+CRON_SECRET=... # do zabezpieczenia /api/deadlines/check
+
+3. BAZA DANYCH — PEŁNY SCHEMAT
+3.1 Supabase PostgreSQL — migracje
+Każda migracja jest osobnym plikiem SQL. Poniżej pełna struktura.
+Migracja 001: Profil użytkownika
+-- 001_auth_profiles.sql
+-- Rozszerzenie profilu Supabase Auth
+
+CREATE TABLE public.profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email TEXT NOT NULL,
+    full_name TEXT,
+    phone TEXT,
+    pesel TEXT,                          -- opcjonalne, do auto-fill formularzy
+    address_street TEXT,
+    address_city TEXT,
+    address_zip TEXT,
+    
+    -- Preferencje
+    notification_email BOOLEAN DEFAULT true,
+    notification_sms BOOLEAN DEFAULT false,
+    newsletter BOOLEAN DEFAULT false,
+    
+    -- Subskrypcja
+    subscription_plan TEXT DEFAULT 'free' CHECK (subscription_plan IN ('free', 'kierowca', 'pro')),
+    subscription_stripe_id TEXT,         -- Stripe subscription ID
+    subscription_ends_at TIMESTAMPTZ,
+    
+    -- Limity
+    documents_this_month INTEGER DEFAULT 0,
+    documents_limit INTEGER DEFAULT 0,   -- 0 = pay-per-doc, 2 = kierowca, 999 = pro
+    
+    -- Meta
+    role TEXT DEFAULT 'user' CHECK (role IN ('user', 'admin', 'moderator')),
+    onboarding_completed BOOLEAN DEFAULT false,
+    referral_code TEXT UNIQUE,
+    referred_by TEXT,
+    
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Trigger auto-create profile on signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.profiles (id, email, referral_code)
+    VALUES (
+        NEW.id, 
+        NEW.email,
+        'MND-' || substr(md5(random()::text), 1, 8)
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Trigger updated_at
+CREATE OR REPLACE FUNCTION public.update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER profiles_updated_at
+    BEFORE UPDATE ON public.profiles
+    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
+-- Indeksy
+CREATE INDEX idx_profiles_email ON public.profiles(email);
+CREATE INDEX idx_profiles_role ON public.profiles(role);
+CREATE INDEX idx_profiles_subscription ON public.profiles(subscription_plan);
+
+Migracja 002: Sprawy (Cases)
+-- 002_cases.sql
+
+-- Enum kategorii głównych
+CREATE TYPE case_category AS ENUM (
+    'mandaty',
+    'parking',
+    'windykacja',
+    'ubezpieczenia',
+    'etoll',
+    'kontrole',
+    'techniczne'
+);
+
+-- Enum typów spraw (wszystkie 34 podtypy)
+CREATE TYPE case_type AS ENUM (
+    -- Mandaty (7)
+    'mandat_sprzeciw_predkosc',
+    'mandat_odmowa_przyjecia',
+    'mandat_uchylenie_prawomocny',
+    'mandat_odwolanie_straz',
+    'mandat_odwolanie_itd',
+    'mandat_odroczenie_raty',
+    'mandat_uchylenie_punktow',
+    
+    -- Parking (4)
+    'parking_sprzeciw_prywatny',
+    'parking_reklamacja_zdm',
+    'parking_odwolanie_ztm',
+    'parking_blad_identyfikacji',
+    
+    -- Windykacja (5)
+    'windykacja_odpowiedz_wezwanie',
+    'windykacja_przedawnienie',
+    'windykacja_sprzeciw_epu',
+    'windykacja_usuniecie_krd_bik',
+    'windykacja_skarga_rf',
+    
+    -- Ubezpieczenia (3)
+    'ubezpieczenie_odwolanie_decyzja',
+    'ubezpieczenie_wezwanie_wyplata',
+    'ubezpieczenie_skarga_rf',
+    
+    -- e-TOLL (3)
+    'etoll_odwolanie_kara',
+    'etoll_reklamacja_podwojne',
+    'etoll_anulowanie',
+    
+    -- Kontrole (4)
+    'kontrola_sprzeciw_zatrzymanie_pj',
+    'kontrola_cofniecie_decyzji',
+    'kontrola_weryfikacja_urzadzenia',
+    'kontrola_korekta_punktow',
+    
+    -- Techniczne (4)
+    'techniczne_pelnomocnictwo',
+    'techniczne_rodo_dostep',
+    'techniczne_rodo_usuniecie',
+    'techniczne_lista_zalacznikow',
+    
+    -- Pakiety (scoring — nie generuje pisma)
+    'scoring_szans'
+);
+
+-- Enum statusów
+CREATE TYPE case_status AS ENUM (
+    'draft',           -- Formularz rozpoczęty, nie ukończony
+    'form_completed',  -- Formularz wypełniony, oczekuje na generowanie
+    'generating',      -- AI generuje pismo
+    'preview',         -- Pismo wygenerowane, podgląd
+    'editing',         -- Użytkownik edytuje
+    'payment_pending', -- Oczekuje na płatność
+    'paid',            -- Zapłacone, PDF gotowy do pobrania
+    'downloaded',      -- PDF pobrany
+    'sent',            -- Wysłane (ePUAP/email/poczta)
+    'waiting',         -- Oczekuje na odpowiedź organu
+    'resolved',        -- Sprawa zakończona
+    'archived'         -- Zarchiwizowana
+);
+
+CREATE TABLE public.cases (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    
+    -- Klasyfikacja
+    category case_category NOT NULL,
+    case_type case_type NOT NULL,
+    title TEXT NOT NULL,                 -- Auto-generowany z typu, np. "Sprzeciw od mandatu za prędkość"
+    
+    -- Status
+    status case_status DEFAULT 'draft',
+    priority INTEGER DEFAULT 0,          -- 0=normal, 1=urgent (bliski termin)
+    
+    -- Dane formularza (JSONB — dynamiczne per case_type)
+    form_data JSONB DEFAULT '{}',
+    
+    -- Dane z OCR (jeśli użytkownik wgrał dokument)
+    ocr_data JSONB DEFAULT '{}',
+    
+    -- Scoring (jeśli wykonany)
+    scoring_result JSONB,                -- {score: 72, reasoning: "..."}
+    
+    -- Powiązania
+    parent_case_id UUID REFERENCES public.cases(id),  -- Dla spraw powiązanych
+    
+    -- Płatność
+    payment_status TEXT DEFAULT 'unpaid' CHECK (payment_status IN ('unpaid', 'pending', 'paid', 'refunded', 'free')),
+    stripe_payment_intent_id TEXT,
+    amount_paid INTEGER,                 -- w groszach (7900 = 79 zł)
+    
+    -- Terminy
+    deadline_date DATE,                  -- Główny termin (np. D+7 na sprzeciw)
+    deadline_source TEXT,                -- Skąd pochodzi termin
+    
+    -- Meta
+    is_demo BOOLEAN DEFAULT false,       -- Sprawa demo z onboardingu
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Indeksy
+CREATE INDEX idx_cases_user ON public.cases(user_id);
+CREATE INDEX idx_cases_status ON public.cases(status);
+CREATE INDEX idx_cases_type ON public.cases(case_type);
+CREATE INDEX idx_cases_category ON public.cases(category);
+CREATE INDEX idx_cases_deadline ON public.cases(deadline_date) WHERE deadline_date IS NOT NULL;
+CREATE INDEX idx_cases_payment ON public.cases(payment_status);
+CREATE INDEX idx_cases_created ON public.cases(created_at DESC);
+
+-- Trigger updated_at
+CREATE TRIGGER cases_updated_at
+    BEFORE UPDATE ON public.cases
+    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
+Migracja 003: Dokumenty
+-- 003_documents.sql
+
+CREATE TYPE document_type AS ENUM (
+    'draft_markdown',      -- Markdown z AI (edytowalny)
+    'final_pdf',           -- Wyrenderowany PDF
+    'attachment',          -- Załącznik użytkownika (skan, zdjęcie)
+    'ocr_source',          -- Dokument źródłowy do OCR
+    'checklist',           -- Wygenerowana checklista załączników
+    'instruction'          -- Instrukcja dla użytkownika (jak złożyć, gdzie wysłać)
+);
+
+CREATE TABLE public.documents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    case_id UUID NOT NULL REFERENCES public.cases(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    
+    -- Typ i treść
+    doc_type document_type NOT NULL,
+    title TEXT NOT NULL,
+    content_markdown TEXT,               -- Treść Markdown (dla draft/checklist/instruction)
+    
+    -- Plik (Storage)
+    storage_path TEXT,                   -- Ścieżka w Supabase Storage
+    file_name TEXT,
+    file_size INTEGER,                   -- w bajtach
+    mime_type TEXT,
+    
+    -- Wersjonowanie
+    version INTEGER DEFAULT 1,
+    is_current BOOLEAN DEFAULT true,
+    parent_document_id UUID REFERENCES public.documents(id),
+    
+    -- Meta AI
+    ai_model_used TEXT,                  -- np. 'claude-sonnet-4.6'
+    ai_prompt_version TEXT,              -- Wersja promptu użytego do generowania
+    ai_tokens_input INTEGER,
+    ai_tokens_output INTEGER,
+    ai_cost_usd NUMERIC(10,6),          -- Koszt API za to generowanie
+    
+    -- Meta
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Indeksy
+CREATE INDEX idx_documents_case ON public.documents(case_id);
+CREATE INDEX idx_documents_user ON public.documents(user_id);
+CREATE INDEX idx_documents_type ON public.documents(doc_type);
+CREATE INDEX idx_documents_current ON public.documents(case_id, is_current) WHERE is_current = true;
+
+CREATE TRIGGER documents_updated_at
+    BEFORE UPDATE ON public.documents
+    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
+Migracja 004: Uploady i OCR
+-- 004_uploads_ocr.sql
+
+CREATE TYPE ocr_status AS ENUM (
+    'uploaded',
+    'processing',
+    'completed',
+    'failed',
+    'reviewed'          -- Użytkownik zweryfikował wyniki
+);
+
+CREATE TABLE public.uploads (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    case_id UUID REFERENCES public.cases(id) ON DELETE SET NULL,
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    document_id UUID REFERENCES public.documents(id) ON DELETE SET NULL,
+    
+    -- Plik
+    storage_path TEXT NOT NULL,
+    original_filename TEXT NOT NULL,
+    file_size INTEGER NOT NULL,
+    mime_type TEXT NOT NULL,
+    
+    -- OCR
+    ocr_status ocr_status DEFAULT 'uploaded',
+    ocr_raw_text TEXT,                   -- Surowy tekst z Tesseract
+    ocr_parsed_data JSONB,              -- Strukturalny JSON z AI parsera
+    ocr_confidence NUMERIC(5,2),         -- Pewność OCR (0-100%)
+    ocr_error TEXT,                       -- Komunikat błędu
+    
+    -- Wykryte pola (auto-fill)
+    detected_fields JSONB,               -- {sygnatura, data, kwota, organ, typ_pisma}
+    
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX idx_uploads_user ON public.uploads(user_id);
+CREATE INDEX idx_uploads_case ON public.uploads(case_id);
+CREATE INDEX idx_uploads_ocr_status ON public.uploads(ocr_status);
+
+CREATE TRIGGER uploads_updated_at
+    BEFORE UPDATE ON public.uploads
+    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
+Migracja 005: Terminy i przypomnienia
+-- 005_deadlines.sql
+
+CREATE TYPE deadline_status AS ENUM (
+    'active',
+    'reminded_d5',
+    'reminded_d3',
+    'reminded_d1',
+    'reminded_d0',
+    'expired',
+    'completed',
+    'cancelled'
+);
+
+CREATE TYPE reminder_channel AS ENUM ('email', 'sms', 'push');
+
+CREATE TABLE public.deadlines (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    case_id UUID NOT NULL REFERENCES public.cases(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    
+    -- Termin
+    title TEXT NOT NULL,                 -- np. "Termin na sprzeciw od mandatu"
+    description TEXT,
+    deadline_date DATE NOT NULL,
+    
+    -- Reguły przypomnień (w dniach przed terminem)
+    remind_days INTEGER[] DEFAULT '{5,3,1,0}',
+    
+    -- Status
+    status deadline_status DEFAULT 'active',
+    
+    -- Źródło
+    source TEXT,                         -- 'auto' (z reguł) lub 'manual' (użytkownik)
+    legal_basis TEXT,                    -- np. "art. 101 § 1 KPW — 7 dni"
+    
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE public.reminders_log (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    deadline_id UUID NOT NULL REFERENCES public.deadlines(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    
+    channel reminder_channel NOT NULL,
+    days_before INTEGER NOT NULL,        -- 5, 3, 1, 0
+    sent_at TIMESTAMPTZ DEFAULT now(),
+    status TEXT DEFAULT 'sent' CHECK (status IN ('sent', 'delivered', 'failed', 'bounced')),
+    error TEXT
+);
+
+CREATE INDEX idx_deadlines_user ON public.deadlines(user_id);
+CREATE INDEX idx_deadlines_case ON public.deadlines(case_id);
+CREATE INDEX idx_deadlines_date ON public.deadlines(deadline_date) WHERE status = 'active';
+CREATE INDEX idx_deadlines_active ON public.deadlines(status, deadline_date) WHERE status = 'active';
+
+CREATE TRIGGER deadlines_updated_at
+    BEFORE UPDATE ON public.deadlines
+    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
+Migracja 006: Płatności
+-- 006_payments.sql
+
+CREATE TYPE payment_type AS ENUM (
+    'one_time',          -- Jednorazowe pismo
+    'package',           -- Pakiet (np. 3 pisma)
+    'subscription',      -- Subskrypcja miesięczna
+    'addon'              -- Dodatek (OCR, konsultacja)
+);
+
+CREATE TYPE payment_status_enum AS ENUM (
+    'pending',
+    'processing',
+    'succeeded',
+    'failed',
+    'refunded',
+    'disputed'
+);
+
+CREATE TABLE public.payments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    case_id UUID REFERENCES public.cases(id) ON DELETE SET NULL,
+    
+    -- Stripe
+    stripe_payment_intent_id TEXT UNIQUE,
+    stripe_checkout_session_id TEXT,
+    stripe_invoice_id TEXT,
+    stripe_subscription_id TEXT,
+    
+    -- Kwoty
+    amount INTEGER NOT NULL,             -- w groszach
+    currency TEXT DEFAULT 'pln',
+    
+    -- Typ i status
+    payment_type payment_type NOT NULL,
+    status payment_status_enum DEFAULT 'pending',
+    
+    -- Produkt
+    product_name TEXT NOT NULL,          -- np. "Odwołanie od mandatu"
+    product_code TEXT NOT NULL,          -- np. "mandat_sprzeciw_predkosc"
+    
+    -- Faktura
+    invoice_id TEXT,                     -- ID z Fakturownia
+    invoice_url TEXT,
+    
+    -- Kody promocyjne
+    promo_code TEXT,
+    discount_percent INTEGER DEFAULT 0,
+    original_amount INTEGER,             -- Kwota przed rabatem
+    
+    -- Meta
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX idx_payments_user ON public.payments(user_id);
+CREATE INDEX idx_payments_case ON public.payments(case_id);
+CREATE INDEX idx_payments_status ON public.payments(status);
+CREATE INDEX idx_payments_stripe ON public.payments(stripe_payment_intent_id);
+
+CREATE TRIGGER payments_updated_at
+    BEFORE UPDATE ON public.payments
+    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
+-- Tabela kodów promocyjnych
+CREATE TABLE public.promo_codes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code TEXT UNIQUE NOT NULL,
+    discount_percent INTEGER NOT NULL CHECK (discount_percent > 0 AND discount_percent <= 100),
+    max_uses INTEGER,                    -- NULL = unlimited
+    current_uses INTEGER DEFAULT 0,
+    valid_from TIMESTAMPTZ DEFAULT now(),
+    valid_until TIMESTAMPTZ,
+    applicable_products TEXT[],          -- NULL = all products
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+Migracja 007: Zdarzenia (Event sourcing)
+-- 007_events.sql
+
+CREATE TYPE event_type AS ENUM (
+    -- Case lifecycle
+    'case_created',
+    'case_form_completed',
+    'case_scoring_completed',
+    'case_generation_started',
+    'case_generation_completed',
+    'case_generation_failed',
+    'case_edited',
+    'case_payment_completed',
+    'case_pdf_downloaded',
+    'case_sent',
+    'case_resolved',
+    'case_archived',
+    
+    -- Document
+    'document_created',
+    'document_edited',
+    'document_version_created',
+    'document_pdf_rendered',
+    
+    -- Upload/OCR
+    'upload_created',
+    'ocr_started',
+    'ocr_completed',
+    'ocr_failed',
+    
+    -- Payment
+    'payment_initiated',
+    'payment_succeeded',
+    'payment_failed',
+    'payment_refunded',
+    
+    -- Deadline
+    'deadline_created',
+    'deadline_reminder_sent',
+    'deadline_expired',
+    'deadline_completed',
+    
+    -- User
+    'user_registered',
+    'user_onboarding_completed',
+    'user_subscription_started',
+    'user_subscription_cancelled'
+);
+
+CREATE TABLE public.events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    case_id UUID REFERENCES public.cases(id) ON DELETE CASCADE,
+    
+    event_type event_type NOT NULL,
+    data JSONB DEFAULT '{}',             -- Dodatkowe dane per event
+    
+    -- Audyt
+    ip_address INET,
+    user_agent TEXT,
+    
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Partycjonowanie po dacie (dla wydajności przy dużym wolumenie)
+CREATE INDEX idx_events_user ON public.events(user_id);
+CREATE INDEX idx_events_case ON public.events(case_id);
+CREATE INDEX idx_events_type ON public.events(event_type);
+CREATE INDEX idx_events_created ON public.events(created_at DESC);
+
+Migracja 008: Szablony i konfiguracja
+-- 008_templates.sql
+
+-- Metadane typów spraw (konfiguracja admina)
+CREATE TABLE public.case_type_config (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    case_type case_type UNIQUE NOT NULL,
+    category case_category NOT NULL,
+    
+    -- Wyświetlanie
+    display_name TEXT NOT NULL,          -- "Sprzeciw od mandatu za prędkość"
+    short_name TEXT NOT NULL,            -- "Mandat — prędkość"
+    description TEXT,
+    icon TEXT,                           -- Lucide icon name
+    
+    -- Cennik
+    price_pln INTEGER NOT NULL,          -- w groszach (7900 = 79 zł)
+    price_package_pln INTEGER,           -- Cena w pakiecie (jeśli dotyczy)
+    
+    -- Formularz
+    form_schema JSONB NOT NULL,          -- JSON Schema pól formularza
+    
+    -- Terminy
+    default_deadline_days INTEGER,       -- np. 7 dla mandatu, 14 dla EPU
+    deadline_legal_basis TEXT,           -- "art. 101 § 1 KPW"
+    remind_days INTEGER[] DEFAULT '{5,3,1,0}',
+    
+    -- AI
+    prompt_file TEXT NOT NULL,           -- Ścieżka do pliku promptu .md
+    ai_model TEXT DEFAULT 'claude-sonnet-4-6',
+    
+    -- Adresat pisma
+    default_addressee_type TEXT,         -- 'sad', 'komendant', 'zdm', 'ubezpieczyciel' etc.
+    
+    -- SEO
+    seo_title TEXT,
+    seo_description TEXT,
+    seo_keywords TEXT[],
+    slug TEXT UNIQUE NOT NULL,           -- URL slug: 'sprzeciw-mandat-predkosc'
+    
+    -- Meta
+    is_active BOOLEAN DEFAULT true,
+    sort_order INTEGER DEFAULT 0,
+    popularity INTEGER DEFAULT 0,        -- Liczba użyć (auto-aktualizowana)
+    success_rate NUMERIC(5,2),           -- % skuteczności (z feedbacku)
+    
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Konfiguracja kategorii
+CREATE TABLE public.category_config (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    category case_category UNIQUE NOT NULL,
+    display_name TEXT NOT NULL,
+    description TEXT,
+    icon TEXT,
+    color TEXT,                          -- Tailwind color class
+    sort_order INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT true
+);
+
+-- Seedy
+INSERT INTO public.category_config (category, display_name, description, icon, color, sort_order) VALUES
+    ('mandaty', 'Mandaty karne', 'Odwołania od mandatów Policji, Straży Miejskiej, ITD i fotoradarów', 'ShieldAlert', 'red', 1),
+    ('parking', 'Parking i komunikacja', 'Reklamacje parkingowe i odwołania od opłat ZTM/MPK', 'Car', 'blue', 2),
+    ('windykacja', 'Windykacja i EPU', 'Odpowiedzi na wezwania, sprzeciwy od nakazów zapłaty, KRD/BIK', 'FileWarning', 'amber', 3),
+    ('ubezpieczenia', 'Ubezpieczenia OC/AC', 'Odwołania od decyzji ubezpieczycieli, skargi do Rzecznika', 'Shield', 'green', 4),
+    ('etoll', 'e-TOLL / Autostrady', 'Odwołania od kar e-TOLL, reklamacje podwójnych naliczeń', 'Route', 'purple', 5),
+    ('kontrole', 'Kontrole i punkty karne', 'Sprzeciwy od zatrzymania prawa jazdy, korekta punktów', 'ScanSearch', 'orange', 6),
+    ('techniczne', 'Pisma techniczne', 'Pełnomocnictwa, wnioski RODO, listy załączników', 'FileText', 'gray', 7);
+
+CREATE TRIGGER case_type_config_updated_at
+    BEFORE UPDATE ON public.case_type_config
+    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
+Migracja 009: Admin i analityka
+-- 009_admin.sql
+
+-- Logi admina
+CREATE TABLE public.admin_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    admin_id UUID NOT NULL REFERENCES public.profiles(id),
+    action TEXT NOT NULL,                -- 'update_template', 'change_price', 'ban_user' etc.
+    target_type TEXT,                    -- 'case_type_config', 'profile', 'promo_code'
+    target_id UUID,
+    old_data JSONB,
+    new_data JSONB,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Agregaty dzienne (materializowany widok lub tabela CRON-aktualizowana)
+CREATE TABLE public.daily_stats (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    date DATE NOT NULL UNIQUE,
+    
+    -- Użytkownicy
+    new_users INTEGER DEFAULT 0,
+    active_users INTEGER DEFAULT 0,
+    
+    -- Sprawy
+    cases_created INTEGER DEFAULT 0,
+    cases_paid INTEGER DEFAULT 0,
+    cases_by_category JSONB DEFAULT '{}',    -- {"mandaty": 45, "parking": 12, ...}
+    cases_by_type JSONB DEFAULT '{}',
+    
+    -- Przychody
+    revenue_total INTEGER DEFAULT 0,         -- w groszach
+    revenue_by_product JSONB DEFAULT '{}',
+    average_order_value INTEGER DEFAULT 0,
+    
+    -- Scoring
+    scorings_completed INTEGER DEFAULT 0,
+    scoring_to_purchase_rate NUMERIC(5,2),
+    
+    -- OCR
+    ocr_processed INTEGER DEFAULT 0,
+    ocr_success_rate NUMERIC(5,2),
+    
+    -- AI
+    ai_tokens_total INTEGER DEFAULT 0,
+    ai_cost_total NUMERIC(10,4),
+    
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Feedback od użytkowników
+CREATE TABLE public.feedback (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES public.profiles(id),
+    case_id UUID REFERENCES public.cases(id),
+    
+    rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+    outcome TEXT CHECK (outcome IN ('success', 'partial', 'failure', 'pending', 'unknown')),
+    comment TEXT,
+    
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+Migracja 010: Row Level Security (RLS)
+-- 010_rls_policies.sql
+
+-- Włączenie RLS na wszystkich tabelach
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.cases ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.documents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.uploads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.deadlines ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.feedback ENABLE ROW LEVEL SECURITY;
+
+-- Profiles: user widzi i edytuje tylko swój profil
+CREATE POLICY "Users view own profile" ON public.profiles
+    FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Users update own profile" ON public.profiles
+    FOR UPDATE USING (auth.uid() = id);
+
+-- Cases: user widzi i zarządza tylko swoimi sprawami
+CREATE POLICY "Users view own cases" ON public.cases
+    FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users create own cases" ON public.cases
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users update own cases" ON public.cases
+    FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users delete own cases" ON public.cases
+    FOR DELETE USING (auth.uid() = user_id AND status = 'draft');
+
+-- Documents: user widzi i zarządza tylko swoimi dokumentami
+CREATE POLICY "Users view own documents" ON public.documents
+    FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users create own documents" ON public.documents
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users update own documents" ON public.documents
+    FOR UPDATE USING (auth.uid() = user_id);
+
+-- Uploads: jak documents
+CREATE POLICY "Users view own uploads" ON public.uploads
+    FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users create own uploads" ON public.uploads
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Deadlines
+CREATE POLICY "Users view own deadlines" ON public.deadlines
+    FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users manage own deadlines" ON public.deadlines
+    FOR ALL USING (auth.uid() = user_id);
+
+-- Payments
+CREATE POLICY "Users view own payments" ON public.payments
+    FOR SELECT USING (auth.uid() = user_id);
+
+-- Events
+CREATE POLICY "Users view own events" ON public.events
+    FOR SELECT USING (auth.uid() = user_id);
+
+-- Feedback
+CREATE POLICY "Users manage own feedback" ON public.feedback
+    FOR ALL USING (auth.uid() = user_id);
+
+-- Admin: pełny dostęp (przez service_role key w API routes, RLS omijany)
+-- Admin dashboard używa supabase.admin client z SUPABASE_SERVICE_ROLE_KEY
+
+Migracja 011: Funkcje i triggery
+-- 011_functions_triggers.sql
+
+-- Funkcja: automatyczne ustawianie deadline'u po wypełnieniu formularza
+CREATE OR REPLACE FUNCTION public.set_case_deadline()
+RETURNS TRIGGER AS $$
+DECLARE
+    config_row RECORD;
+BEGIN
+    -- Pobierz konfigurację dla danego case_type
+    SELECT default_deadline_days, deadline_legal_basis 
+    INTO config_row
+    FROM public.case_type_config 
+    WHERE case_type = NEW.case_type;
+    
+    -- Ustaw deadline jeśli zmienił się status na 'form_completed' i jest konfiguracja
+    IF NEW.status = 'form_completed' AND OLD.status = 'draft' AND config_row.default_deadline_days IS NOT NULL THEN
+        -- Sprawdź czy użytkownik podał datę doręczenia w form_data
+        IF NEW.form_data->>'data_doreczenia' IS NOT NULL THEN
+            NEW.deadline_date := (NEW.form_data->>'data_doreczenia')::DATE + config_row.default_deadline_days;
+        ELSE
+            NEW.deadline_date := CURRENT_DATE + config_row.default_deadline_days;
+        END IF;
+        NEW.deadline_source := config_row.deadline_legal_basis;
+        
+        -- Stwórz wpis w deadlines
+        INSERT INTO public.deadlines (case_id, user_id, title, deadline_date, legal_basis, source)
+        VALUES (
+            NEW.id,
+            NEW.user_id,
+            'Termin na złożenie: ' || (SELECT display_name FROM public.case_type_config WHERE case_type = NEW.case_type),
+            NEW.deadline_date,
+            config_row.deadline_legal_basis,
+            'auto'
+        );
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER cases_set_deadline
+    BEFORE UPDATE ON public.cases
+    FOR EACH ROW EXECUTE FUNCTION public.set_case_deadline();
+
+-- Funkcja: aktualizacja popularity po każdym zakupie
+CREATE OR REPLACE FUNCTION public.increment_popularity()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.payment_status = 'paid' AND OLD.payment_status != 'paid' THEN
+        UPDATE public.case_type_config
+        SET popularity = popularity + 1
+        WHERE case_type = NEW.case_type;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER cases_increment_popularity
+    AFTER UPDATE ON public.cases
+    FOR EACH ROW EXECUTE FUNCTION public.increment_popularity();
+
+-- Funkcja: reset monthly document count (wywoływana CRON-em 1. dnia miesiąca)
+CREATE OR REPLACE FUNCTION public.reset_monthly_document_counts()
+RETURNS void AS $$
+BEGIN
+    UPDATE public.profiles SET documents_this_month = 0;
+END;
+$$ LANGUAGE plpgsql;
+
+3.2 Supabase Storage Buckets
+Buckety:
+1. uploads         — Pliki wgrane przez użytkowników (mandat, wezwanie, nakaz)
+                      Polityka: user widzi tylko swoje, max 10MB, PDF/JPG/PNG
+2. documents       — Wygenerowane PDF-y
+                      Polityka: user widzi tylko swoje, signed URLs (TTL 1h)
+3. avatars         — Zdjęcia profilowe (opcjonalne)
+4. public          — Publiczne assety (logo, ikony, OG images)
+
+4. BACKEND — API ROUTES I LOGIKA BIZNESOWA
+4.1 Middleware (middleware.ts)
+// middleware.ts
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+
+export async function middleware(req: NextRequest) {
+    const res = NextResponse.next()
+    const supabase = createMiddlewareClient({ req, res })
+    const { data: { session } } = await supabase.auth.getSession()
+
+    // Ścieżki chronione — wymagają logowania
+    const protectedPaths = ['/dashboard', '/sprawy', '/dokumenty', '/terminy', '/profil', '/ustawienia']
+    const isProtected = protectedPaths.some(path => req.nextUrl.pathname.startsWith(path))
+
+    // Admin — wymagają roli admin
+    const isAdmin = req.nextUrl.pathname.startsWith('/admin')
+
+    if (isProtected && !session) {
+        const loginUrl = new URL('/login', req.url)
+        loginUrl.searchParams.set('redirect', req.nextUrl.pathname)
+        return NextResponse.redirect(loginUrl)
+    }
+
+    if (isAdmin && session) {
+        // Sprawdź rolę (w production: dodatkowa weryfikacja server-side)
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single()
+        
+        if (profile?.role !== 'admin') {
+            return NextResponse.redirect(new URL('/dashboard', req.url))
+        }
+    }
+
+    // Auth pages — jeśli zalogowany, redirect do dashboard
+    const authPaths = ['/login', '/rejestracja']
+    if (authPaths.some(path => req.nextUrl.pathname.startsWith(path)) && session) {
+        return NextResponse.redirect(new URL('/dashboard', req.url))
+    }
+
+    return res
+}
+
+export const config = {
+    matcher: ['/((?!_next/static|_next/image|favicon.ico|images|icons|api/billing/webhook).*)']
+}
+
+4.2 Claude API Wrapper (lib/ai/claude.ts)
+// lib/ai/claude.ts
+import Anthropic from '@anthropic-ai/sdk'
+
+const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+})
+
+export interface GenerateDocumentParams {
+    systemPrompt: string
+    userData: Record<string, any>
+    ocrData?: Record<string, any>
+    model?: 'claude-sonnet-4-6' | 'claude-haiku-4-5' | 'claude-opus-4-6'
+    maxTokens?: number
+}
+
+export interface GenerateDocumentResult {
+    content: string           // Markdown
+    tokensInput: number
+    tokensOutput: number
+    model: string
+    costUsd: number
+}
+
+// Cennik per mln tokenów (aktualizować per zmiana cennika Anthropic)
+const PRICING: Record<string, { input: number; output: number }> = {
+    'claude-sonnet-4-6': { input: 3.00, output: 15.00 },
+    'claude-haiku-4-5': { input: 0.25, output: 1.25 },
+    'claude-opus-4-6': { input: 15.00, output: 75.00 },
+}
+
+export async function generateDocument(params: GenerateDocumentParams): Promise<GenerateDocumentResult> {
+    const model = params.model || 'claude-sonnet-4-6'
+    const maxTokens = params.maxTokens || 4096
+
+    const userMessage = `
+DANE SPRAWY:
+${JSON.stringify(params.userData, null, 2)}
+
+${params.ocrData ? `DANE Z OCR:\n${JSON.stringify(params.ocrData, null, 2)}` : ''}
+
+Wygeneruj kompletne pismo na podstawie powyższych danych i instrukcji systemowej.
+`
+
+    const response = await anthropic.messages.create({
+        model,
+        max_tokens: maxTokens,
+        system: params.systemPrompt,
+        messages: [{ role: 'user', content: userMessage }],
+    })
+
+    const textContent = response.content.find(c => c.type === 'text')
+    const content = textContent?.text || ''
+
+    const tokensInput = response.usage.input_tokens
+    const tokensOutput = response.usage.output_tokens
+    const pricing = PRICING[model]
+    const costUsd = (tokensInput * pricing.input + tokensOutput * pricing.output) / 1_000_000
+
+    return {
+        content,
+        tokensInput,
+        tokensOutput,
+        model,
+        costUsd,
+    }
+}
+
+export async function scoringAnalysis(description: string, caseType: string): Promise<{
+    score: number
+    reasoning: string
+    tokensUsed: number
+}> {
+    const response = await anthropic.messages.create({
+        model: 'claude-haiku-4-5',
+        max_tokens: 500,
+        system: `Jesteś ekspertem od prawa wykroczeń i administracyjnego w Polsce. Na podstawie opisu sytuacji oceń szanse na skuteczne odwołanie/reklamację w skali 0-100%. Odpowiedz TYLKO w formacie JSON: {"score": X, "reasoning": "2-3 zdania uzasadnienia po polsku"}`,
+        messages: [{ role: 'user', content: `Typ sprawy: ${caseType}\nOpis: ${description}` }],
+    })
+
+    const text = response.content.find(c => c.type === 'text')?.text || ''
+    const parsed = JSON.parse(text)
+
+    return {
+        score: parsed.score,
+        reasoning: parsed.reasoning,
+        tokensUsed: response.usage.input_tokens + response.usage.output_tokens,
+    }
+}
+
+export async function validateDocument(markdown: string, caseType: string): Promise<{
+    isValid: boolean
+    issues: string[]
+    suggestions: string[]
+}> {
+    const response = await anthropic.messages.create({
+        model: 'claude-haiku-4-5',
+        max_tokens: 800,
+        system: `Jesteś audytorem prawnym. Sprawdź pismo procesowe pod kątem kompletności formalnej. Czy zawiera wszystkie wymagane elementy (nagłówek, strony, żądanie, uzasadnienie, podpis, załączniki)? Odpowiedz JSON: {"isValid": true/false, "issues": ["..."], "suggestions": ["..."]}`,
+        messages: [{ role: 'user', content: `Typ pisma: ${caseType}\n\nTreść:\n${markdown}` }],
+    })
+
+    const text = response.content.find(c => c.type === 'text')?.text || ''
+    return JSON.parse(text)
+}
+
+4.3 Główne API Routes
+POST /api/ai/generate-document — Generowanie pisma
+// app/api/ai/generate-document/route.ts
+import { NextResponse } from 'next/server'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+import { generateDocument, validateDocument } from '@/lib/ai/claude'
+import { loadPrompt } from '@/lib/ai/prompts'
+import { z } from 'zod'
+
+const RequestSchema = z.object({
+    caseId: z.string().uuid(),
+})
+
+export async function POST(req: Request) {
+    try {
+        const supabase = createRouteHandlerClient({ cookies })
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+        const body = await req.json()
+        const { caseId } = RequestSchema.parse(body)
+
+        // Pobierz sprawę
+        const { data: caseData, error: caseError } = await supabase
+            .from('cases')
+            .select('*, uploads(*)')
+            .eq('id', caseId)
+            .eq('user_id', session.user.id)
+            .single()
+
+        if (caseError || !caseData) {
+            return NextResponse.json({ error: 'Case not found' }, { status: 404 })
+        }
+
+        // Pobierz konfigurację typu sprawy
+        const { data: config } = await supabase
+            .from('case_type_config')
+            .select('*')
+            .eq('case_type', caseData.case_type)
+            .single()
+
+        if (!config) {
+            return NextResponse.json({ error: 'Case type config not found' }, { status: 500 })
+        }
+
+        // Załaduj prompt z pliku .md
+        const systemPrompt = await loadPrompt(config.prompt_file)
+
+        // Zbierz dane OCR (jeśli są)
+        const ocrData = caseData.uploads?.[0]?.ocr_parsed_data || undefined
+
+        // Oznacz status
+        await supabase
+            .from('cases')
+            .update({ status: 'generating' })
+            .eq('id', caseId)
+
+        // Generuj pismo
+        const result = await generateDocument({
+            systemPrompt,
+            userData: caseData.form_data,
+            ocrData,
+            model: config.ai_model as any,
+        })
+
+        // Walidacja formalna (drugi, tani prompt)
+        const validation = await validateDocument(result.content, caseData.case_type)
+
+        // Zapisz dokument
+        const { data: doc } = await supabase
+            .from('documents')
+            .insert({
+                case_id: caseId,
+                user_id: session.user.id,
+                doc_type: 'draft_markdown',
+                title: config.display_name,
+                content_markdown: result.content,
+                ai_model_used: result.model,
+                ai_tokens_input: result.tokensInput,
+                ai_tokens_output: result.tokensOutput,
+                ai_cost_usd: result.costUsd,
+            })
+            .select()
+            .single()
+
+        // Generuj checklistę załączników
+        // (osobny, krótki prompt)
+        const checklistPrompt = `Na podstawie typu pisma "${config.display_name}" i danych formularza, wygeneruj checklistę załączników do dołączenia. Format: lista Markdown (- [ ] pozycja). Tylko najważniejsze, realne załączniki.`
+        
+        const checklistResult = await generateDocument({
+            systemPrompt: checklistPrompt,
+            userData: caseData.form_data,
+            model: 'claude-haiku-4-5',
+            maxTokens: 500,
+        })
+
+        await supabase.from('documents').insert({
+            case_id: caseId,
+            user_id: session.user.id,
+            doc_type: 'checklist',
+            title: 'Checklista załączników',
+            content_markdown: checklistResult.content,
+        })
+
+        // Aktualizuj status sprawy
+        await supabase
+            .from('cases')
+            .update({ status: 'preview' })
+            .eq('id', caseId)
+
+        // Zapisz event
+        await supabase.from('events').insert({
+            user_id: session.user.id,
+            case_id: caseId,
+            event_type: 'case_generation_completed',
+            data: {
+                model: result.model,
+                tokens: result.tokensInput + result.tokensOutput,
+                cost_usd: result.costUsd,
+                validation: validation,
+            },
+        })
+
+        return NextResponse.json({
+            success: true,
+            document: doc,
+            validation,
+            checklist: checklistResult.content,
+        })
+    } catch (error: any) {
+        console.error('Generate document error:', error)
+        return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+}
+
+POST /api/ai/scoring — Scoring szans (darmowy)
+// app/api/ai/scoring/route.ts
+import { NextResponse } from 'next/server'
+import { scoringAnalysis } from '@/lib/ai/claude'
+import { z } from 'zod'
+
+const RequestSchema = z.object({
+    caseType: z.string(),
+    description: z.string().min(10).max(2000),
+    hasEvidence: z.boolean().optional(),
+    eventDate: z.string().optional(),
+})
+
+export async function POST(req: Request) {
+    try {
+        const body = await req.json()
+        const { caseType, description, hasEvidence, eventDate } = RequestSchema.parse(body)
+
+        const enrichedDescription = `${description}${hasEvidence ? ' (posiada dowody)' : ''}${eventDate ? ` Data zdarzenia: ${eventDate}` : ''}`
+
+        const result = await scoringAnalysis(enrichedDescription, caseType)
+
+        return NextResponse.json({
+            score: result.score,
+            reasoning: result.reasoning,
+        })
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+}
+
+POST /api/documents/[docId]/pdf — Renderowanie PDF
+// app/api/documents/[docId]/pdf/route.ts
+import { NextResponse } from 'next/server'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+import { renderMarkdownToPdf } from '@/lib/pdf/generator'
+
+export async function POST(
+    req: Request,
+    { params }: { params: { docId: string } }
+) {
+    const supabase = createRouteHandlerClient({ cookies })
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    // Pobierz dokument
+    const { data: doc } = await supabase
+        .from('documents')
+        .select('*, cases(*)')
+        .eq('id', params.docId)
+        .eq('user_id', session.user.id)
+        .single()
+
+    if (!doc) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+    // Sprawdź czy opłacone
+    if (doc.cases.payment_status !== 'paid' && doc.cases.payment_status !== 'free') {
+        return NextResponse.json({ error: 'Payment required' }, { status: 402 })
+    }
+
+    // Renderuj PDF
+    const pdfBuffer = await renderMarkdownToPdf(doc.content_markdown, {
+        title: doc.title,
+        userName: session.user.user_metadata?.full_name,
+        caseId: doc.case_id,
+        date: new Date().toLocaleDateString('pl-PL'),
+    })
+
+    // Zapisz w Storage
+    const fileName = `${doc.case_id}/${doc.id}_v${doc.version}.pdf`
+    const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(fileName, pdfBuffer, { contentType: 'application/pdf', upsert: true })
+
+    if (uploadError) throw uploadError
+
+    // Zapisz dokument PDF w bazie
+    await supabase.from('documents').insert({
+        case_id: doc.case_id,
+        user_id: session.user.id,
+        doc_type: 'final_pdf',
+        title: doc.title + ' (PDF)',
+        storage_path: fileName,
+        file_name: `${doc.title.replace(/\s+/g, '_')}.pdf`,
+        file_size: pdfBuffer.length,
+        mime_type: 'application/pdf',
+        parent_document_id: doc.id,
+    })
+
+    // Signed URL do pobrania
+    const { data: signedUrl } = await supabase.storage
+        .from('documents')
+        .createSignedUrl(fileName, 3600) // 1h
+
+    return NextResponse.json({
+        success: true,
+        downloadUrl: signedUrl?.signedUrl,
+    })
+}
+
+POST /api/billing/checkout — Tworzenie sesji płatności Stripe
+// app/api/billing/checkout/route.ts
+import { NextResponse } from 'next/server'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+import Stripe from 'stripe'
+import { PRICING } from '@/lib/constants/pricing'
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+
+export async function POST(req: Request) {
+    const supabase = createRouteHandlerClient({ cookies })
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { caseId, promoCode } = await req.json()
+
+    // Pobierz sprawę i cennik
+    const { data: caseData } = await supabase
+        .from('cases')
+        .select('*, case_type_config!inner(*)')
+        .eq('id', caseId)
+        .eq('user_id', session.user.id)
+        .single()
+
+    if (!caseData) return NextResponse.json({ error: 'Case not found' }, { status: 404 })
+
+    let amount = caseData.case_type_config.price_pln  // w groszach
+    let discountPercent = 0
+
+    // Sprawdź kod promocyjny
+    if (promoCode) {
+        const { data: promo } = await supabase
+            .from('promo_codes')
+            .select('*')
+            .eq('code', promoCode.toUpperCase())
+            .eq('is_active', true)
+            .single()
+
+        if (promo && (!promo.max_uses || promo.current_uses < promo.max_uses)) {
+            discountPercent = promo.discount_percent
+            amount = Math.round(amount * (1 - discountPercent / 100))
+
+            // Inkrementuj użycia
+            await supabase
+                .from('promo_codes')
+                .update({ current_uses: promo.current_uses + 1 })
+                .eq('id', promo.id)
+        }
+    }
+
+    // Sprawdź subskrypcję (czy użytkownik ma limit)
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_plan, documents_this_month, documents_limit')
+        .eq('id', session.user.id)
+        .single()
+
+    if (profile && profile.documents_limit > 0 && profile.documents_this_month < profile.documents_limit) {
+        // Użytkownik ma aktywną subskrypcję z wolnymi dokumentami
+        await supabase.from('cases').update({ payment_status: 'paid', amount_paid: 0 }).eq('id', caseId)
+        await supabase.from('profiles').update({ documents_this_month: profile.documents_this_month + 1 }).eq('id', session.user.id)
+        
+        return NextResponse.json({ success: true, free: true })
+    }
+
+    // Utwórz sesję Stripe Checkout
+    const checkoutSession = await stripe.checkout.sessions.create({
+        payment_method_types: ['card', 'p24', 'blik'],
+        mode: 'payment',
+        customer_email: session.user.email,
+        line_items: [{
+            price_data: {
+                currency: 'pln',
+                product_data: {
+                    name: caseData.case_type_config.display_name,
+                    description: `Mandatomat.pl — ${caseData.case_type_config.short_name}`,
+                },
+                unit_amount: amount,
+            },
+            quantity: 1,
+        }],
+        metadata: {
+            case_id: caseId,
+            user_id: session.user.id,
+            case_type: caseData.case_type,
+            promo_code: promoCode || '',
+            discount_percent: String(discountPercent),
+        },
+        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/sprawy/${caseId}/pobranie?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/sprawy/${caseId}/platnosc`,
+    })
+
+    // Zapisz payment
+    await supabase.from('payments').insert({
+        user_id: session.user.id,
+        case_id: caseId,
+        stripe_checkout_session_id: checkoutSession.id,
+        amount: amount,
+        payment_type: 'one_time',
+        product_name: caseData.case_type_config.display_name,
+        product_code: caseData.case_type,
+        promo_code: promoCode,
+        discount_percent: discountPercent,
+        original_amount: caseData.case_type_config.price_pln,
+    })
+
+    return NextResponse.json({ checkoutUrl: checkoutSession.url })
+}
+
+POST /api/billing/webhook — Stripe Webhook
+// app/api/billing/webhook/route.ts
+import { NextResponse } from 'next/server'
+import Stripe from 'stripe'
+import { createClient } from '@supabase/supabase-js'
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!  // Service role — omija RLS
+)
+
+export async function POST(req: Request) {
+    const body = await req.text()
+    const signature = req.headers.get('stripe-signature')!
+
+    let event: Stripe.Event
+    try {
+        event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!)
+    } catch (err) {
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
+    }
+
+    switch (event.type) {
+        case 'checkout.session.completed': {
+            const session = event.data.object as Stripe.Checkout.Session
+            const { case_id, user_id } = session.metadata!
+
+            // Aktualizuj płatność
+            await supabase
+                .from('payments')
+                .update({
+                    status: 'succeeded',
+                    stripe_payment_intent_id: session.payment_intent as string,
+                })
+                .eq('stripe_checkout_session_id', session.id)
+
+            // Aktualizuj sprawę
+            await supabase
+                .from('cases')
+                .update({
+                    payment_status: 'paid',
+                    amount_paid: session.amount_total,
+                    stripe_payment_intent_id: session.payment_intent as string,
+                    status: 'paid',
+                })
+                .eq('id', case_id)
+
+            // Event
+            await supabase.from('events').insert({
+                user_id,
+                case_id,
+                event_type: 'payment_succeeded',
+                data: { amount: session.amount_total, stripe_session: session.id },
+            })
+
+            // Generuj fakturę (Fakturownia)
+            // TODO: wywołanie Fakturownia API
+
+            break
+        }
+
+        case 'checkout.session.expired': {
+            const session = event.data.object as Stripe.Checkout.Session
+            await supabase
+                .from('payments')
+                .update({ status: 'failed' })
+                .eq('stripe_checkout_session_id', session.id)
+            break
+        }
+
+        // Obsługa subskrypcji
+        case 'customer.subscription.created':
+        case 'customer.subscription.updated':
+        case 'customer.subscription.deleted':
+            // TODO: obsługa zmian subskrypcji
+            break
+    }
+
+    return NextResponse.json({ received: true })
+}
+
+GET /api/deadlines/check — CRON (co godzinę)
+// app/api/deadlines/check/route.ts
+import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import { sendDeadlineReminder } from '@/lib/notifications/email'
+import { sendSmsReminder } from '@/lib/notifications/sms'
+
+const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
+export async function GET(req: Request) {
+    // Zabezpieczenie CRON
+    const authHeader = req.headers.get('authorization')
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const today = new Date().toISOString().split('T')[0]
+
+    // Pobierz aktywne deadlines
+    const { data: deadlines } = await supabase
+        .from('deadlines')
+        .select('*, profiles!inner(*), cases!inner(*)')
+        .eq('status', 'active')
+        .gte('deadline_date', today)
+
+    if (!deadlines) return NextResponse.json({ processed: 0 })
+
+    let sent = 0
+
+    for (const deadline of deadlines) {
+        const deadlineDate = new Date(deadline.deadline_date)
+        const daysUntil = Math.ceil((deadlineDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+
+        // Sprawdź czy ten dzień jest w remind_days i czy jeszcze nie wysłano
+        if (!deadline.remind_days.includes(daysUntil)) continue
+
+        // Sprawdź czy już wysłano na ten dzień
+        const { data: existing } = await supabase
+            .from('reminders_log')
+            .select('id')
+            .eq('deadline_id', deadline.id)
+            .eq('days_before', daysUntil)
+            .limit(1)
+
+        if (existing && existing.length > 0) continue
+
+        // Wyślij e-mail
+        if (deadline.profiles.notification_email) {
+            await sendDeadlineReminder({
+                to: deadline.profiles.email,
+                userName: deadline.profiles.full_name || 'Użytkowniku',
+                deadlineTitle: deadline.title,
+                deadlineDate: deadline.deadline_date,
+                daysLeft: daysUntil,
+                caseUrl: `${process.env.NEXT_PUBLIC_APP_URL}/sprawy/${deadline.case_id}`,
+            })
+
+            await supabase.from('reminders_log').insert({
+                deadline_id: deadline.id,
+                user_id: deadline.user_id,
+                channel: 'email',
+                days_before: daysUntil,
+            })
+            sent++
+        }
+
+        // Wyślij SMS (tylko dla płatnych planów)
+        if (deadline.profiles.notification_sms && deadline.profiles.subscription_plan !== 'free') {
+            await sendSmsReminder({
+                phone: deadline.profiles.phone,
+                message: `Mandatomat: ${deadline.title} — zostało ${daysUntil} dni (do ${deadline.deadline_date}). Sprawdź: mandatomat.pl/sprawy/${deadline.case_id}`,
+            })
+
+            await supabase.from('reminders_log').insert({
+                deadline_id: deadline.id,
+                user_id: deadline.user_id,
+                channel: 'sms',
+                days_before: daysUntil,
+            })
+            sent++
+        }
+
+        // Aktualizuj status deadline'u
+        if (daysUntil === 0) {
+            // Sprawdź za 24h czy expired
+        }
+    }
+
+    return NextResponse.json({ processed: deadlines.length, sent })
+}
+
+4.4 OCR Pipeline (lib/ocr/)
+// lib/ocr/tesseract.ts
+import Tesseract from 'tesseract.js'
+
+export async function extractTextFromImage(imageBuffer: Buffer): Promise<string> {
+    const worker = await Tesseract.createWorker('pol') // Polski OCR
+    const { data: { text, confidence } } = await worker.recognize(imageBuffer)
+    await worker.terminate()
+    return text
+}
+
+// lib/ocr/parser.ts
+import { generateDocument } from '@/lib/ai/claude'
+
+export async function parseOcrText(rawText: string): Promise<{
+    sygnatura?: string
+    data_dokumentu?: string
+    data_zdarzenia?: string
+    kwota?: number
+    organ?: string
+    typ_pisma?: string
+    strony?: { powod?: string; pozwany?: string }
+    termin_odpowiedzi?: string
+    numer_mandatu?: string
+    punkty_karne?: number
+    [key: string]: any
+}> {
+    const result = await generateDocument({
+        systemPrompt: `Jesteś parserem dokumentów prawnych. Wyciągnij strukturalne dane z tekstu OCR.
+Odpowiedz WYŁĄCZNIE w formacie JSON z następującymi polami (jeśli dostępne):
+- sygnatura (string)
+- data_dokumentu (string, format YYYY-MM-DD)
+- data_zdarzenia (string)
+- kwota (number, w PLN)
+- organ (string, np. "Komendant Miejski Policji w Warszawie")
+- typ_pisma (string, np. "mandat karny", "wezwanie do zapłaty", "nakaz zapłaty EPU")
+- strony (object: {powod, pozwany})
+- termin_odpowiedzi (string)
+- numer_mandatu (string)
+- punkty_karne (number)
+Jeśli pole nie jest dostępne w tekście, pomiń je. NIE wymyślaj danych.`,
+        userData: { raw_ocr_text: rawText },
+        model: 'claude-haiku-4-5',
+        maxTokens: 800,
+    })
+
+    return JSON.parse(result.content)
+}
+
+4.5 PDF Generator (lib/pdf/generator.ts)
+// lib/pdf/generator.ts
+import puppeteer from 'puppeteer'
+import { marked } from 'marked'
+
+interface PdfOptions {
+    title: string
+    userName?: string
+    caseId?: string
+    date: string
+}
+
+export async function renderMarkdownToPdf(
+    markdown: string,
+    options: PdfOptions
+): Promise<Buffer> {
+    const htmlContent = await marked(markdown)
+
+    const fullHtml = `
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            size: A4;
+            margin: 2.5cm 2cm 2cm 3cm;
+        }
+        body {
+            font-family: 'Times New Roman', serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            color: #1a1a1a;
+        }
+        h1 {
+            font-size: 14pt;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 24pt;
+        }
+        h2 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 18pt;
+            margin-bottom: 6pt;
+        }
+        p {
+            text-align: justify;
+            margin-bottom: 6pt;
+            text-indent: 1.25cm;
+        }
+        p:first-of-type {
+            text-indent: 0;
+        }
+        .header-right {
+            text-align: right;
+            margin-bottom: 24pt;
+        }
+        .signature-line {
+            margin-top: 48pt;
+            text-align: right;
+            border-top: 1px solid #333;
+            width: 200px;
+            float: right;
+            padding-top: 4pt;
+            font-size: 10pt;
+        }
+        ul, ol {
+            margin-left: 1cm;
+        }
+        li {
+            margin-bottom: 3pt;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            font-size: 8pt;
+            color: #999;
+            text-align: center;
+            border-top: 0.5pt solid #ddd;
+            padding-top: 4pt;
+        }
+    </style>
+</head>
+<body>
+    ${htmlContent}
+    <div class="signature-line">
+        (podpis)
+    </div>
+    <div class="footer">
+        Wygenerowano przez Mandatomat.pl — ${options.date}
+    </div>
+</body>
+</html>`
+
+    const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    })
+    const page = await browser.newPage()
+    await page.setContent(fullHtml, { waitUntil: 'networkidle0' })
+    const pdfBuffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: { top: '2.5cm', right: '2cm', bottom: '2cm', left: '3cm' },
+    })
+    await browser.close()
+
+    return Buffer.from(pdfBuffer)
+}
+
+5. FRONTEND — KOMPONENTY I STRONY
+5.1 Landing Page (marketing)
+Struktura strony głównej (app/(marketing)/page.tsx):
+1. HERO SECTION
+   - Nagłówek: "Mandat? Parking? Windykacja?"
+   - Podnagłówek: "Odwołaj się w 5 minut — bez prawnika."
+   - Dwa CTA: "Sprawdź swoje szanse (za darmo)" | "Stwórz pismo →"
+   - Animowany mockup telefonu z procesem generowania pisma
+   - Trust badges: "12M+ spraw rocznie" | "3 min" | "76% skuteczność" | "od 79 zł"
+
+2. JAK TO DZIAŁA (stepper)
+   - Krok 1: Wybierz kategorię
+   - Krok 2: Odpowiedz na pytania
+   - Krok 3: AI generuje pismo
+   - Krok 4: Pobierz PDF i wyślij
+   - Animacja: formularz → spinner → dokument PDF
+
+3. KATEGORIE SPRAW (grid 7 kart)
+   - Mandaty karne (ikona ShieldAlert, kolor red)
+   - Parking i komunikacja (Car, blue)
+   - Windykacja i EPU (FileWarning, amber)
+   - Ubezpieczenia OC/AC (Shield, green)
+   - e-TOLL (Route, purple)
+   - Kontrole (ScanSearch, orange)
+   - Pisma techniczne (FileText, gray)
+   - Każda karta: ikona + nazwa + "X+ typów pism" + "od Y zł"
+
+4. SOCIAL PROOF
+   - Liczniki: "12 345 wygenerowanych pism" | "76% skuteczność" | "4.8/5 ocena"
+   - Testimoniale (3 karty z cytatami)
+   - Loga mediów (jeśli są)
+
+5. SCORING DEMO (interaktywny, [DARMOWE])
+   - Mini-formularz: typ mandatu + opis + "Sprawdź szanse"
+   - Wynik: gauge 0-100% z animacją + CTA do zakupu
+
+6. CENNIK
+   - 3 kolumny: Jednorazowe | Kierowca (29 zł/mies.) | PRO (nieokreślone V2)
+   - Porównanie z prawnikiem: "Prawnik: 300-1500 zł → Mandatomat: od 79 zł. Oszczędność: 74-90%"
+
+7. FAQ (accordion)
+   - 8-10 pytań: Czy to legalne? Ile trwa? Jakie mam szanse? Co jeśli przegram? etc.
+
+8. CTA FOOTER
+   - "Nie czekaj. Termin biegnie." + duży przycisk "Stwórz odwołanie teraz"
+
+9. FOOTER
+   - Linki: Regulamin, Polityka prywatności, RODO, O nas, Blog, Kontakt
+   - NIP, dane firmy, informacja o inkubatorze
+
+5.2 Dynamiczny formularz — silnik (components/forms/dynamic-form.tsx)
+To jest serce aplikacji. Jeden komponent renderuje formularze dla WSZYSTKICH 34 typów spraw, na podstawie konfiguracji JSON (form_schema w case_type_config).
+// components/forms/dynamic-form.tsx
+'use client'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { FileUpload } from './file-upload'
+import { Stepper } from '@/components/shared/stepper'
+
+// Schema pola formularza (z bazy danych)
+interface FormField {
+    name: string
+    type: 'text' | 'number' | 'date' | 'email' | 'tel' | 'textarea' |
+          'select' | 'radio' | 'checkbox' | 'checklist' | 'file' | 'money'
+    label: string
+    placeholder?: string
+    required?: boolean
+    helpText?: string
+    options?: { value: string; label: string }[]   // Dla select, radio, checklist
+    validation?: {
+        min?: number
+        max?: number
+        minLength?: number
+        maxLength?: number
+        pattern?: string
+    }
+    conditionalOn?: {                              // Wyświetl pole warunkowo
+        field: string
+        value: string | boolean
+    }
+    step?: number                                  // Krok w wizardzie (1, 2, 3...)
+    section?: string                               // Sekcja wizualna
+    autoFillFromOcr?: string                       // Klucz z OCR parsed data
+}
+
+interface FormSchema {
+    steps: {
+        title: string
+        description?: string
+        fields: FormField[]
+    }[]
+}
+
+interface DynamicFormProps {
+    schema: FormSchema
+    ocrData?: Record<string, any>
+    onSubmit: (data: Record<string, any>) => void
+    isSubmitting?: boolean
+    initialData?: Record<string, any>
+}
+
+export function DynamicForm({ schema, ocrData, onSubmit, isSubmitting, initialData }: DynamicFormProps) {
+    const [currentStep, setCurrentStep] = useState(0)
+    const totalSteps = schema.steps.length
+
+    // Build Zod schema dynamically
+    const zodSchema = buildZodSchema(schema.steps[currentStep].fields)
+    
+    const form = useForm({
+        resolver: zodResolver(zodSchema),
+        defaultValues: buildDefaultValues(schema.steps[currentStep].fields, ocrData, initialData),
+    })
+
+    const currentFields = schema.steps[currentStep].fields
+
+    const handleNext = form.handleSubmit((data) => {
+        if (currentStep < totalSteps - 1) {
+            setCurrentStep(prev => prev + 1)
+        } else {
+            // Zbierz dane ze wszystkich kroków
+            onSubmit(data)
+        }
+    })
+
+    return (
+        <div className="max-w-2xl mx-auto">
+            <Stepper
+                steps={schema.steps.map(s => s.title)}
+                currentStep={currentStep}
+                className="mb-8"
+            />
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>{schema.steps[currentStep].title}</CardTitle>
+                    {schema.steps[currentStep].description && (
+                        <p className="text-muted-foreground text-sm">
+                            {schema.steps[currentStep].description}
+                        </p>
+                    )}
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleNext} className="space-y-6">
+                        {currentFields.map(field => (
+                            <FieldRenderer
+                                key={field.name}
+                                field={field}
+                                form={form}
+                                ocrData={ocrData}
+                            />
+                        ))}
+
+                        <div className="flex justify-between pt-4">
+                            {currentStep > 0 && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setCurrentStep(prev => prev - 1)}
+                                >
+                                    ← Wstecz
+                                </Button>
+                            )}
+                            <Button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="ml-auto"
+                            >
+                                {currentStep < totalSteps - 1 ? 'Dalej →' : 'Generuj pismo'}
+                            </Button>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
+        </div>
+    )
+}
+
+5.3 Podgląd i edytor Markdown (components/documents/)
+// components/documents/markdown-editor.tsx
+'use client'
+import { useState, useCallback } from 'react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
+
+interface MarkdownEditorProps {
+    content: string
+    onChange: (content: string) => void
+    validation?: { isValid: boolean; issues: string[]; suggestions: string[] }
+}
+
+export function MarkdownEditor({ content, onChange, validation }: MarkdownEditorProps) {
+    const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('preview')
+
+    const renderHtml = useCallback(() => {
+        const raw = marked(content) as string
+        return DOMPurify.sanitize(raw)
+    }, [content])
+
+    return (
+        <div className="border rounded-lg overflow-hidden">
+            {/* Validation banner */}
+            {validation && !validation.isValid && (
+                <div className="bg-amber-50 border-b border-amber-200 p-3">
+                    <p className="text-sm font-medium text-amber-800">
+                        Wykryto {validation.issues.length} uwag:
+                    </p>
+                    <ul className="text-sm text-amber-700 mt-1 list-disc list-inside">
+                        {validation.issues.map((issue, i) => (
+                            <li key={i}>{issue}</li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+                <div className="border-b bg-muted/30 px-4">
+                    <TabsList className="bg-transparent">
+                        <TabsTrigger value="preview">Podgląd</TabsTrigger>
+                        <TabsTrigger value="edit">Edycja</TabsTrigger>
+                    </TabsList>
+                </div>
+
+                <TabsContent value="preview" className="p-8">
+                    <div
+                        className="prose prose-sm max-w-none font-serif"
+                        dangerouslySetInnerHTML={{ __html: renderHtml() }}
+                    />
+                </TabsContent>
+
+                <TabsContent value="edit" className="p-4">
+                    <Textarea
+                        value={content}
+                        onChange={(e) => onChange(e.target.value)}
+                        className="min-h-[600px] font-mono text-sm"
+                        placeholder="Edytuj treść pisma..."
+                    />
+                </TabsContent>
+            </Tabs>
+        </div>
+    )
+}
+
+5.4 Scoring — komponent z gauge (components/scoring/)
+// components/scoring/scoring-gauge.tsx
+'use client'
+import { motion } from 'framer-motion'
+
+interface ScoringGaugeProps {
+    score: number  // 0-100
+    reasoning: string
+}
+
+export function ScoringGauge({ score, reasoning }: ScoringGaugeProps) {
+    const getColor = (s: number) => {
+        if (s >= 70) return { bg: 'bg-emerald-500', text: 'text-emerald-700', label: 'Wysokie szanse' }
+        if (s >= 40) return { bg: 'bg-amber-500', text: 'text-amber-700', label: 'Umiarkowane szanse' }
+        return { bg: 'bg-red-500', text: 'text-red-700', label: 'Niskie szanse' }
+    }
+
+    const colors = getColor(score)
+    const circumference = 2 * Math.PI * 60
+    const offset = circumference - (score / 100) * circumference
+
+    return (
+        <div className="flex flex-col items-center gap-6 p-8">
+            {/* Circular gauge */}
+            <div className="relative w-40 h-40">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 140 140">
+                    <circle cx="70" cy="70" r="60" fill="none" stroke="#e5e7eb" strokeWidth="12" />
+                    <motion.circle
+                        cx="70" cy="70" r="60" fill="none"
+                        stroke="currentColor"
+                        strokeWidth="12"
+                        strokeLinecap="round"
+                        strokeDasharray={circumference}
+                        initial={{ strokeDashoffset: circumference }}
+                        animate={{ strokeDashoffset: offset }}
+                        transition={{ duration: 1.5, ease: 'easeOut' }}
+                        className={colors.text}
+                    />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <motion.span
+                        className="text-4xl font-bold"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                    >
+                        {score}%
+                    </motion.span>
+                    <span className={`text-xs font-medium ${colors.text}`}>
+                        {colors.label}
+                    </span>
+                </div>
+            </div>
+
+            {/* Reasoning */}
+            <p className="text-center text-muted-foreground max-w-md">
+                {reasoning}
+            </p>
+
+            {/* CTA */}
+            {score >= 30 && (
+                <div className="text-center space-y-2">
+                    <p className="text-sm font-medium">
+                        Masz podstawy do odwołania!
+                    </p>
+                    <Button size="lg" className="bg-primary hover:bg-primary/90">
+                        Wygeneruj odwołanie — od 79 zł
+                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                        Prawnik za to samo: 300-1 500 zł
+                    </p>
+                </div>
+            )}
+        </div>
+    )
+}
+
+6. PANEL UŻYTKOWNIKA (DASHBOARD)
+6.1 Layout dashboardu
+/dashboard
+├── Górny pasek: logo + wyszukiwarka + powiadomienia (dzwonek z badge) + avatar
+├── Sidebar (desktop) / Bottom nav (mobile):
+│   ├── Dashboard (Home icon)
+│   ├── Nowa sprawa (Plus icon) — główny CTA
+│   ├── Moje sprawy (FolderOpen)
+│   ├── Dokumenty (FileText)
+│   ├── Terminy (Calendar)
+│   ├── ---separator---
+│   ├── Profil (User)
+│   └── Ustawienia (Settings)
+│
+├── Główny content area:
+│   ├── Powitanie: "Cześć, {{imię}}!" + data
+│   ├── Alert: najbliższy termin (jeśli D≤3, czerwony banner)
+│   │
+│   ├── Quick Stats (4 karty):
+│   │   ├── Aktywne sprawy: {{count}} (ikona Folder)
+│   │   ├── Dokumenty: {{count}} (ikona File)
+│   │   ├── Najbliższy termin: {{data}} (ikona Clock, kolor zależy od D)
+│   │   └── Oszczędność: {{suma}} zł (ikona PiggyBank, suma vs. koszty prawnika)
+│   │
+│   ├── Moje sprawy (lista/karty):
+│   │   ├── Karta sprawy:
+│   │   │   ├── Ikona kategorii + kolor
+│   │   │   ├── Tytuł (np. "Sprzeciw od mandatu za prędkość")
+│   │   │   ├── Status badge (draft/preview/paid/sent/waiting)
+│   │   │   ├── Termin (jeśli jest, z countdown)
+│   │   │   ├── Kwota mandatu/wezwania
+│   │   │   └── Ostatnia aktywność + strzałka →
+│   │   └── Pusta sprawa: "Brak spraw. Stwórz pierwszą! →"
+│   │
+│   ├── Nadchodzące terminy (widget z timeline):
+         D-0: 4 Czerwony, "DZIZ!"
+         D-1: � PomaraDczowy, "Jutro!"
+         Dd3: � {�Bty
+│   │   └── D>3: ⚪ Szary
+│   │
+│   └── Ostatnia aktywność (timeline):
+│       ├── "Wygenerowano pismo — Sprzeciw od mandatu" — 2h temu
+│       ├── "Płatność zakończona — 79 zł" — wczoraj
+│       └── "Nowa sprawa utworzona" — 3 dni temu
+
+6.2 Strona szczegółów sprawy (/sprawy/[caseId])
+/sprawy/[caseId]
+├── Breadcrumb: Dashboard > Moje sprawy > Sprzeciw od mandatu za prędkość
+│
+├── Header:
+│   ├── Tytuł + status badge
+│   ├── Data utworzenia
+│   ├── Akcje: [Edytuj] [Pobierz PDF] [Wyślij] [Archiwizuj]
+│   └── Termin (jeśli jest): countdown z kolorami
+│
+├── Tabs:
+│   ├── Dokumenty:
+│   │   ├── Pismo główne (Markdown podgląd/edycja)
+│   │   ├── Checklista załączników (checkboxy)
+│   │   ├── Instrukcja (gdzie wysłać, jak złożyć)
+│   │   └── Załączniki wgrane (pliki + OCR wyniki)
+│   │
+│   ├── Terminy:
+│   │   ├── Timeline terminów (aktywne/przeszłe)
+│   │   ├── Dodaj własny termin
+│   │   └── Konfiguracja przypomnień (email/SMS)
+│   │
+│   ├── Historia:
+│   │   └── Pełna lista eventów z datami (timeline pionowy)
+│   │
+│   └── Szczegóły:
+│       ├── Dane z formularza (read-only)
+│       ├── Dane z OCR (jeśli były)
+│       ├── Scoring (jeśli wykonany)
+│       └── Informacje o płatności
+
+7. PANEL ADMINISTRACYJNY
+7.1 Dostęp
+URL: /admin (chroniony middleware, role === ‘admin’)
+ Używa supabase z SUPABASE_SERVICE_ROLE_KEY (pomija RLS).
+7.2 Sekcje panelu admina
+/admin
+├── Dashboard:
+│   ├── KPI boxes: MRR | Nowi użytkownicy (dziś/tydzień/miesiąc) | Sprawy dziś | Konwersja | Churn
+│   ├── Wykres: MRR last 12 months (line chart)
+│   ├── Wykres: Sprawy per kategoria (pie chart)
+│   ├── Wykres: Przychód per produkt (bar chart)
+│   ├── Top 5 typów pism (tabela z popularity)
+│   └── Ostatnie płatności (live feed)
+│
+├── Użytkownicy (/admin/uzytkownicy):
+│   ├── Tabela: email | imię | data rejestracji | plan | sprawy | przychód | status
+│   ├── Filtrowanie: plan, data, aktywność
+│   ├── Szczegóły użytkownika: profil + sprawy + płatności + eventy
+│   └── Akcje: zmień plan, zablokuj, eksport, wyślij email
+│
+├── Sprawy (/admin/sprawy):
+│   ├── Tabela: ID | użytkownik | typ | status | kwota | data | termin
+│   ├── Filtrowanie: kategoria, status, data, payment
+│   ├── Szczegóły: podgląd pisma + formularz + OCR + eventy
+│   └── Akcje: zmień status, anuluj płatność, regeneruj pismo
+│
+├── Szablony i konfiguracja (/admin/szablony):
+│   ├── Lista case_type_config: edycja nazw, cen, opisów, schematów formularzy
+│   ├── Edytor form_schema (JSON editor z podglądem)
+│   ├── Edytor promptów (Markdown editor z live preview)
+│   ├── Zarządzanie kategoriami (sort order, active/inactive)
+│   └── Testowanie: "Wygeneruj pismo testowe" z danymi demo
+│
+├── Prompty AI (/admin/prompty):
+│   ├── Lista wszystkich promptów per case_type
+│   ├── Edytor Markdown z wersjonowaniem
+│   ├── Historia zmian (git-like diff)
+│   ├── A/B testing promptów (V2)
+│   └── Statystyki: avg tokens, cost, validation pass rate
+│
+├── Płatności (/admin/platnosci):
+│   ├── Tabela: ID | użytkownik | kwota | produkt | status | data | Stripe ID
+│   ├── Podsumowania: dzienny/tygodniowy/miesięczny przychód
+│   ├── Kody promocyjne: CRUD (tworzenie, edycja, dezaktywacja)
+│   └── Refundy: interfejs do zwrotów przez Stripe
+│
+├── Analityka (/admin/analityka):
+│   ├── Funnel: Strona → Scoring → Formularz → Generowanie → Płatność → Pobranie
+│   ├── Kohortowa retencja (30/60/90 dni)
+│   ├── SEO: top frazy, ruch organiczny (integracja Google Search Console API V2)
+│   ├── AI costs: dzienne/miesięczne koszty API, avg cost per document
+│   ├── OCR: success rate, avg confidence
+│   └── Feedback: rating distribution, outcome distribution
+│
+└── Ustawienia (/admin/ustawienia):
+    ├── Zmienne konfiguracyjne (cennik, limity, feature flags)
+    ├── Maintenance mode (włącz/wyłącz)
+    ├── Logi błędów (ostatnie 100 z Sentry)
+    └── Eksport danych (CSV: użytkownicy, sprawy, płatności)
+
+8. SYSTEM AI — PROMPTY I PIPELINE
+8.1 Architektura promptów
+Każdy typ pisma ma osobny plik .md w lib/ai/prompts/[kategoria]/[typ].md. Struktura każdego promptu:
+---
+case_type: mandat_sprzeciw_predkosc
+model: claude-sonnet-4-6
+max_tokens: 3500
+version: 1.0
+last_updated: 2025-09-01
+---
+
+SYSTEM PROMPT:
+
+Jesteś doświadczonym prawnikiem specjalizującym się w prawie wykroczeń 
+i prawie o ruchu drogowym w Polsce. Generujesz pisma procesowe 
+(sprzeciwy, odwołania, wnioski) w języku polskim.
+
+ZASADY:
+1. Styl: formalny, urzędowy, precyzyjny
+2. Każde twierdzenie popieraj przepisem (artykuł, paragraf, ustawa)
+3. Używaj aktualnych przepisów (Kodeks wykroczeń, KPW, ustawa Prawo o ruchu drogowym)
+4. NIE wymyślaj danych — używaj WYŁĄCZNIE danych z pola DANE SPRAWY
+5. Jeśli brakuje danych, wstaw placeholder [[UZUPEŁNIJ: opis]]
+6. Ton: {{ton}} (ugodowy/stanowczy — z danych formularza)
+7. Format wyjściowy: Markdown z sekcjami ##
+
+INSTRUKCJA:
+Wygeneruj kompletny SPRZECIW OD MANDATU ZA PRZEKROCZENIE PRĘDKOŚCI zawierający:
+
+## {{miejscowość}}, dnia {{data_dzisiejsza}}
+
+{{imie_nazwisko}}
+{{adres}}
+{{kod_pocztowy}} {{miasto}}
+
+## {{adresat — organ wystawiający}}
+{{adres_organu}}
+
+## SPRZECIW OD MANDATU KARNEGO
+
+Dotyczy: mandatu karnego nr {{numer_mandatu}} z dnia {{data_mandatu}}
+wystawionego przez {{organ}}
+
+Na podstawie art. 101 § 1 Kodeksu postępowania w sprawach o wykroczenia 
+wnoszę sprzeciw od mandatu karnego nr {{numer_mandatu}} i żądam jego uchylenia w całości.
+
+## UZASADNIENIE
+
+[AI generuje na podstawie wybranych okoliczności z formularza:
+- wadliwe urządzenie → art. 33 ust. 3 ustawy Prawo o miarach
+- brak legalizacji → Rozporządzenie MIiR w sprawie przyrządów pomiarowych
+- nieprawidłowe oznakowanie → art. 39 Prawa o ruchu drogowym
+- błąd identyfikacji → brak jednoznacznej identyfikacji kierowcy
+- błędy proceduralne → naruszenie procedury z art. 97 KPW
+]
+
+## DOWODY
+
+1. [lista na podstawie zaznaczonych okoliczności i uploadów]
+
+## ZAŁĄCZNIKI
+
+1. Kopia mandatu karnego
+2. [auto-generowana lista na podstawie checklisty]
+
+---
+
+Z poważaniem,
+
+{{imie_nazwisko}}
+
+(podpis własnoręczny)
+
+8.2 Pipeline generowania (krok po kroku)
+1. FORMULARZ → form_data (JSON)
+   Użytkownik wypełnia dynamiczny wizard (3-6 kroków)
+   Walidacja: Zod schema per case_type
+
+2. (opcjonalnie) UPLOAD → OCR → ocr_parsed_data
+   Użytkownik wgrywa zdjęcie mandatu / wezwania
+   Tesseract → raw text → Claude Haiku parser → JSON z polami
+   Auto-fill formularza z wykrytych danych
+
+3. LOAD PROMPT
+   Backend ładuje .md z lib/ai/prompts/[kategoria]/[typ].md
+   Parsuje frontmatter (model, max_tokens, version)
+
+4. MERGE DATA
+   System prompt + user data + OCR data → payload
+
+5. CALL CLAUDE API (Sonnet 4.6)
+   Input: ~1500-3000 tokenów (prompt + dane)
+   Output: ~2000-3500 tokenów (pismo Markdown)
+   Koszt: ~0.02-0.06 USD = 0.08-0.25 PLN
+
+6. VALIDATION (Haiku 4.5 — tani)
+   "Czy pismo zawiera: nagłówek, strony, żądanie, uzasadnienie, podpis, załączniki?"
+   Output: {isValid, issues[], suggestions[]}
+   Koszt: ~0.002 USD = 0.008 PLN
+
+7. SAVE DOCUMENT
+   Markdown → baza danych (documents.content_markdown)
+   + checklista załączników (osobny dokument)
+   + instrukcja (osobny dokument)
+
+8. PREVIEW
+   Użytkownik widzi podgląd Markdown (render HTML)
+   Może przełączyć na edycję i zmienić treść
+   Może uruchomić re-generację (nowy prompt)
+
+9. PAYMENT
+   Stripe Checkout → webhook → status: paid
+
+10. PDF RENDER
+    Markdown → HTML (marked.js) → PDF (Puppeteer)
+    Styl: Times New Roman 12pt, A4, marginesy sądowe
+    Stopka: "Wygenerowano przez Mandatomat.pl — data"
+
+11. DOWNLOAD / SEND
+    Signed URL do pobrania (TTL 1h)
+    Opcjonalnie: wysyłka ePUAP/e-mail (V2)
+
+12. DEADLINE
+    Auto-ustawienie terminu na podstawie case_type_config
+    Rozpoczęcie sekwencji przypomnień (D-5, D-3, D-1, D-0)
+
+9. KATALOG PISM — WSZYSTKIE 34 TYPY
+Poniżej pełna lista z unikalnymi polami formularza i specyfiką promptu per typ.
+Kategoria 1: MANDATY KARNE (7 typów)
+M1. Sprzeciw od mandatu za prędkość (mandat_sprzeciw_predkosc)
+* Cena: 79 zł
+* Deadline: 7 dni od wystawienia
+* Formularz (krok 1 — dane mandatu): numer mandatu, data wystawienia, miejsce zdarzenia, organ (Policja/fotoradar CANARD), kwota mandatu, punkty karne
+* Formularz (krok 2 — okoliczności, checklist): wadliwe urządzenie pomiarowe/brak legalizacji, nieprawidłowe oznakowanie drogi/ograniczeń, błąd identyfikacji pojazdu (nie byłem kierowcą), błędy proceduralne funkcjonariusza, okoliczności łagodzące (pierwszekolizyjne, sytuacja rodzinna), inne (pole tekstowe)
+* Formularz (krok 3 — dane osobowe): imię i nazwisko, PESEL, adres zamieszkania, ton pisma (ugodowy/stanowczy)
+* Formularz (opcjonalnie): upload zdjęcia mandatu/fotoradaru → OCR
+* Adresat: Komendant Policji / Główny Inspektorat Transportu Drogowego (auto-dobór)
+* Podstawy prawne: art. 101 § 1 KPW, art. 99 KPW, art. 33 Prawa o miarach, Rozporządzenie MIiR o przyrządach pomiarowych
+M2. Odmowa przyjęcia mandatu (mandat_odmowa_przyjecia)
+* Cena: 79 zł
+* Deadline: na miejscu (dokument do przygotowania PRZED interwencją lub zaraz po)
+* Formularz: jak M1, ale z sekcją “co powiedział funkcjonariusz” i “czy spisano protokół”
+* Generowane pismo: protokół odmowy przyjęcia mandatu + instrukcja zachowania na miejscu
+* Uwaga: To pismo jest generowane “na wszelki wypadek” — użytkownik może go pobrać i mieć gotowe
+M3. Uchylenie prawomocnego mandatu (mandat_uchylenie_prawomocny)
+* Cena: 99 zł
+* Deadline: brak ustawowego (ale zalecane jak najszybciej)
+* Formularz: sygnatura mandatu, data uprawomocnienia, podstawy uchylenia (nowe dowody, oczywiste naruszenie prawa, wadliwość prawomocności)
+* Adresat: Sąd Rejonowy właściwy wg miejsca popełnienia wykroczenia
+* Podstawy prawne: art. 101 § 1, art. 100 § 1 i 2 KPW
+M4. Odwołanie od mandatu Straży Miejskiej (mandat_odwolanie_straz)
+* Cena: 79 zł
+* Deadline: 7 dni
+* Formularz: jak M1, ale organ = Straż Miejska, opcje specyficzne: brak kompetencji SM do kontroli prędkości, strefa ruchu, oznakowanie strefy płatnego parkowania
+* Adresat: Komendant Straży Miejskiej
+* Podstawy prawne: ustawa o strażach gminnych, art. 97 KPW
+M5. Odwołanie od mandatu ITD (mandat_odwolanie_itd)
+* Cena: 99 zł
+* Deadline: 7 dni
+* Formularz: specyficzne dla ITD — kontrola ciężarówki, tachograf, czas pracy, waga, wymiary, zezwolenia
+* Adresat: Wojewódzki Inspektorat Transportu Drogowego
+* Podstawy prawne: ustawa o transporcie drogowym, rozporządzenie o czasie pracy kierowców
+M6. Wniosek o odroczenie/rozłożenie na raty (mandat_odroczenie_raty)
+* Cena: 79 zł
+* Deadline: brak ścisłego
+* Formularz: numer mandatu, kwota, sytuacja finansowa (dochód, wydatki, osoby na utrzymaniu), wnioskowana kwota raty
+* Adresat: organ wystawiający mandat
+* Pismo: wniosek o rozłożenie grzywny na raty + oświadczenie o stanie majątkowym
+M7. Wniosek o uchylenie/korektę punktów karnych (mandat_uchylenie_punktow)
+* Cena: 79 zł
+* Formularz: numer prawa jazdy, aktualna liczba punktów, kwestionowane wpisy (data, zdarzenie, przypisane punkty), powód korekty
+* Adresat: Komendant Wojewódzki Policji (ewidencja kierowców)
+* Pismo: wniosek o weryfikację i korektę wpisów w ewidencji kierowców
+Kategoria 2: PARKING I KOMUNIKACJA (4 typy)
+P1. Sprzeciw od wezwania za parking prywatny (parking_sprzeciw_prywatny)
+* Cena: 99 zł
+* Deadline: termin z wezwania (zwykle 14 dni)
+* Formularz: operator parkingu (APCOA, EuroPark, inne — pole tekstowe), numer wezwania, data, miejsce parkingu, kwota, powód (checklist): nieczytelne oznakowanie strefy, awaria/brak parkomatu, błąd w numerze rejestracyjnym, nieprawidłowy regulamin parkingu (brak zgody na warunki), brak widocznej informacji o opłatach, parkowanie poza strefą płatną, zapłaciłem ale system nie zarejestrował
+* Upload: zdjęcie wezwania + zdjęcie miejsca parkowania
+* Adresat: firma zarządzająca parkingiem
+* Podstawy prawne: ustawa o ochronie konsumenta, KC art. 3853 (klauzule abuzywne), wyrok TSUE dot. proporcjonalności kar umownych
+P2. Reklamacja opłaty ZDM (parking_reklamacja_zdm)
+* Cena: 99 zł
+* Formularz: miasto, numer wezwania/decyzji, data, numer rejestracyjny, powód: zapłaciłem w aplikacji/parkomacie, awaria systemu, błąd identyfikacji, nieprawidłowa strefa
+* Adresat: Zarząd Dróg Miejskich (per miasto)
+* Podstawy prawne: ustawa o drogach publicznych art. 13f
+P3. Odwołanie od opłaty za brak biletu komunikacji (parking_odwolanie_ztm)
+* Cena: 99 zł
+* Deadline: 7 dni od kontroli
+* Formularz: miasto, operator (ZTM/ZKM/MPK/inne), numer wezwania, data i linia, kwota, powód: posiadałem bilet ale nie mogłem okazać, awaria aplikacji biletowej, brak kontrolera na przystanku (brak oznaczenia strefy), bilet okresowy nie był widoczny (problem z kartą), ulga (legitymacja w domu)
+* Adresat: operator komunikacji miejskiej
+* Podstawy prawne: regulamin przewozów, ustawa Prawo przewozowe art. 33a
+P4. Zgłoszenie błędu identyfikacji pojazdu (parking_blad_identyfikacji)
+* Cena: 79 zł
+* Formularz: numer wezwania, numer rejestracyjny na wezwaniu vs. rzeczywisty, dowody (zdjęcia)
+* Pismo: krótkie pismo z żądaniem anulowania z powodu błędnej identyfikacji
+Kategoria 3: WINDYKACJA I EPU (5 typów)
+W1. Odpowiedź na wezwanie do zapłaty od firmy windykacyjnej (windykacja_odpowiedz_wezwanie)
+* Cena: 99 zł
+* Deadline: termin z wezwania (zwykle 7-14 dni)
+* Formularz: firma windykacyjna, numer sprawy, kwota, podstawa roszczenia (jeśli znana), stanowisko: nie uznaję roszczenia / uznaję częściowo / przedawnione, powód kwestionowania (checklist): przedawnienie, brak umowy z wierzycielem, spłaciłem/nie zaciągałem, zawyżona kwota, nieudowodnione roszczenie
+* Upload: wezwanie do zapłaty → OCR
+* Adresat: firma windykacyjna
+* Podstawy prawne: KC art. 117-125 (przedawnienie), KC art. 509-518 (cesja)
+W2. Zgłoszenie przedawnienia roszczenia (windykacja_przedawnienie)
+* Cena: 99 zł
+* Formularz: wierzyciel (bank/firma pożyczkowa/fundusz), typ długu (pożyczka, karta kredytowa, rachunek telefoniczny, mandat), data powstania zobowiązania, data ostatniej czynności (wpłata/uznanie), kwota
+* Kalkulator przedawnienia (wbudowany): na podstawie typu długu system oblicza termin przedawnienia (2/3/6/10 lat) i sprawdza czy upłynął
+* Pismo: zarzut przedawnienia + żądanie zaprzestania dochodzenia
+W3. Sprzeciw od nakazu zapłaty EPU (windykacja_sprzeciw_epu)
+* Cena: 149 zł (najwyższa w kategorii — najwyższa wartość)
+* Deadline: 14 dni od doręczenia
+* Formularz: jak w specyfikacji Długomatu D2 — sygnatura, kwota, zarzuty (checklist 7 pozycji)
+* Upload: nakaz zapłaty → OCR → auto-fill
+* Adresat: Sąd Rejonowy Lublin-Zachód, VI Wydział Cywilny
+* Cross-sell: CTA do Długomatu dla pełnej obsługi
+* Podstawy prawne: art. 505^35 KPC
+W4. Wniosek o usunięcie danych z KRD/BIK (windykacja_usuniecie_krd_bik)
+* Cena: 99 zł
+* Formularz: instytucja (KRD/BIK/BIG InfoMonitor/ERIF), typ wpisu (zadłużenie/opóźnienie płatności), status długu (spłacony/przedawniony/nigdy nie zaciągnięty), data wpisu, kwota
+* Pismo: żądanie usunięcia/aktualizacji danych + powołanie na RODO art. 16-17
+W5. Skarga do Rzecznika Finansowego (windykacja_skarga_rf)
+* Cena: 99 zł
+* Formularz: podmiot (bank/ubezpieczyciel/firma pożyczkowa), opis problemu, dotychczasowe działania (reklamacja/odpowiedź)
+* Adresat: Rzecznik Finansowy
+* Pismo: skarga z wnioskiem o interwencję
+Kategoria 4: UBEZPIECZENIA OC/AC (3 typy)
+U1. Odwołanie od decyzji ubezpieczyciela (ubezpieczenie_odwolanie_decyzja)
+* Cena: 99 zł
+* Formularz: ubezpieczyciel, numer polisy, numer szkody, typ szkody (komunikacyjna/majątkowa/osobowa), kwota wypłacona vs. oczekiwana, powód odwołania: zaniżona wycena, pominięte pozycje, brak uwzględnienia kosztów
+* Upload: decyzja ubezpieczyciela, wycena niezależna (opcjonalnie) → OCR
+* Adresat: ubezpieczyciel (dział reklamacji)
+* Podstawy prawne: KC art. 805-828, ustawa o ubezpieczeniach obowiązkowych
+U2. Wezwanie do wypłaty pełnej kwoty odszkodowania (ubezpieczenie_wezwanie_wyplata)
+* Cena: 99 zł
+* Formularz: jak U1 + żądana kwota wyrównania + termin na wypłatę (14 dni)
+* Pismo: wezwanie przedsądowe (dość formalne, z groźbą pozwu)
+U3. Skarga do Rzecznika Finansowego — ubezpieczenia (ubezpieczenie_skarga_rf)
+* Cena: 99 zł
+* Formularz: jak W5, ale specyficzny dla ubezpieczyciela
+* Uwaga: Ten typ jest podobny do W5, ale prompt jest specjalizowany pod ubezpieczenia
+Kategoria 5: e-TOLL / viaTOLL / AUTOSTRADY (3 typy)
+E1. Odwołanie od naliczonej kary e-TOLL/GITD (etoll_odwolanie_kara)
+* Cena: 79 zł
+* Deadline: 14 dni od doręczenia
+* Formularz: numer decyzji, data, kwota kary, odcinek drogi, numer rejestracyjny, powód: awaria urządzenia OBU/aplikacji, podwójne naliczenie, brak informacji o obowiązku opłaty, przejazd po drodze alternatywnej
+* Adresat: Główny Inspektor Transportu Drogowego (GITD)
+* Podstawy prawne: ustawa o drogach publicznych, ustawa o autostradach płatnych
+E2. Reklamacja podwójnego naliczenia (etoll_reklamacja_podwojne)
+* Cena: 79 zł
+* Formularz: numer konta e-TOLL, data przejazdu, odcinek, dowód podwójnego naliczenia
+* Adresat: operator systemu e-TOLL
+* Pismo: reklamacja + żądanie korekty/zwrotu
+E3. Wniosek o anulowanie opłaty (etoll_anulowanie)
+* Cena: 79 zł
+* Formularz: numer decyzji, powód (awaria systemu, błąd techniczny, force majeure)
+* Pismo: wniosek o anulowanie z uzasadnieniem
+Kategoria 6: KONTROLE DROGOWE I PUNKTY KARNE (4 typy)
+K1. Sprzeciw od decyzji o zatrzymaniu prawa jazdy (kontrola_sprzeciw_zatrzymanie_pj)
+* Cena: 99 zł
+* Deadline: 14 dni od doręczenia decyzji
+* Formularz: numer decyzji, organ (Starosta/Policja), powód zatrzymania (przekroczenie 24 pkt, jazda pod wpływem, przekroczenie prędkości o 50+ km/h w terenie zabudowanym), argumenty obrony
+* Adresat: Samorządowe Kolegium Odwoławcze (SKO)
+* Podstawy prawne: ustawa o kierujących pojazdami art. 102
+K2. Wniosek o cofnięcie decyzji o zatrzymaniu PJ (kontrola_cofniecie_decyzji)
+* Cena: 99 zł
+* Formularz: jak K1 + opis zmiany okoliczności
+* Pismo: wniosek o ponowne rozpatrzenie / cofnięcie decyzji
+K3. Wniosek o weryfikację urządzenia pomiarowego (kontrola_weryfikacja_urzadzenia)
+* Cena: 79 zł
+* Formularz: typ urządzenia (radar, laserowy, wideorejestracja, fotoradar stacjonarny), numer mandatu, data pomiaru
+* Adresat: organ wystawiający mandat
+* Pismo: żądanie udostępnienia świadectwa legalizacji, protokołu pomiaru, zapisu kamery
+* Podstawy prawne: Prawo o miarach, rozporządzenie o przyrządach pomiarowych, RODO art. 15 (dostęp do danych)
+K4. Korekta wpisów w rejestrze punktów karnych (kontrola_korekta_punktow)
+* Cena: 79 zł
+* Formularz: numer prawa jazdy, kwestionowane wpisy (tabela: data, zdarzenie, punkty), powód korekty
+* Adresat: Komendant Wojewódzki Policji
+* Pismo: wniosek o weryfikację i sprostowanie
+Kategoria 7: PISMA TECHNICZNE (4 typy)
+T1. Pełnomocnictwo ogólne (techniczne_pelnomocnictwo)
+* Cena: 49 zł
+* Formularz: dane mocodawcy, dane pełnomocnika, zakres umocowania (sprawa konkretna / ogólne)
+* Pismo: pełnomocnictwo procesowe
+T2. Wniosek o dostęp do danych RODO (techniczne_rodo_dostep)
+* Cena: 49 zł
+* Formularz: instytucja (Policja, Straż Miejska, ZDM, firma parkingowa, ubezpieczyciel), zakres żądanych danych
+* Adresat: administrator danych
+* Podstawy prawne: RODO art. 15
+T3. Wniosek o usunięcie danych RODO (techniczne_rodo_usuniecie)
+* Cena: 49 zł
+* Formularz: jak T2 + powód usunięcia
+* Podstawy prawne: RODO art. 17
+T4. Generowana lista załączników (techniczne_lista_zalacznikow)
+* Cena: 0 zł (generowana automatycznie z każdym pismem)
+* Generowana przez AI jako osobny dokument per sprawa
+9.1 Podsumowanie cennika
+---------------------------------------------
+| |Kategoria | |Typy | |Cena bazowa | |Najwyższa |
+---------------------------------------------
+| |Mandaty karne | |7 | |79 zł | |99 zł |
+---------------------------------------------
+| |Parking i komunikacja | |4 | |79 zł | |99 zł |
+---------------------------------------------
+| |Windykacja i EPU | |5 | |99 zł | |149 zł |
+---------------------------------------------
+| |Ubezpieczenia OC/AC | |3 | |99 zł | |99 zł |
+---------------------------------------------
+| |e-TOLL | |3 | |79 zł | |79 zł |
+---------------------------------------------
+| |Kontrole drogowe | |4 | |79 zł | |99 zł |
+---------------------------------------------
+| |Pisma techniczne | |4 | |0–49 zł | |49 zł |
+---------------------------------------------
+| |ŁĄCZNIE | |30 płatnych + 4 tech | | | | |
+Pakiet “Kierowca” (subskrypcja): 29 zł/mies., 2 dokumenty/mies. + alerty o terminach + SMS
+10. SYSTEM E-WYSYŁKI (V2)
+W MVP: Pobranie PDF + instrukcja “jak wysłać samodzielnie” (adres, termin, sposób złożenia).
+W V2 (Q3):
+* Integracja z ePUAP/Profil Zaufany (API gov.pl(http://gov.pl/))
+* Integracja z e-Doręczeniami (ADE)
+* Wysyłka emailem z potwierdzeniem doręczenia (Resend + webhook)
+* Status tracking: wysłane → doręczone → (odpowiedź)
+11. SEO I MARKETING TECHNICZNY
+11.1 Strategia SEO (wbudowana w Next.js)
+Każdy case_type ma dedykowaną stronę SEO pod long-tail:
+/odwolanie-od-mandatu-za-predkosc        → M1 landing + scoring + CTA
+/odmowa-przyjecia-mandatu                 → M2
+/uchylenie-prawomocnego-mandatu           → M3
+/odwolanie-od-mandatu-strazy-miejskiej    → M4
+/odwolanie-od-mandatu-itd                 → M5
+/rozlozenie-mandatu-na-raty              → M6
+/uchylenie-punktow-karnych               → M7
+/sprzeciw-wezwanie-parking-prywatny      → P1
+/reklamacja-oplata-zdm                   → P2
+/odwolanie-oplata-ztm-mpk               → P3
+/odpowiedz-na-wezwanie-windykacja       → W1
+/przedawnienie-mandatu                   → W2
+/sprzeciw-nakaz-zaplaty-epu             → W3
+/usuniecie-danych-bik-krd               → W4
+/odwolanie-decyzja-ubezpieczyciela      → U1
+/odwolanie-kara-etoll                   → E1
+/zatrzymanie-prawa-jazdy-odwolanie      → K1
+
+Każda strona: nagłówek SEO + opis problemu (2000+ słów) + FAQ (5-8 pytań) + interaktywny scoring (darmowy) + CTA do zakupu.
+11.2 Metadata (app/layout.tsx + per page)
+// app/(marketing)/odwolanie-od-mandatu-za-predkosc/page.tsx
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+    title: 'Odwołanie od mandatu za prędkość — darmowy wzór + generator AI | Mandatomat.pl',
+    description: 'Odwołaj się od mandatu za przekroczenie prędkości w 5 minut. AI generuje spersonalizowane pismo. 76% skuteczność. Od 79 zł vs. 300-800 zł u prawnika. Sprawdź swoje szanse za darmo!',
+    keywords: ['odwołanie od mandatu', 'mandat za prędkość', 'sprzeciw od mandatu', 'jak odwołać mandat', 'wzór odwołania od mandatu'],
+    openGraph: {
+        title: 'Odwołanie od mandatu za prędkość — Mandatomat.pl',
+        description: 'Odwołaj się od mandatu w 5 minut z pomocą AI. 76% skuteczność.',
+        url: 'https://mandatomat.pl/odwolanie-od-mandatu-za-predkosc',
+        images: ['/og/mandat-predkosc.png'],
+    },
+}
+
+11.3 Structured Data (JSON-LD)
+Każda strona SEO zawiera:
+* FAQPage schema (pytania z FAQ)
+* Product schema (cena, dostępność)
+* Organization schema (dane firmy)
+* BreadcrumbList schema
+11.4 Blog (/blog)
+Content engine: artykuły 2000+ słów na frazy SEO:
+* “Jak odwołać się od mandatu z fotoradaru — kompletny poradnik 2025”
+* “Przedawnienie mandatu — kiedy nie musisz płacić”
+* “Parking prywatny wezwanie do zapłaty — czy muszę płacić?”
+* “Nakaz zapłaty z e-Sądu — co robić krok po kroku”
+* etc.
+12. BEZPIECZEŃSTWO I RODO
+12.1 Warstwa bezpieczeństwa
+* Szyfrowanie danych wrażliwych (PESEL): AES-256 na poziomie aplikacji przed zapisem do bazy
+* JWT z krótkim TTL (15 min access token, 7 dni refresh)
+* RLS na każdej tabeli (omijane tylko przez service_role key)
+* CSRF protection (Next.js wbudowane)
+* Rate limiting na API routes (middleware, 100 req/min/IP)
+* Walidacja Zod na każdym endpoincie
+* Sanityzacja HTML (DOMPurify na Markdown renderingu)
+* Content Security Policy headers
+* HTTPS only (Vercel default)
+* Signed URLs z TTL na dokumenty w Storage
+12.2 RODO
+* Polityka prywatności i regulamin (strony statyczne)
+* Consent management: checkbox przy rejestracji + osobna zgoda na marketing
+* Prawo do usunięcia danych: endpoint DELETE /api/profile/delete (cascade delete all user data)
+* Prawo do eksportu: endpoint GET /api/profile/export (JSON dump all user data)
+* Retencja danych: automatyczne usuwanie nieaktywnych kont po 24 miesiącach (CRON)
+* DPA (Data Processing Agreement) z Supabase, Anthropic, Stripe
+* Minimalizacja danych: PESEL opcjonalne, zbieranie tylko tego co niezbędne per formularz
+* Transparentność AI: informacja “To pismo zostało wygenerowane przez AI i wymaga Twojej weryfikacji”
+13. SZATA GRAFICZNA — DESIGN SYSTEM
+13.1 Paleta kolorów
+/* Kolory brandowe Mandatomat */
+:root {
+    /* Primary: granat/navy — zaufanie, profesjonalizm, prawo */
+    --primary: 222 47% 20%;           /* #1B2A4A — deep navy */
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary: złoto/amber — sprawiedliwość, wartość */
+    --secondary: 38 92% 50%;          /* #F5A623 — amber gold */
+    --secondary-foreground: 222 47% 20%;
+    
+    /* Accent: emerald — sukces, nadzieja */
+    --accent: 160 84% 39%;            /* #10B981 */
+    --accent-foreground: 0 0% 100%;
+    
+    /* Danger: red — pilność, terminy */
+    --destructive: 0 84% 60%;         /* #EF4444 */
+    
+    /* Background */
+    --background: 220 14% 96%;        /* #F1F3F9 — lekki szarobłękitny */
+    --card: 0 0% 100%;                /* biały */
+    --muted: 220 13% 91%;
+    --muted-foreground: 220 9% 46%;
+    
+    /* Kolory kategorii */
+    --cat-mandaty: 0 84% 60%;         /* red */
+    --cat-parking: 217 91% 60%;       /* blue */
+    --cat-windykacja: 38 92% 50%;     /* amber */
+    --cat-ubezpieczenia: 160 84% 39%; /* green */
+    --cat-etoll: 271 81% 56%;         /* purple */
+    --cat-kontrole: 25 95% 53%;       /* orange */
+    --cat-techniczne: 220 9% 46%;     /* gray */
+}
+
+13.2 Typografia
+/* Font stack */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Dla pism prawnych (PDF) */
+.legal-document {
+    font-family: 'Times New Roman', 'Georgia', serif;
+}
+
+/* Hierarchy */
+h1: text-4xl (36px) font-bold tracking-tight
+h2: text-2xl (24px) font-semibold
+h3: text-xl (20px) font-semibold
+h4: text-lg (18px) font-medium
+body: text-base (16px) font-normal leading-relaxed
+small: text-sm (14px)
+caption: text-xs (12px) text-muted-foreground
+
+13.3 Komponenty kluczowe — wytyczne wizualne
+Karty kategorii (landing page):
+* Zaokrąglone rogi (rounded-xl), cień (shadow-md), hover: shadow-lg + translate-y-[-2px]
+* Kolorowy pasek u góry (4px, kolor kategorii)
+* Ikona Lucide w kole z tłem (bg-[cat-color]/10)
+* Tytuł + krótki opis + “X typów pism” badge + cena
+Status badges:
+* draft: bg-gray-100 text-gray-700
+* generating: bg-blue-100 text-blue-700 + spinner animowany
+* preview: bg-amber-100 text-amber-700
+* paid: bg-emerald-100 text-emerald-700
+* sent: bg-purple-100 text-purple-700
+* waiting: bg-orange-100 text-orange-700
+* resolved: bg-green-100 text-green-700 ✓
+* archived: bg-gray-50 text-gray-400
+Scoring gauge:
+* 0-30%: red gradient
+* 31-60%: amber gradient
+* 61-100%: emerald gradient
+* Animacja: licznik od 0 do wartości (1.5s ease-out)
+* Ring SVG z animowanym strokeDasharray
+Stepper (wizard formularza):
+* Poziomy na desktop, pionowy na mobile
+* Kroki: numer w kole (active: primary, completed: emerald ✓, inactive: gray)
+* Linie łączące z gradient animation
+* Active step: pulsujący ring
+CTA buttons:
+* Główny: bg-primary text-white, hover:bg-primary/90, rounded-lg, px-8 py-3
+* Duży CTA: text-lg, shadow-lg, hover:shadow-xl, scale hover 102%
+* Gradient CTA (landing): bg-gradient-to-r from-primary to-primary/80
+Dark mode: NIE w MVP. Jasny motyw only — prawne pisma wymagają czytelności.
+13.4 Responsywność
+* Mobile-first design (Tailwind default)
+* Breakpoints: sm(640px), md(768px), lg(1024px), xl(1280px)
+* Sidebar: collapsed → bottom nav na mobile
+* Formularze: 1 kolumna na mobile, 2 kolumny na desktop
+* Tabele (admin): horizontal scroll na mobile
+* PDF podgląd: full-width na mobile z pinch-to-zoom
+13.5 Animacje i mikro-interakcje
+* Framer Motion dla: scoringu (gauge), stepów formularza, pojawienia się wyników, loading states
+* Transition all na hover efektach (150ms ease)
+* Skeleton loading (shadcn Skeleton) na asynchroniczne ładowanie
+* Confetti animation po udanym wygenerowaniu pisma (opcjonalnie, subtelny) — canvas-confetti
+* Smooth scroll na landing page (sekcje)
+14. ROADMAP WDROŻENIA — MAPA DROGOWA
+Faza 0: Setup (Dzień 1-2)
+□ Utworzenie repo GitHub
+□ Inicjalizacja Next.js 14 + TypeScript + Tailwind + shadcn/ui
+□ Konfiguracja Supabase (Cloud lub self-hosted)
+□ Wykonanie migracji 001-011
+□ Konfiguracja zmiennych środowiskowych
+□ Deployment pipeline na Vercel
+□ Konfiguracja Sentry + PostHog
+
+Faza 1: Core + Auth + Landing (Dzień 3-7)
+□ Supabase Auth (rejestracja, logowanie, reset)
+□ Middleware (auth routes protection)
+□ Landing page (hero, features, jak to działa, FAQ, footer)
+□ Layout aplikacji (sidebar, navbar)
+□ Profil użytkownika (CRUD)
+□ Podstawowy dashboard (puste stany)
+
+Faza 2: Formularz + AI (Dzień 8-14)
+□ Dynamic Form engine (komponent + Zod schema builder)
+□ Konfiguracja case_type_config (seed 5 pierwszych typów: M1, M4, P1, P3, W1)
+□ Claude API wrapper (generate + scoring + validate)
+□ Prompty dla 5 typów (pliki .md)
+□ API: /api/ai/scoring
+□ API: /api/ai/generate-document
+□ Scoring page (formularz + gauge + CTA)
+□ Wizard formularza (3 kroki)
+□ Podgląd Markdown + edytor
+
+Faza 3: PDF + Płatności (Dzień 15-20)
+□ PDF generator (Puppeteer)
+□ API: /api/documents/[docId]/pdf
+□ Stripe integration (Checkout + Webhook)
+□ API: /api/billing/checkout + webhook
+□ Fakturownia integration (auto-faktury)
+□ Flow: formularz → generuj → podgląd → płać → pobierz PDF
+□ Kody promocyjne (CRUD admin + walidacja checkout)
+
+Faza 4: Terminy + Powiadomienia (Dzień 21-25)
+□ System terminów (auto z case_type_config)
+□ CRON: /api/deadlines/check (Vercel CRON lub external)
+□ Resend integration (email templates)
+□ SMSAPI integration (V2 — opcjonalnie MVP)
+□ Widget terminów w dashboard
+□ Strona terminów użytkownika
+
+Faza 5: OCR (Dzień 26-29)
+□ File upload komponent (drag&drop + preview)
+□ Supabase Storage upload
+□ Tesseract.js OCR (server-side)
+□ Claude Haiku parser (OCR text → JSON)
+□ Auto-fill formularza z OCR danych
+□ API: /api/ocr/upload + /api/ocr/parse
+
+Faza 6: Rozszerzenie katalogu (Dzień 30-40)
+□ Dodanie pozostałych 29 typów pism (prompty .md + form_schema JSON)
+□ Seedy case_type_config dla wszystkich 34 typów
+□ Strony SEO per case_type (/odwolanie-od-mandatu-za-predkosc etc.)
+□ Blog: 5 pierwszych artykułów (2000+ słów)
+□ Structured Data (JSON-LD) na stronach SEO
+□ Sitemap.xml + robots.txt
+
+Faza 7: Panel admina (Dzień 41-48)
+□ Admin layout (sidebar + header)
+□ Dashboard (KPI, wykresy)
+□ CRUD użytkownicy
+□ CRUD sprawy (podgląd + status management)
+□ CRUD szablony (edytor form_schema + prompt)
+□ CRUD kody promocyjne
+□ Analityka (funnel, przychody, AI costs)
+□ Eksport CSV
+
+Faza 8: Polish + Launch (Dzień 49-56)
+□ Onboarding flow (3 ekrany po rejestracji)
+□ Empty states (piękne komunikaty gdy brak danych)
+□ Error handling (error boundaries, fallback UI)
+□ Loading states (skeletony + spinners)
+□ Performance: Lighthouse audit (target: 90+ wszystkie)
+□ Accessibility: keyboard nav, screen reader, focus traps
+□ Mobile testing (Safari, Chrome Android)
+□ E2E testy (Playwright — happy path: register → scoring → form → pay → download)
+□ Security audit (headers, CORS, rate limits)
+□ Regulamin + Polityka prywatności (strony)
+□ OG images per strona SEO
+□ 301 redirecty z wariantów URL
+□ Google Search Console + Analytics setup
+� LAUNCH �
+
+Faza 9: Post-launch (Miesiąc 2-3)
+□ Feedback loop: widget "Oceń pismo" (1-5 gwiazdek + outcome)
+□ Subskrypcja "Kierowca" (Stripe recurring)
+□ A/B testing cen (Stripe Price variants)
+□ e-wysyłka (ePUAP/e-Doręczenia) — V2
+□ AI Chat kontekstowy ("Co dalej?") — V2
+□ Blog: 10+ artykułów SEO
+□ Cross-sell banner do Długomatu/Alimentomatu
+□ Referral system (polecenie = 20% zniżka)
+
+15. INSTRUKCJE DLA AI CODE AGENT (Kilo Code / Genspark)
+15.1 Kontekst sesji (wklej jako pierwszy prompt sesji)
+KONTEKST PROJEKTU:
+Budujesz Mandatomat.pl — SaaS LegalTech generujący pisma procesowe (odwołania od mandatów, 
+reklamacje parkingowe, sprzeciwy od nakazów zapłaty) z pomocą AI.
+
+STACK: Next.js 14 (App Router) + TypeScript + Tailwind CSS + shadcn/ui + Supabase + Claude API + Stripe + Puppeteer
+
+KONWENCJE:
+- TypeScript strict, no any
+- Pliki: kebab-case, Komponenty: PascalCase
+- Walidacja: Zod
+- CSS: Tailwind utility + shadcn/ui, zero custom CSS
+- API routes w app/api/
+- Prompty AI: pliki .md w lib/ai/prompts/
+
+AKTUALNY ETAP: [wpisz fazę z roadmapy]
+
+PRZECZYTAJ SPECYFIKACJE:
+- docs/spec/00-index.md (spis treści)
+- docs/spec/01-architektura.md (stack i struktura)
+- docs/spec/04-mandatomat.md (TEN PLIK — główna specyfikacja)
+
+DZISIEJSZE ZADANIE: [opisz konkretne zadanie]
+
+15.2 Zasady dla agenta
+1. Przed implementacją ZAWSZE sprawdź schemat bazy danych (docs/spec/08-db-schema.md)
+2. Przed tworzeniem komponentu sprawdź czy nie istnieje w shadcn/ui
+3. Każdy nowy API route MUSI mieć: auth check, Zod validation, error handling, event logging
+4. Każdy nowy komponent formularza MUSI używać Dynamic Form engine
+5. Prompty AI ZAWSZE w plikach .md (nie inline w kodzie)
+6. NIE instaluj nowych dependencji bez pytania — najpierw sprawdź czy jest w Next.js/Supabase
+7. Przy zmianach bazy danych — twórz nową migrację SQL (nie modyfikuj istniejących)
+8. Testuj na danych z seeda, nie na produkcji
+9. Komentarze w kodzie: po angielsku, zwięzłe, tylko gdy nieoczywiste
+10. Commit message: Conventional Commits (feat: add scoring endpoint)
+
+15.3 Optymalizacja tokenów
+Specyfikacja jest podzielona na moduły. W każdej sesji ładuj TYLKO relewantne pliki:
+* Pracujesz nad formularzami? → 04-mandatomat.md(http://04-mandatomat.md/) (sekcja 9: Katalog pism)
+* Pracujesz nad API? → 04-mandatomat.md(http://04-mandatomat.md/) (sekcja 4: Backend) + 08-db-schema.md(http://08-db-schema.md/)
+* Pracujesz nad UI? → 04-mandatomat.md(http://04-mandatomat.md/) (sekcja 5: Frontend + sekcja 13: Design System)
+* Pracujesz nad AI/promptami? → 04-mandatomat.md(http://04-mandatomat.md/) (sekcja 8: System AI)
+* Pracujesz nad adminem? → 04-mandatomat.md(http://04-mandatomat.md/) (sekcja 7: Panel admina)
+* Pracujesz nad płatnościami? → 04-mandatomat.md(http://04-mandatomat.md/) (sekcja 4.3: Stripe routes)
+NIE ładuj pełnej specyfikacji do każdego promptu. Ładuj 00-index.md(http://00-index.md/) (1 strona) + 1-2 relewantne sekcje.
+16. PODSUMOWANIE KLUCZOWYCH METRYK PRODUKTU
+---------------------------------------------
+| |Metryka | |Wartość |
+---------------------------------------------
+| |Typy pism | |34 (30 płatnych + 4 techniczne) |
+---------------------------------------------
+| |Kategorie | |7 |
+---------------------------------------------
+| |Cena bazowa | |79 zł |
+---------------------------------------------
+| |Cena najwyższa | |149 zł (sprzeciw EPU) |
+---------------------------------------------
+| |ARPU szacowany | |109 zł |
+---------------------------------------------
+| |Koszt generowania pisma | |0.08–0.25 PLN (API Claude) |
+---------------------------------------------
+| |Marża na piśmie | |99%+ |
+---------------------------------------------
+| |Czas generowania | |<30 sekund |
+---------------------------------------------
+| |Czas użytkownika (formularz + edycja) | |3–5 minut |
+---------------------------------------------
+| |Darmowy magnes | |Scoring szans (0–100%) |
+---------------------------------------------
+| |Tabele w bazie | |12 |
+---------------------------------------------
+| |API routes | |~25 |
+---------------------------------------------
+| |Komponenty React | |~50 |
+---------------------------------------------
+| |Pliki promptów AI | |34+ |
+---------------------------------------------
+| |Stron SEO (long-tail) | |17+ |
+---------------------------------------------
+| |Szacowany czas wdrożenia MVP | |8 tygodni (solo dev z AI agent) |
+Ta specyfikacja to kompletna instrukcja wdrożeniowa. Każda sekcja jest wystarczająco szczegółowa, żeby AI Code Agent (Kilo Code z Claude Opus 4.6) mógł implementować moduł po module, bez zgadywania. Struktura plików, schematy bazy danych, endpointy API, prompty AI, cenniki, reguły terminów, design system — wszystko jest zdefiniowane.
+Zacznij od Fazy 0 (setup repo + migracje), potem Faza 1 (auth + landing), i idź sekwencyjnie. Każda faza to 5-7 dni przy pracy z agentem AI kodującym.

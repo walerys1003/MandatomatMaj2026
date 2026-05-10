@@ -1,0 +1,1458 @@
+4. MANDATOMAT
+Instrukcja dla agenta AI: Frontend & Design System
+4.1 TOŻSAMOŚĆ MARKI
+Mandatomat obsługuje najszerszą grupę użytkowników ze wszystkich SaaS-ów LexMate24. Kierowcy (mandaty drogowe, fotoradary), pasażerowie komunikacji miejskiej (opłaty ZTM/MPK), właściciele samochodów (parkowanie, e-TOLL), przedsiębiorcy transportowi (ITD), posiadacze polis (OC/AC). Emocje przy wejściu: irytacja, poczucie niesprawiedliwości, chęć szybkiego rozwiązania. Kontekst jest LŻEJSZY niż w Długomacie (nikt nie traci domu z powodu mandatu) i MNIEJ INTYMNY niż w Rozwodomacie (mandat to nie rozwód). Mandatomat to najbardziej „produktowy", najbardziej „SaaS-owy" ze wszystkich czterech — szybki, efektywny, skalowalny.
+Archetyp marki: Inżynier. Precyzyjny, metodyczny, pewny swoich narzędzi. Nie dramatyzuje. Nie współczuje. Rozwiązuje problem — szybko, skutecznie, bezemocjonalnie.
+Jedno zdanie definiujące design: „Interfejs Bloomberg Terminal — ale dla mandatów. Czysty, gęsty, profesjonalny."
+Kluczowa różnica wobec innych SaaS-ów LexMate24: Mandatomat jest NAJSZYBSZY — najkrótsze wizardy (3–4 kroki), najkrótsze animacje (150ms), najgęstszy UI (więcej informacji na ekranie), najostrzejsze krawędzie. Zero sentymentu. Czysta efektywność.
+4.2 SYSTEM KOLORÓW
+Agent AI: proporcje — 72% neutrals (dominacja grafitu i bieli), 18% primary (electric blue precyzyjnie dozowany), 7% przestrzeń, 3% akcent. Mandatomat to jedyny SaaS LexMate24, w którym primary color NIE jest ciemny — electric blue na białym tle jest czysty, techniczny, industrialny.
+Primary — Precision Blue
+Nie navy (to Długomat). Nie teal (to Rozwodomat). Nie indigo (to Alimentomat). Electric blue — kolor interfejsów lotniczych, kokpitów, systemów nawigacji. Mówi: precyzja, technologia, system. To kolor, który nie pyta o emocje — wykonuje zadanie.
+:root {
+  /* Tekst w ciemnych sekcjach, overlay */
+  --blue-950: #172554;
+  --blue-900: #1E3A5F;
+  
+  /* Sidebar, dark sections */
+  --blue-800: #1E40AF;
+  --blue-700: #1D4ED8;
+  
+  /* PRIMARY — buttony, linki, focus ring, aktywne elementy */
+  --blue-600: #2563EB;
+  
+  /* Hover */
+  --blue-500: #3B82F6;
+  
+  /* Ikony, bordery aktywne, dekoracje */
+  --blue-400: #60A5FA;
+  
+  /* Badge tła, subtletne highlights */
+  --blue-300: #93C5FD;
+  --blue-200: #BFDBFE;
+  --blue-100: #DBEAFE;
+  --blue-50:  #EFF6FF;
+}
+
+Neutral — Iron
+Czysta, zimna szarość z minimalnym niebieskim podtonem. Nie ciepła (Alimentomat), nie kamienna (Rozwodomat), nie stalowa (Długomat). Żelazna — twarda, industrialna, precyzyjna. Najciemniejszy odcień (#09090B) jest prawie czarny — ale nie jest czarny. To zinc.
+:root {
+  --iron-950: #09090B;
+  --iron-900: #18181B;
+  --iron-800: #27272A;
+  --iron-700: #3F3F46;
+  --iron-600: #52525B;
+  --iron-500: #71717A;
+  --iron-400: #A1A1AA;
+  --iron-300: #D4D4D8;
+  --iron-200: #E4E4E7;
+  --iron-100: #F4F4F5;
+  --iron-50:  #FAFAFA;
+}
+
+Accent — Volt Green
+Zieleń sygnałowa — jeszcze bardziej nasycona niż emerald Długomatu. To kolor statusu „sukces" na ekranie systemu: odwołanie przyjęte, sprawa wygrana, mandat anulowany. Używana oszczędnie — wyłącznie na success states, badge „Uwzględnione", ikona wyniku pozytywnego.
+:root {
+  --volt-700: #15803D;
+  --volt-600: #16A34A;
+  --volt-500: #22C55E;
+  --volt-400: #4ADE80;
+  --volt-300: #86EFAC;
+  --volt-100: #DCFCE7;
+  --volt-50:  #F0FDF4;
+}
+
+Accent 2 — Signal Red
+Odmowa odwołania, negatywny wynik, termin przekroczony. WYŁĄCZNIE semantic — nigdy dekoracyjny.
+:root {
+  --signal-700: #B91C1C;
+  --signal-600: #DC2626;
+  --signal-500: #EF4444;
+  --signal-400: #F87171;
+  --signal-100: #FEE2E2;
+  --signal-50:  #FEF2F2;
+}
+
+Accent 3 — Amber Status
+Termin w toku, oczekuje na odpowiedź, w trakcie rozpatrywania.
+:root {
+  --status-amber-600: #D97706;
+  --status-amber-500: #F59E0B;
+  --status-amber-100: #FEF3C7;
+}
+
+Semantic
+:root {
+  --success: #16A34A;
+  --success-light: #DCFCE7;
+  --warning: #D97706;
+  --warning-light: #FEF3C7;
+  --danger: #DC2626;
+  --danger-light: #FEE2E2;
+  --info: #2563EB;
+  --info-light: #DBEAFE;
+}
+
+4.3 TYPOGRAFIA
+Display — Inter Tight
+Agent AI: ŻADEN serif. Mandatomat używa Inter Tight jako display — zmodyfikowany Inter z tighter spacing i wyraźniejszym geometrycznym charakterem. Komunikuje: system, interfejs, narzędzie. Jeśli Inter Tight nie jest dostępny, użyj Inter z font-weight: 800 i letter-spacing: -0.04em.
+import { Inter_Tight } from 'next/font/google';
+
+const displayFont = Inter_Tight({
+  subsets: ['latin', 'latin-ext'],
+  weight: ['600', '700', '800'],
+  display: 'swap',
+  variable: '--font-display',
+});
+
+Parametry: H1: 52px / line-height 1.0 / letter-spacing -0.04em / weight 800. H2: 36px / 1.08 / -0.03em / 700. H3: 24px / 1.15 / -0.02em / 700. H4: 18px / 1.25 / -0.01em / 600.
+Letter-spacing jest NAJBARDZIEJ NEGATYWNY ze wszystkich SaaS-ów (-0.04em w H1). Litery są ściśnięte, gęste, kompaktowe. Efekt: nagłówki wyglądają jak wygrawerowane w metalu. Siła, precyzja, zero luzu.
+Interface — Inter
+Standardowy Inter 16px / 1.6 / 400. Ale w Mandatomacie więcej elementów ma weight 500 niż w innych SaaS-ach — labels, meta dane, opisy w kartach. Weight 500 (medium) daje wrażenie gęstości informacji bez agresji bolda. Tabular nums (font-feature-settings: "tnum") na kwotach mandatów, datach, numerach spraw.
+Mono — JetBrains Mono
+Rozszerzone użycie (jak w Długomacie): numery mandatów, sygnatury, kwoty, daty, numery spraw. Ale w Mandatomacie mono pojawia się CZĘŚCIEJ — w badge’ach statusów, w tagach kategorii, w headerach kart spraw. To wzmacnia wrażenie „systemowego interfejsu".
+4.4 LAYOUT — SPECYFIKA MANDATOMAT
+Landing page kontener: 1320px (NAJSZERSZY — więcej treści)
+Dashboard content: 1140px (NAJSZERSZY dashboard)
+Formularz wizarda: 560px (NAJWĘŻSZY — krótkie formularze, mniej pól)
+Max-width paragrafów: 480px (zwarte)
+
+Sekcje landing: padding-y 100px (NAJKRÓTSZY padding — gęsto)
+Gap między kartami: 16px (NAJKRÓTSZY gap — więcej kart na ekranie)
+Padding wewnątrz kart: 24px (NAJKRÓTSZY — kompaktowe)
+Gap pola formularza: 16px
+
+Agent AI: Mandatomat jest GĘSTSZY od innych SaaS-ów. 
+Mniej whitespace, więcej danych, bliżej do siebie. 
+To nie blog — to narzędzie. Bloomberg, nie Medium.
+
+4.5 HERO SECTION — PIXEL-PERFECT INSTRUKCJA
+Sekcja hero:
+  Min-height: 640px (NAJNIŻSZY hero — szybko do treści)
+  Padding-top: 140px, padding-bottom: 100px
+  Background: var(--iron-50) — najczystszy off-white
+  Position: relative, overflow: hidden
+
+DEKORACJA TŁA:
+  Agent AI: Mandatomat ma NAJSUBTELNIEJSZĄ dekorację ze wszystkich SaaS-ów.
+  Prawie nic. Czystość.
+
+  Element 1 — Siatka perspektywiczna:
+    Position: absolute, bottom 0, left 0, right 0, height 50%
+    Background-image: 
+      linear-gradient(rgba(37,99,235,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(37,99,235,0.03) 1px, transparent 1px)
+    Background-size: 60px 60px
+    Transform: perspective(600px) rotateX(45deg)
+    Transform-origin: bottom center
+    Opacity: 0.6
+    Mask-image: linear-gradient(180deg, transparent 0%, black 60%)
+    — siatka perspektywiczna z dołu — jak podłoga hali przemysłowej
+    — widoczna ledwo, ale daje głębię i techniczność
+  
+  Element 2 — Accent dot:
+    Position: absolute, top 20%, right 15%
+    Width: 8px, height: 8px
+    Border-radius: 50%
+    Background: var(--blue-400)
+    Opacity: 0.4
+    — jeden mały punkt. To wszystko. Minimalizm.
+
+LAYOUT (desktop):
+  CSS Grid: grid-template-columns: 1.15fr 0.85fr
+  Gap: 64px
+  Align-items: center
+  Max-width: 1280px
+
+LEWA KOLUMNA (tekst):
+
+  OVERLINE:
+    Font: JetBrains Mono 11px weight 600, uppercase, letter-spacing 0.12em
+    Color: var(--blue-600)
+    Margin-bottom: 20px
+    Treść: "MANDATOMAT.PL"
+    — mono font w overline (jedyny SaaS) — wzmacnia wrażenie "systemu"
+
+  H1:
+    Font: Inter Tight 52px / 1.0 / -0.04em / 800
+    Color: var(--iron-950)
+    Margin-bottom: 20px
+    Max-width: 520px
+    
+    Treść: "Odwołaj mandat w 3 minuty."
+    
+    Agent AI: najkrótszy H1 ze wszystkich SaaS-ów. 6 słów. 
+    Bez emocji, bez pytań, bez "pomożemy Ci". 
+    Czysta propozycja wartości. Czas. Akcja. Wynik.
+    
+    "3 minuty" — opcjonalnie w kolorze blue-600 (jedyny kolorowy fragment)
+
+  PARAGRAPH:
+    Font: Inter 17px / 1.6 / weight 400
+    Color: var(--iron-500)
+    Margin-bottom: 36px
+    Max-width: 460px
+    Treść: "AI generuje profesjonalne odwołanie dopasowane do Twojej sytuacji. 
+    Mandaty drogowe, fotoradary, parkowanie, ZTM, e-TOLL, ubezpieczenia."
+
+  BUTTON GROUP:
+    Flex row, gap 12px
+    
+    Button 1 (primary):
+      "Stwórz odwołanie →"
+      Height: 52px, padding-h 32px
+      Background: var(--blue-600)
+      Color: white
+      Font: Inter 15px weight 600
+      Border-radius: 10px
+      Shadow: 0 1px 3px rgba(37,99,235,0.15), 0 2px 8px rgba(37,99,235,0.1)
+      
+      Hover:
+        Background: var(--blue-500)
+        Shadow: 0 2px 6px rgba(37,99,235,0.2), 0 4px 14px rgba(37,99,235,0.12)
+        Transform: translateY(-1px)
+      
+    Button 2 (secondary — NOT ghost, lekko wypełniony):
+      "Sprawdź szanse — za darmo"
+      Height: 52px, padding-h 28px
+      Background: var(--blue-50)
+      Border: 1px solid var(--blue-200)
+      Color: var(--blue-700)
+      Font: Inter 15px weight 500
+      
+      Hover: bg blue-100, border blue-300
+
+  STATS LINE:
+    Margin-top: 40px
+    Flex row, gap 32px
+    
+    Każda metryka:
+      Wartość: Inter Tight 24px weight 700, iron-900, tabular-nums
+      Label: Inter 13px weight 400, iron-500
+      
+    "3 min" / "czas generowania"
+    "76%" / "skuteczność"
+    "100+" / "wzorów pism"
+    
+    Separator: pionowa linia 1px × 32px, iron-200
+    
+    Agent AI: mniejsze wartości niż Długomat (24px vs 28px) — 
+    Mandatomat nie potrzebuje dramatycznych liczb, one mówią same za siebie
+
+PRAWA KOLUMNA (VISUAL):
+  DEVICE MOCKUP — telefon z interfejsem Mandatomat:
+  
+  NIE screenshot. NIE ilustracja. MOCKUP interfejsu w ramce telefonu.
+  
+  Ramka telefonu:
+    Width: 320px, height: auto (proporcje iPhone 14/15)
+    Background: iron-900 (ciemna ramka)
+    Border-radius: 40px
+    Padding: 12px
+    Shadow: 0 20px 60px rgba(0,0,0,0.12), 0 8px 20px rgba(0,0,0,0.08)
+    
+  Ekran wewnątrz (radius 32px, overflow hidden):
+    Background: white
+    
+    Status bar: 
+      Height: 44px, flex row, justify-between, padding-h 24px
+      "9:41" — Inter 15px weight 600, iron-900 (left)
+      Signal + wifi + battery icons (right, iron-700)
+    
+    App header:
+      Height: 56px, bg white, border-bottom 1px iron-100
+      "Mandatomat" — Inter 16px weight 700, iron-900
+      
+    Content (wizard step 1):
+      Padding: 20px
+      
+      H3: "Rodzaj mandatu" — Inter 17px weight 600, iron-900
+      
+      Trzy opcje (card-select, vertical stack, gap 10px):
+        Karta 1: "Mandat za prędkość" 
+          Ikona: gauge 20px, blue-500
+          Selected: border 2px blue-500, bg blue-50
+        Karta 2: "Fotoradar"
+          Ikona: camera 20px, iron-400
+          Unselected: border 1px iron-200
+        Karta 3: "Opłata parkingowa"
+          Ikona: car 20px, iron-400
+          Unselected
+        
+        Każda karta: height 52px, radius 10px, padding-h 16px
+          Flex row, gap 12px, align-center
+          Inter 14px weight 500
+      
+      Button na dole: "Dalej →" full-width, blue-600, white, height 48px
+    
+    Home indicator: 4px × 134px, iron-300, radius 99px, centered, bottom 8px
+  
+  ANIMACJA MOCKUPU (Framer Motion):
+    Cały mockup: fadeIn + translateY 20→0, delay 300ms, duration 600ms
+    Karty wewnątrz: staggered fadeIn, delay 600ms, each +100ms
+    Selected card (mandat za prędkość): 
+      po 1200ms, auto-select animation (border 1px→2px blue, bg white→blue-50), 200ms
+    
+    Subtle float: translateY +/- 3px, 8s infinite, ease sine
+      — subtelniejszy float niż Alimentomat (3px vs 4px)
+
+MOBILE (< 768px):
+  Single column, tekst na górze
+  H1: 38px / 1.02 / -0.04em — nadal bardzo ściśnięty
+  Mockup: ukryty (phone mockup na phone = meta i niepotrzebny)
+  Zamiast mockupu: trzy stats karty w rzędzie (scrollowalnym)
+  Buttons: stack, full-width
+  Paragraph: 16px
+  Padding-top: 100px (szybciej do treści na mobile)
+
+4.6 SEKCJA „KATEGORIE PISM" — NAWIGACJA PRODUKTOWA
+Mandatomat ma 100+ wzorów pism w 9 kategoriach. To wymaga dedykowanej sekcji nawigacyjnej, jakiej nie ma żaden inny SaaS LexMate24.
+Background: white
+Padding: 100px 0
+
+OVERLINE + H2:
+  Overline: "KATALOG PISM" — JetBrains Mono 11px, blue-600, uppercase, ls 0.12em
+  H2: "100+ wzorów pism. Znajdź swój w 10 sekund."
+    Inter Tight 36px weight 700, iron-900
+    Margin-bottom: 16px
+  Paragraph: "Wybierz kategorię lub wpisz problem — AI znajdzie najlepszy wzór."
+    Inter 16px, iron-500
+    Margin-bottom: 48px
+
+SEARCH BAR (przed kategoriami):
+  Max-width: 640px, centered, margin-bottom: 48px
+  
+  Input:
+    Height: 56px (DUŻY — to najważniejszy element sekcji)
+    Width: 100%
+    Background: white
+    Border: 2px solid iron-200
+    Border-radius: 14px
+    Padding-left: 52px (miejsce na ikonę)
+    Font: Inter 16px weight 400, iron-900
+    Placeholder: "np. odwołanie od mandatu za prędkość..." — iron-400
+    
+    Ikona search: 20px, iron-400, position absolute left 18px
+    
+    Focus:
+      Border-color: blue-500
+      Shadow: 0 0 0 4px rgba(37,99,235,0.08)
+      Ikona: blue-500
+    
+    Agent AI: search implementacja — filtruje kategorie i pisma w real-time.
+    Debounce 200ms. Wyniki pojawiają się pod inputem jako dropdown
+    (max 5 wyników, karta per wynik: ikona + tytuł + kategoria + cena).
+
+KARTY KATEGORII:
+  CSS Grid: 3 kolumny (desktop), gap 16px
+  Max-width: 1080px, centered
+
+  Każda karta:
+    Background: white
+    Border: 1.5px solid iron-100
+    Border-radius: 14px
+    Padding: 28px
+    Cursor: pointer
+    Transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1)
+    
+    Hover:
+      Border-color: blue-300
+      Shadow: 0 4px 16px rgba(37,99,235,0.06), 0 2px 4px rgba(0,0,0,0.02)
+      Transform: translateY(-2px)
+      
+    Active:
+      Transform: translateY(0)
+      Shadow: 0 1px 2px rgba(0,0,0,0.04)
+    
+    Struktura wewnątrz:
+      Row 1: Flex row, justify-between, align-start
+        Left: 
+          Ikona: 36px × 36px, border-radius 10px, bg blue-50, 
+            ikona 20px blue-600, flex center
+        Right:
+          Badge: pill, iron-100 bg, iron-700 text, JetBrains Mono 12px weight 600
+            "28 wzorów"
+      
+      Row 2: margin-top 16px
+        H4: Inter 17px weight 600, iron-900
+        Paragraph: Inter 14px, iron-500, lh 1.55, margin-top 6px, 2 linie max
+      
+      Row 3: margin-top 16px
+        Tags: flex wrap, gap 6px
+          Każdy tag: pill, iron-50 bg, iron-600 text, 
+            Inter 11px weight 500, padding 3px 8px, radius 99px
+
+  KARTY (9 sztuk):
+  
+    1. MANDATY KARNE
+       Ikona: Lucide "siren" (sygnalizator policyjny)
+       H4: "Mandaty karne"
+       Paragraph: "Policja, Straż Miejska, Straż Graniczna. Odwołania, uchylenia, sprzeciwy."
+       Tags: "odwołanie" "uchylenie" "sprzeciw" "umorzenie"
+       Badge: "28 wzorów"
+    
+    2. FOTORADARY
+       Ikona: Lucide "camera"
+       H4: "Fotoradary i pomiar prędkości"
+       Paragraph: "Kwestionowanie pomiaru, błędy urządzenia, brak kalibracji, nieprawidłowe oznakowanie."
+       Tags: "sprzeciw" "kwestionowanie" "CANARD" "ISKRA"
+       Badge: "22 wzory"
+    
+    3. PARKING
+       Ikona: Lucide "parking-circle" (P w okręgu)
+       H4: "Opłaty parkingowe"
+       Paragraph: "ZDM, APCOA, parkowanie prywatne. Reklamacje, odwołania, umorzenia."
+       Tags: "reklamacja" "odwołanie" "umorzenie" "ZDM"
+       Badge: "23 wzory"
+    
+    4. KOMUNIKACJA ZTM/MPK
+       Ikona: Lucide "bus" (autobus)
+       H4: "Komunikacja miejska"
+       Paragraph: "Opłaty dodatkowe ZTM, MPK, SKM. Odwołania, umorzenia, przedawnienia."
+       Tags: "opłata dodatkowa" "odwołanie" "bilet" "przedawnienie"
+       Badge: "16 wzorów"
+    
+    5. INSPEKCJA TRANSPORTU (ITD)
+       Ikona: Lucide "truck"
+       H4: "Inspekcja Transportu Drogowego"
+       Paragraph: "Odwołania od decyzji ITD, kontrole, kary administracyjne."
+       Tags: "odwołanie" "kara" "tachograf" "CMR"
+       Badge: "19 wzorów"
+    
+    6. e-TOLL / viaTOLL
+       Ikona: Lucide "highway" (lub "route")
+       H4: "e-TOLL i viaTOLL"
+       Paragraph: "Reklamacje naliczonych opłat, korekty, umorzenia, oświadczenia."
+       Tags: "reklamacja" "korekta" "umorzenie"
+       Badge: "9 wzorów"
+    
+    7. UBEZPIECZENIA OC/AC
+       Ikona: Lucide "shield" (tarcza)
+       H4: "Ubezpieczenia OC/AC"
+       Paragraph: "Odwołania od decyzji, reklamacje odszkodowań, Rzecznik Finansowy."
+       Tags: "odwołanie" "reklamacja" "odszkodowanie" "RF"
+       Badge: "12 wzorów"
+    
+    8. PUNKTY KARNE
+       Ikona: Lucide "alert-triangle"
+       H4: "Punkty karne"
+       Paragraph: "Weryfikacja, korekta ewidencji, przywrócenie uprawnień."
+       Tags: "weryfikacja" "korekta" "CEPiK"
+       Badge: "8 wzorów"
+    
+    9. WINDYKACJA / EPU (cross-sell)
+       Ikona: Lucide "file-warning"
+       H4: "Windykacja i EPU"
+       Paragraph: "Sprzeciwy od nakazów zapłaty, przedawnienia. Obsługiwane przez Długomat."
+       Tags: "sprzeciw" "przedawnienie" "e-Sąd"
+       Badge: "→ Długomat"
+       Karta: border 1.5px dashed iron-200 (dashed = "to nie jest nasz moduł, to cross-sell")
+       Badge kolor: navy-100 bg, navy-700 text (paleta Długomatu)
+       Link na klik: `/dlugomat` (zewnętrzny redirect)
+
+MOBILE:
+  Search bar: full-width, height 48px
+  Karty: horizontal scroll (snap) z peek (widać krawędź następnej karty)
+    Alternatywnie: 1 kolumna, kompaktowe (H4 + badge w jednym rzędzie, bez paragraph)
+  Wariant kompaktowy mobile:
+    Każda karta: height 64px, flex row, gap 12px
+    Ikona 40px box + H4 14px + badge na prawo
+    No paragraph, no tags
+
+4.7 SEKCJA CENNIK
+Background: var(--iron-950) — ciemna sekcja
+Padding: 100px 0
+
+Overline: "CENNIK" — JetBrains Mono 11px, iron-400, uppercase, ls 0.12em
+H2: "Jedno pismo lub pełna ochrona."
+    Inter Tight 36px weight 700, white
+    Margin-bottom: 16px
+Paragraph: "Średni koszt odwołania u prawnika: 300–1 000 zł"
+    Inter 16px, iron-400, line-through na kwotach (blue-400 przekreślenie)
+    Margin-bottom: 56px
+
+TRZY KARTY:
+
+KARTA 1 — "Jedno pismo":
+  Background: rgba(255,255,255,0.03)
+  Border: 1px solid rgba(255,255,255,0.06)
+  Radius: 14px, padding 32px
+  
+  Cena: "99 zł" — Inter Tight 40px weight 800, white
+  Pod: "Jednorazowo" — Inter 14px, iron-400
+  Separator: 1px rgba(255,255,255,0.06), margin-y 24px
+  
+  Cechy (Inter 14px, iron-300, gap 12px):
+    ✓ Jedno pismo prawne
+    ✓ AI dopasowanie do sytuacji
+    ✓ PDF gotowy do wysłania
+    ✓ Poradnik krok-po-kroku
+  
+  Ikona ✓: blue-400, 14px
+  Button: ghost, border rgba(255,255,255,0.1), white
+    "Stwórz pismo →"
+
+KARTA 2 — "Pakiet 3 pism" (WYRÓŻNIONA):
+  Background: white
+  Shadow: 0 8px 32px rgba(0,0,0,0.3)
+  
+  Badge: "OSZCZĘDZASZ 25%" — blue-600 bg, white text, pill
+    Inter 10px weight 700, uppercase
+  
+  Cena: "249 zł" — Inter Tight 40px weight 800, iron-950
+  Pod: "Jednorazowo" — Inter 14px, iron-500
+  Cena przekreślona: "297 zł" — Inter 14px, iron-400, line-through
+  Separator: 1px iron-100
+  
+  Cechy (Inter 14px, iron-700):
+    ✓ 3 pisma prawne (dowolny typ)
+    ✓ Wszystko z Jednego pisma
+    ✓ AI asystent prawny
+    ✓ Kalendarz terminów
+    ✓ Priorytetowe generowanie
+  
+  Ikona ✓: blue-600
+  Button: blue-600 bg, white, full-width, "Wybierz pakiet →"
+
+KARTA 3 — "PRO+ (Subskrypcja)":
+  Background: rgba(255,255,255,0.03)
+  Border: 1px solid rgba(255,255,255,0.06)
+  
+  Cena: "349 zł" — Inter Tight 40px weight 800, white
+  Pod: "Miesięcznie" — Inter 14px, iron-400
+  
+  Cechy:
+    ✓ Nielimitowane pisma
+    ✓ Wszystkie kategorie
+    ✓ AI prawnik 24/7
+    ✓ OCR analiza dokumentów
+    ✓ Kalendarz + alerty
+    ✓ Eksport DOCX + PDF
+    ✓ Raporty skuteczności
+  
+  Button: ghost, border rgba(255,255,255,0.1), white
+    "Rozpocznij PRO+ →"
+
+Pod kartami — B2B teaser:
+  Max-width: 640px, centered
+  Background: rgba(255,255,255,0.03), border 1px rgba(255,255,255,0.06), radius 14px
+  Padding: 24px 28px
+  Flex row, justify-between, align-center
+  
+  Left:
+    "Jesteś firmą transportową lub kancelarią?"
+    Inter 15px weight 500, iron-300
+    Pod spodem: "Licencja B2B od 490 zł/mc. White-label, API, panel flotowy."
+    Inter 13px, iron-400
+  Right:
+    Button: ghost small, border rgba(255,255,255,0.12), iron-200
+    "Sprawdź ofertę B2B →"
+
+4.8 DASHBOARD — PANEL UŻYTKOWNIKA
+FILOZOFIA: Dashboard Mandatomatu to najbardziej "SaaS-owy" panel w LexMate24.
+Bardziej Stripe Dashboard niż portal prawny. Gęstszy, bardziej tabelaryczny,
+więcej danych na ekranie. Użytkownik Mandatomatu to często kierowca z wieloma 
+mandatami — potrzebuje przeglądać wiele spraw naraz.
+
+SIDEBAR:
+  Width: 256px (węższy niż Długomat — mniej modułów)
+  Background: var(--iron-950)
+  
+  Logo:
+    "Mandatomat" — Inter Tight 17px weight 700, white
+    ".pl" — Inter Tight 17px weight 700, blue-400 (kolorowy suffix)
+    Pod spodem: brak "LexMate24" — Mandatomat jest na tyle silną marką, 
+      że submarka jest zbędna w sidebarze
+    Margin-bottom: 32px
+    
+  Nawigacja:
+    Domyślnie: ikona iron-500, tekst iron-400
+    Hover: bg rgba(255,255,255,0.04), tekst iron-200
+    Active: bg rgba(37,99,235,0.08), tekst white, ikona blue-400
+      Left indicator: 3px, blue-500
+    
+    Font labels: Inter 14px weight 500
+    Ikony: 18px, stroke 1.5px
+    
+  Elementy:
+    ⬡ Panel
+    📋 Moje pisma
+    📚 Szablony (link do katalogu)
+    📅 Kalendarz terminów
+    📊 Statystyki
+    💳 Płatności
+    --- separator (1px rgba(255,255,255,0.05)) ---
+    👤 Profil
+    ⚙ Ustawienia
+    
+    Jeśli PRO+: badge "PRO+" obok loganu
+      pill, blue-600 bg, white text, 10px, uppercase
+
+  BUTTON (dół sidebar, przed separator):
+    "+ Nowe pismo" — full-width, blue-600, white, height 40px
+    Inter 13px weight 600
+    Radius 8px
+    Margin-bottom: 16px
+
+MAIN CONTENT:
+  Background: var(--iron-50) — najczystszy gray
+  Padding: 28px 32px (MNIEJSZY padding niż inne SaaS-y — gęstość)
+  
+  HEADER:
+    Flex row, justify-between, align-center
+    H3: "Panel" — Inter Tight 22px weight 700, iron-900
+    Right: 
+      Search (compact): 200px input, height 36px, iron-100 bg, iron-300 border
+      Notification bell (18px, iron-500)
+      Avatar: 32px circle, iron-200 bg
+
+METRYKI (pod header):
+  CSS Grid 4 kolumny, gap 12px, margin-bottom 24px
+  
+  Każda karta:
+    Background: white, border 1px iron-100, radius 10px, padding 16px
+    — mniejsze padding i radius niż inne SaaS-y = kompaktowość
+    
+    Overline: JetBrains Mono 10px, iron-400, uppercase, ls 0.06em
+    Wartość: Inter Tight 22px weight 700, iron-900, tabular-nums
+    Trend: Inter 11px, volt-600 (up) / signal-600 (down)
+    
+    "PISMA W TYM MIESIĄCU" → "7"
+    "OCZEKUJĄCE" → "3" (status-amber-500)
+    "UWZGLĘDNIONE" → "4" (volt-500)
+    "SKUTECZNOŚĆ" → "76%" (volt-500)
+
+WIDGET "SKUTECZNOŚĆ" (UNIKALNY DLA MANDATOMAT):
+  Karta wyróżniona, full-width, margin-bottom 24px
+  Background: white, border iron-100, radius 12px, padding 24px
+  
+  Layout: flex row, gap 32px, align-center
+  
+  Left (donut chart):
+    Width: 100px, height: 100px
+    SVG circle chart:
+      Track: iron-100 (360°)
+      Segment 1 (uwzględnione): volt-500 (76% = ~274°)
+      Segment 2 (odmowa): signal-400 (12%)
+      Segment 3 (oczekujące): status-amber-400 (12%)
+    Center text: "76%" — Inter Tight 20px weight 700, iron-900
+  
+  Center (legenda):
+    Każdy item: flex row, gap 8px, align-center
+    Dot 8px circle + tekst Inter 13px weight 500 iron-700 + wartość iron-500
+    ● Uwzględnione: volt-500, "23 pisma"
+    ● Odmowa: signal-400, "4 pisma"
+    ● Oczekujące: status-amber-400, "3 pisma"
+  
+  Right (trend sparkline):
+    Width: 200px, height: 60px
+    SVG line chart, stroke blue-400, stroke-width 2, fill none
+    Trend line last 12 weeks
+    Pod spodem: "Trend skuteczności (12 tyg.)" — Inter 11px, iron-400
+
+LISTA PISM (tabela, nie karty — Mandatomat jest tabelaryczny):
+  Background: white, border iron-100, radius 12px, overflow hidden
+  
+  Table header:
+    Background: iron-50
+    Font: Inter 12px weight 600, iron-500, uppercase, ls 0.04em
+    Height: 44px
+    Border-bottom: 1px iron-200
+    
+  Kolumny:
+    "Typ pisma" — 25% width
+    "Data" — 12%
+    "Instytucja" — 18%
+    "Status" — 15%
+    "Termin odpowiedzi" — 15%
+    "Akcje" — 15%
+  
+  Table row:
+    Height: 60px
+    Border-bottom: 1px iron-50
+    Font: Inter 14px weight 400, iron-800
+    Hover: bg blue-50/30
+    
+    Typ pisma: 
+      Flex row, gap 10px
+      Ikona kategorii: 20px, blue-500 (w circle 32px, blue-50 bg, radius 8px)
+      Nazwa: Inter 14px weight 500, iron-900
+      Kategoria: Inter 12px, iron-500
+    
+    Data: JetBrains Mono 13px, iron-600
+    
+    Instytucja: Inter 14px, iron-700
+    
+    Status (badge pill):
+      "Wersja robocza" — iron-100 bg, iron-600 text
+      "Wysłane" — blue-100 bg, blue-700 text
+      "Oczekuje" — status-amber-100 bg, status-amber-700 text
+      "Uwzględnione" — volt-100 bg, volt-700 text
+      "Odmowa" — signal-100 bg, signal-700 text
+      JetBrains Mono 11px weight 600, uppercase
+    
+    Termin: 
+      >14 dni: Inter 13px, iron-500 ("do 12.05.2026")
+      7-14 dni: Inter 13px weight 500, status-amber-600
+      <7 dni: Inter 13px weight 600, signal-600
+      Brak: "—" iron-300
+    
+    Akcje:
+      Button group: 2 ghost buttons, gap 4px
+        "Otwórz" — 13px, blue-600
+        "⋮" — dropdown (Edytuj, Duplikuj, Pobierz PDF, Usuń)
+
+  Table footer:
+    Background: iron-50
+    Height: 48px
+    Flex row, justify-between, align-center, padding-h 16px
+    Left: "Wyświetlam 1-10 z 30" — Inter 13px, iron-500
+    Right: Pagination (numbered buttons, active: blue-600 bg white text)
+
+MOBILE dashboard:
+  Bottom nav: 5 ikon (Panel, Pisma, Nowe, Kalendarz, Menu)
+    Ikona "Nowe" (środkowa): blue-600 bg circle, white "+" icon
+  Tabela → lista kart (każda karta: typ + status + termin, kompaktowa)
+  Metryki: 2×2 grid
+  Widget skuteczności: ukryty (zbyt złożony), zamiast: prosty % w karcie metryki
+
+4.9 WIZARD — SPECYFIKA MANDATOMAT
+KLUCZOWA RÓŻNICA: Mandatomat wizard to NAJKRÓTSZY wizard ze wszystkich SaaS-ów.
+3-4 kroki (vs. 6 Długomat, 4-7 Rozwodomat, 5 Alimentomat).
+Powód: mandaty są proste. Mniej pól, mniej danych, szybciej do wyniku.
+
+TOP BAR:
+  Background: white (czysty, jasny — kontrast z ciemnym dashboardem)
+  Height: 64px (niższy niż inne SaaS-y), sticky
+  Border-bottom: 1px iron-100
+  
+  Left: "← Wstecz" ghost, iron-600, Inter 14px weight 500
+  Center: 
+    "Odwołanie od mandatu" — Inter 15px weight 600, iron-900
+    Krok: "Krok 1 z 3" — Inter 12px, iron-400 (obok, nie pod spodem — oszczędność miejsca)
+  Right: "×" close button, 20px, iron-400
+    Hover: iron-600
+    — zamknięcie wizarda (nie "Zapisz i wyjdź" — Mandatomat nie dramatyzuje)
+
+PROGRESS BAR:
+  Height: 2px (NAJCIEŃSZY — Mandatomat nie potrzebuje grubej wizualizacji)
+  Track: iron-100
+  Fill: blue-500
+  No glow, no animation — statyczny, zmiana skokowa
+
+STEP INDICATOR:
+  BRAK TRADYCYJNEGO STEPPERA.
+  
+  Mandatomat zamiast kropek z numerami używa BREAD-CRUMB TABS:
+  Flex row, gap 0, max-width 560px, centered, margin-top 32px, margin-bottom 40px
+  
+  Każdy tab:
+    Padding: 10px 20px
+    Border-bottom: 2px solid
+    Font: Inter 13px weight 500, uppercase, ls 0.04em
+    
+    Ukończony: text iron-500, border blue-500
+    Aktywny: text blue-600 weight 600, border blue-600
+    Przyszły: text iron-300, border iron-100
+    
+    Separator: brak (taby stykają się)
+    
+  Taby: "RODZAJ" | "DANE" | "PODGLĄD" | "PŁATNOŚĆ"
+  (Mandatomat 4-krokowy: typ → dane → preview → pay)
+
+FORMULARZ:
+  Max-width: 520px (NAJWĘŻSZY), centered
+  Background: white (bez karty-wrappera — sam formularz na białym tle)
+  Padding: 0 (formularz bezpośrednio na stronie, nie w karcie)
+  
+  Agent AI: brak karty okalającej formularz to celowa decyzja.
+  Mandatomat jest PŁASKI — mniej warstw, mniej głębi, mniej "pudełek w pudełkach".
+  Formularz oddycha bezpośrednio na stronie.
+
+KROK 1 — RODZAJ MANDATU:
+  H3: "Co chcesz odwołać?" — Inter Tight 24px weight 700, iron-900
+  Margin-bottom: 24px
+  
+  CARD-SELECT GRID (2 kolumny, gap 12px):
+    Każda karta:
+      Height: auto (content-driven), min-height 80px
+      Border: 1.5px solid iron-200
+      Radius: 12px
+      Padding: 16px 20px
+      Cursor: pointer
+      
+      Flex column, gap 4px
+      Ikona: 24px, iron-400
+      Tytuł: Inter 14px weight 600, iron-900
+      Opis: Inter 12px, iron-500 (1 linia)
+      
+      Selected: border 2px blue-500, bg blue-50, ikona blue-600
+      Hover (unselected): border iron-300, shadow sm
+    
+    Opcje:
+      [siren] "Mandat karny" / "Policja, Straż Miejska"
+      [camera] "Fotoradar" / "CANARD, pomiar prędkości"
+      [parking-circle] "Opłata parkingowa" / "ZDM, APCOA, prywatne"
+      [bus] "Komunikacja miejska" / "ZTM, MPK, SKM"
+      [truck] "ITD" / "Inspekcja Transportu"
+      [highway] "e-TOLL" / "viaTOLL, opłaty drogowe"
+      [shield] "Ubezpieczenie" / "OC, AC, odszkodowanie"
+      [file-warning] "Inne" / "Opisz swoją sytuację"
+
+KROK 2 — DANE (dynamiczne pytania):
+  H3: "Szczegóły mandatu" — Inter Tight 24px weight 700, iron-900
+  
+  Agent AI: pola zmieniają się dynamicznie w zależności od wybranego rodzaju (krok 1).
+  
+  WARIANT: Mandat karny (Policja):
+    Select: "Kto wystawił?" — Policja drogowa / Straż Miejska / Straż Graniczna / Inne
+    Input: "Numer mandatu" — placeholder "np. XYZ123456"
+    Date: "Data wystawienia mandatu"
+    Number: "Kwota mandatu" — zł
+    Select: "Powód odwołania" (KLUCZOWE POLE):
+      Dropdown z AI-sugestiami, ikona sparkle ✨ obok opcji sugerowanych:
+        ✨ "Błąd urządzenia pomiarowego"
+        ✨ "Nie byłem kierowcą"
+        ✨ "Nieczytelne oznakowanie"
+        "Nieprawidłowa procedura kontroli"
+        "Przekroczenie terminu wystawienia"
+        "Okoliczności łagodzące"
+        "Inne (opiszę)"
+    Textarea (jeśli "Inne"): "Opisz okoliczności" — max 500 znaków
+    
+  WARIANT: Fotoradar:
+    Select: "Typ urządzenia" — CANARD / ISKRA / Ultralyte / Nieznany
+    Input: "Numer sprawy/mandatu"
+    Date: "Data zdarzenia"
+    Input: "Lokalizacja pomiaru"
+    Number: "Prędkość zmierzona / dozwolona" — dwa pola obok siebie
+    Select: "Powód odwołania" (AI-sugestie):
+      ✨ "Brak legalizacji urządzenia"
+      ✨ "Niepewność pomiarowa"
+      ✨ "Nie byłem kierowcą"
+      "Nieprawidłowe ustawienie urządzenia"
+      "Brak oznakowania fotoradaru"
+      "Inne"
+    
+  WARIANT: Opłata parkingowa:
+    Select: "Miasto"
+    Select: "Operator" — ZDM / APCOA / Inny (input)
+    Input: "Numer opłaty/wezwania"
+    Date: "Data zdarzenia"
+    Number: "Kwota"
+    Select: "Powód reklamacji":
+      ✨ "Opłata uiszczona w aplikacji"
+      ✨ "Awaria parkometru"
+      "Nieczytelne oznakowanie strefy"
+      "Pojazd nie był zaparkowany w tym miejscu"
+      "Przedawnienie roszczenia"
+      "Inne"
+  
+  WARIANT: ZTM/MPK:
+    Select: "Miasto"
+    Select: "Przewoźnik" — ZTM Warszawa / MPK Kraków / SKM / Inny
+    Input: "Numer opłaty dodatkowej"
+    Date: "Data zdarzenia"
+    Toggle: "Czy posiadałeś ważny bilet?"
+      Jeśli tak: upload biletu / screenshot (drag-drop zone, compact, height 120px)
+    Select: "Powód odwołania":
+      ✨ "Posiadałem ważny bilet (załączam dowód)"
+      ✨ "Awaria kasownika"
+      "Przedawnienie (po 1 roku)"
+      "Okoliczności losowe"
+      "Inne"
+
+  Agent AI: ikona ✨ (sparkle) przed AI-sugerowanymi opcjami.
+  Implementacja: Lucide "sparkles" 14px, blue-400.
+  Tooltip: "AI sugeruje tę opcję na podstawie analizy podobnych spraw"
+
+KROK 3 — PODGLĄD:
+  Background: iron-50
+  Layout: 2 kolumny (dokument 560px + panel 280px)
+  
+  DOKUMENT:
+    Identyczna struktura jak Długomat (karta A4, serif text, watermark),
+    ale MNIEJSZY padding (48px 40px) i MNIEJSZY shadow (lg nie xl)
+    — Mandatomat wizualnie "lżejszy" od Długomatu
+  
+  PANEL BOCZNY:
+    Mniejszy (280px vs 320px), 1 karta zamiast 2:
+    
+    Karta — Podsumowanie + płatność:
+      Background: white, border iron-100, radius 12px, padding 20px
+      
+      Sekcja 1 — meta:
+        "Odwołanie od mandatu" — Inter 13px, iron-500
+        "Mandat za prędkość • Policja" — Inter 14px weight 500, iron-800
+        Separator: 1px iron-100
+      
+      Sekcja 2 — walidacja (kompaktowa):
+        Flex row, justify-between
+        "Kompletność:" — Inter 13px, iron-500
+        "92%" — Inter 13px weight 600, volt-600
+        Badge: volt-100 bg, volt-700 text, "OK"
+      
+      Sekcja 3 — cena:
+        Separator: 1px iron-100
+        "99 zł" — Inter Tight 28px weight 700, iron-900
+        "Prawnik: ~500 zł" — Inter 13px, iron-400, line-through
+        
+      Button: blue-600 bg, white, full-width, height 44px
+        "Zapłać i pobierz →"
+      
+      Pod button: ikony płatności (Visa, MC, BLIK, P24) 
+        szare, 20px height, flex row gap 6px, centered
+
+KROK 4 — PŁATNOŚĆ (po Stripe Checkout redirect):
+  Success page:
+    Max-width: 480px, centered, padding-top: 80px
+    
+    Ikona: check-circle 64px, volt-500
+      Animacja: scale 0→1, spring stiffness 200, duration 400ms
+      Bez draw-in (szybciej niż Długomat — Mandatomat nie celebruje, zamyka)
+    
+    H2: "Gotowe." — Inter Tight 28px weight 700, iron-900
+      (jednosłowowe — najkrótszy success message w LexMate24)
+    
+    Paragraph: "Twoje odwołanie jest gotowe do pobrania."
+      Inter 16px, iron-500, margin-bottom 32px
+    
+    Karta z plikiem:
+      Background: iron-50, border iron-200, radius 12px, padding 20px
+      Flex row, gap 16px, align-center
+      Ikona: file-text 24px, blue-500
+      Nazwa: "Odwolanie_mandat_XYZ123456.pdf" — JetBrains Mono 13px, iron-700
+      Rozmiar: "128 KB" — Inter 12px, iron-400
+      Button: "Pobierz" primary small, blue-600
+    
+    Pod kartą:
+      Link: "Wróć do panelu" — Inter 14px, blue-600, underline
+      
+    Instrukcja (margin-top 40px):
+      Karta: border iron-200, radius 12px, padding 24px
+      H4: "Co dalej?" — Inter 16px weight 600, iron-900
+      Ordered list (Inter 14px, iron-600, lh 1.6):
+        1. "Wydrukuj odwołanie lub wyślij przez ePUAP"
+        2. "Złóż w ciągu 7 dni od otrzymania mandatu"
+        3. "Oczekuj na odpowiedź (14-30 dni)"
+      
+      Każdy item: number w circle (20px, blue-50 bg, blue-600 text, 11px weight 600)
+
+4.10 KOMPONENTY UNIKALNE DLA MANDATOMAT
+Widget skuteczności (Success Rate Tracker)
+KOMPONENT: SuccessRateTracker
+Lokalizacja: dashboard, strona statystyk, landing page
+
+  Na landing page (sekcja social proof):
+    Background: white, border iron-100, radius 16px, padding 32px
+    Max-width: 800px, centered
+    
+    Layout: CSS Grid 3 kolumny
+    
+    Col 1 — Donut chart:
+      120px × 120px SVG
+      Segments:
+        volt-500 (76% = uwzględnione)
+        signal-400 (12% = odmowa)
+        status-amber-400 (12% = w trakcie)
+      Center: "76%" Inter Tight 28px weight 700, iron-900
+      Animacja: draw-in od 12 o'clock, 1.5s, ease out (on scroll trigger)
+    
+    Col 2 — Breakdown:
+      Vertical stack, gap 12px
+      Każdy: flex row, gap 8px
+        Dot 10px circle [kolor]
+        Label: Inter 14px weight 500, iron-700
+        Value: Inter 14px weight 600, iron-900, tabular-nums
+      
+      "Uwzględnione" — "2 340 pism"
+      "Odmowa" — "372 pisma"
+      "W trakcie" — "368 pism"
+    
+    Col 3 — Best categories:
+      H4: "Najwyższa skuteczność" — Inter 14px weight 600, iron-900
+      
+      Lista (top 3):
+        Każdy: flex row, justify-between
+        Kategoria: Inter 13px, iron-700
+        Procent: Inter 13px weight 600, volt-600
+        Mini progress bar: 60px × 4px, iron-100 track, volt-500 fill
+        
+        "Fotoradary" — "87%"
+        "Opłaty parkingowe" — "82%"
+        "ZTM/MPK" — "79%"
+
+Quick Action Bar (dashboard)
+KOMPONENT: QuickActionBar
+Lokalizacja: dashboard, pod metrykami
+
+  Full-width, margin-bottom 24px
+  Background: blue-50, border 1px blue-100, radius 12px, padding 16px
+  Flex row, gap 12px, align-center, justify-center, flex-wrap
+  
+  Każdy action:
+    Button: height 36px, radius 8px, padding-h 16px
+    Font: Inter 13px weight 500
+    Background: white, border 1px blue-200, color blue-700
+    Ikona: 16px, blue-500, przed tekstem, gap 6px
+    
+    Hover: bg blue-100, border blue-300
+    
+  Actions:
+    [+ siren] "Nowy mandat"
+    [+ camera] "Nowy fotoradar"
+    [+ parking-circle] "Nowe parkowanie"
+    [+ bus] "Nowe ZTM/MPK"
+    [+ file-text] "Inne pismo"
+    
+  Agent AI: Quick Action Bar to shortcut do wizarda z pre-selected kategorią.
+  Kliknięcie "Nowy mandat" → otwiera wizard z krokiem 1 pre-selected na "Mandat karny".
+
+AI Szacunkowa Skuteczność (inline w wizardzie)
+KOMPONENT: SuccessEstimator
+Lokalizacja: wizard krok 2, pod polem "Powód odwołania"
+
+  Pojawia się po wybraniu powodu odwołania (300ms delay).
+  
+  Card:
+    Background: blue-50, border 1px blue-100, radius 10px, padding 14px
+    Flex row, gap 12px, align-center
+    
+    Left: circular mini-chart (36 kontynuuję dokładnie od miejsca przerwania:
+    Left: circular mini-chart (36px × 36px):
+      SVG circle, stroke-width 3px
+      Track: blue-100
+      Fill: volt-500 (jeśli ≥70%), status-amber-500 (40-69%), signal-400 (<40%)
+      Center: procent, Inter 11px weight 700
+    
+    Center:
+      "Szacunkowa skuteczność: 82%" — Inter 13px weight 600, iron-800
+      "Na podstawie 1 240 podobnych spraw" — Inter 12px, iron-500
+    
+    Right:
+      Ikona: info-circle 16px, blue-400
+      Tooltip (on hover/click): 
+        "Szacunek oparty na analizie AI rozstrzygniętych spraw 
+        z tym samym powodem odwołania. Rzeczywisty wynik może się różnić."
+        — Inter 13px, iron-700, max-width 240px, bg white, shadow lg, radius 10px, padding 16px
+    
+    Animacja wejścia: 
+      SlideDown (height 0→auto, opacity 0→1), 250ms, ease [0.16, 1, 0.3, 1]
+      Progress fill w mini-chart: 0→target%, 800ms, delay 200ms
+    
+    Zmiana powodu odwołania:
+      Komponent fade-out (opacity 1→0, 100ms), 
+      update danych, 
+      fade-in (opacity 0→1, 200ms) z nową wartością
+    
+    Agent AI: ten komponent wywołuje lekki endpoint /api/ai/estimate-success
+    z parametrami { category, reason, institution }. 
+    Response: { score: 82, sample_size: 1240 }.
+    Na start (brak danych historycznych): hardcoded scores per kategoria+powód,
+    potem dynamicznie z tabeli case_events/payments.
+
+Status Timeline (historia pisma)
+KOMPONENT: DocumentTimeline
+Lokalizacja: strona szczegółów pisma (/panel/pisma/[id])
+
+  Agent AI: Mandatomat timeline jest HORYZONTALNA (nie pionowa jak Rozwodomat).
+  Powód: sprawy mandatowe mają mniej etapów (4-6 vs 8-10 w rozwodzie),
+  horyzontalny layout jest bardziej kompaktowy i "procesowy".
+
+  Full-width, margin-bottom 32px
+  Background: white, border iron-100, radius 12px, padding 24px
+
+  Flex row, align-center, justify-between
+  Linia łącząca: 2px, iron-100, position absolute, top 50% of dots
+  
+  Każdy punkt:
+    Dot: 14px circle (z-index nad linią)
+    Label pod dot: Inter 12px weight 500, margin-top 8px
+    Data pod label: Inter 11px, iron-400
+    
+    Ukończony: dot blue-600, fill, linia blue-600 (do następnego ukończonego)
+    Aktywny: dot blue-500, ring 4px blue-100 (pulsujący), linia iron-200
+    Przyszły: dot iron-200, outline only, linia iron-100
+    Success: dot volt-500
+    Failed: dot signal-500
+  
+  Punkty timeline (mandat):
+    ✓ "Utworzono" — "20.04.2026"
+    ✓ "Wygenerowano" — "20.04.2026"
+    ✓ "Opłacono" — "20.04.2026"
+    ✓ "Pobrano PDF" — "20.04.2026"
+    ● "Wysłano" — "21.04.2026" (aktywny)
+    ○ "Odpowiedź" — "oczekuje (14-30 dni)"
+  
+  Ostatni punkt (wynik): 
+    Wariant A (pozytywny): dot volt-500, label "Uwzględnione" weight 600 volt-700
+    Wariant B (negatywny): dot signal-500, label "Odmowa" weight 600 signal-700
+    Wariant C (oczekuje): dot status-amber-400, label "Oczekuje" iron-500
+
+  MOBILE:
+    Timeline zmienia się na PIONOWĄ (vertical), minimalistyczną:
+    Linia 2px po lewej, dots 10px, labels po prawej
+    Bardziej kompaktowa niż Rozwodomat (mniej padding, mniej tekstu)
+
+4.11 PANEL B2B — ODMIENNE UI
+FILOZOFIA: Panel B2B Mandatomatu to osobny layout dla firm transportowych,
+kancelarii i NGO. Ciemniejszy, bardziej korporacyjny, z rozbudowaną analityką.
+
+SIDEBAR B2B:
+  Width: 280px
+  Background: iron-950 (ciemniejszy niż B2C iron-950 — pełna czerń)
+  
+  Logo: [Logo klienta] (white-label) LUB "Mandatomat B2B"
+    Inter Tight 16px weight 700, white
+    Badge: "BUSINESS" pill, blue-700 bg, blue-200 text, 10px
+  
+  Nawigacja rozszerzona:
+    Sekcja "ZARZĄDZANIE":
+      ⬡ Dashboard
+      📋 Sprawy (lista wszystkich spraw firmy)
+      📊 Raporty
+      📅 Kalendarz
+    
+    Sekcja "ORGANIZACJA":
+      👥 Zespół (subkonta, role)
+      🚚 Flota (pojazdy, przypisania — DLA FIRM TRANSPORTOWYCH)
+      ⚙ Ustawienia firmy
+      🔑 API (klucze, webhooks)
+    
+    Sekcja "ROZLICZENIA":
+      💳 Fakturacja
+      📜 Licencja
+      📈 Zużycie (ile pism w okresie)
+
+DASHBOARD B2B:
+  Background: iron-100 (jaśniejszy niż B2C — więcej kart wymaga kontrastu)
+  
+  Metryki rozszerzone (6 kart, grid 3×2):
+    "PISMA W OKRESIE" → "47"
+    "AKTYWNE SPRAWY" → "12"
+    "SKUTECZNOŚĆ" → "78%"
+    "OSZCZĘDNOŚCI" → "14 100 zł" (vs. koszt prawnika)
+    "ŚREDNI CZAS" → "2.4 min"
+    "SUBKONTA" → "8 użytkowników"
+  
+  Tabela spraw:
+    Dodatkowe kolumny:
+      "Pojazd" (nr rejestracyjny — dla flot)
+      "Pracownik" (kto złożył)
+      "Koszt" (ile pismo kosztowało firmę)
+    
+    Filtry nad tabelą:
+      Select: Pracownik, Pojazd, Kategoria, Status, Data od-do
+      Button: "Eksport CSV" ghost iron-600
+      Button: "Eksport PDF" ghost iron-600
+  
+  RAPORT MIESIĘCZNY (karta):
+    Background: white, border iron-100, radius 14px, padding 28px
+    
+    H3: "Raport — kwiecień 2026" — Inter Tight 20px weight 700, iron-900
+    
+    Chart: bar chart (recharts), 12 słupków (miesiące)
+      Kolor słupków: blue-500
+      Oś Y: liczba pism
+      Oś X: miesiące (JetBrains Mono 11px)
+      
+    Pod chartem: 
+      "Łączna oszczędność vs. kancelaria: 14 100 zł w tym miesiącu"
+      Inter 14px weight 500, volt-600
+      Ikona: trending-up 16px
+
+PANEL API:
+  Dokumentacja inline (markdown renderer):
+    Endpoints:
+      POST /api/v1/documents/create — tworzenie pisma
+      GET /api/v1/documents/{id} — pobranie pisma
+      GET /api/v1/documents — lista pism
+      GET /api/v1/stats — statystyki
+    
+    Code snippets (syntax highlighted, JetBrains Mono 13px):
+      curl, Python, JavaScript
+    
+    API key display:
+      Input readonly, JetBrains Mono 14px, masked (••••••••)
+      Button: "Pokaż" / "Kopiuj" ghost small
+      Button: "Regeneruj klucz" ghost danger small
+    
+    Webhook URL:
+      Input editable, placeholder "https://twoja-firma.pl/webhook"
+      Events: document.created, document.paid, document.completed, case.resolved
+      Checkboxes per event
+
+4.12 ANIMACJE — SPECYFIKA MANDATOMAT
+Agent AI: Mandatomat ma NAJSZYBSZE animacje w CAŁYM ekosystemie LexMate24.
+Duration bazowy: 150ms (vs. 200ms Długomat, 300ms Alimentomat, 400ms Rozwodomat).
+Ease: cubic-bezier(0.12, 0.8, 0.3, 1) — snap. Natychmiastowy start, szybkie zakończenie.
+Wrażenie: KLIK — gotowe. Zero czekania. Maszyna.
+
+Page transitions:
+  Wejście: opacity 0→1, duration 200ms (bez translateY — brak ruchu, czysta zmiana)
+  Wyjście: opacity 1→0, duration 100ms
+
+Wizard step transitions:
+  BRAK SLIDE. Crossfade only:
+  Wychodzący: opacity 1→0, 100ms
+  Wchodzący: opacity 0→1, 150ms
+  Brak delay między nimi — natychmiastowa zmiana
+  
+  Agent AI: slide transitions są za wolne dla Mandatomatu.
+  Mandatomat zmienia krok jak przełączanie zakładek w przeglądarce — SNAP.
+
+Card hover:
+  Shadow sm→md, border-color iron-100→blue-200
+  Duration: 150ms
+  TranslateY: 0→(-1px) — MINIMALNY ruch, ledwo widoczny
+  
+  Agent AI: w Mandatomacie hover effects są SUBTYLNIEJSZE niż w innych SaaS-ach.
+  1px translateY (nie 2-3px). Powód: gęsty UI z wieloma kartami — 
+  gdyby wszystkie skakały po 3px, ekran wyglądałby jak trzęsienie ziemi.
+
+Table row hover:
+  Background: transparent→blue-50/30
+  Duration: 100ms (natychmiastowy)
+  Brak transform
+
+Button click:
+  Scale 1→0.98→1, duration 80ms (NAJKRÓTSZA ze wszystkich SaaS-ów)
+  Bez spring, bez bounce — mechaniczny klik
+
+Loading state:
+  BRAK skeleton shimmer (zbyt wolny wizualnie).
+  Zamiast tego: spinner.
+  
+  Spinner Mandatomat:
+    24px × 24px
+    Border: 2px solid iron-100
+    Border-top: 2px solid blue-500
+    Animation: rotate 360deg, 600ms, linear, infinite
+    Obok: "Generowanie..." — Inter 14px, iron-500
+    
+  Agent AI: wiem, że skeleton > spinner w większości przypadków.
+  Ale Mandatomat spinner jest celowy — komunikuje "trwa operacja, zaraz skończę"
+  w sposób bardziej "techniczny" niż skeleton. Skeleton sugeruje "ładuje się strona",
+  spinner sugeruje "system przetwarza Twoje dane". Mandatomat = system.
+
+Donut chart (dashboard):
+  Draw-in: 1.2s, ease [0.22, 1, 0.36, 1], clockwise od 12h
+  Segments pojawiają się po kolei (volt→signal→amber), stagger 200ms
+  Counter w centrum: 0→76%, 800ms, delay 300ms
+
+Success po płatności:
+  Ikona check: scale 0→1, spring stiffness 300, damping 20, duration 300ms
+  BRAK dodatkowych efektów. Brak shield animation (Długomat), 
+  brak calm draw (Rozwodomat), brak confetti (Alimentomat).
+  Jeden check, jedno słowo "Gotowe.", jeden przycisk "Pobierz".
+  Mandatomat nie celebruje — ZAMYKA SPRAWĘ.
+
+Toast notification:
+  SlideIn z góry (translateY -12→0), duration 150ms
+  Background: iron-900, text white, Inter 14px weight 500
+  Ikona: 16px (check-circle volt, alert-triangle amber, x-circle signal)
+  Auto-dismiss: 3s (NAJKRÓTSZY czas wyświetlania)
+  No close button — znika sam
+
+4.13 DARK MODE — SPECYFIKA MANDATOMAT
+Background: #09090B (iron-950 — NAJCZYSTSZY ciemny ze wszystkich SaaS-ów)
+  Brak kolorowego podtonu. Nie navy-black (Długomat), nie violet-black (Alimentomat),
+  nie teal-black (Rozwodomat). CZYSTY zinc-black. Techniczny. Neutralny.
+
+Surface: #18181B (iron-900)
+Elevated: #27272A (iron-800)
+Border: rgba(63,63,70,0.5) (iron-700 at 50%)
+Text primary: #FAFAFA
+Text secondary: #A1A1AA
+Text muted: #71717A
+
+Primary: blue-500 (jaśniejszy)
+Success: volt-400
+Danger: signal-400
+Warning: status-amber-400
+
+Karty:
+  Background: #18181B
+  Border: 1px solid rgba(63,63,70,0.4)
+  Shadow: 0 1px 3px rgba(0,0,0,0.4)
+
+Tabela:
+  Header bg: #18181B
+  Row hover: rgba(37,99,235,0.04) — subtelny blue tint
+  Alternating rows: #18181B / #1C1C20
+
+Sidebar:
+  Praktycznie bez zmian (już ciemny)
+  Active item: rgba(37,99,235,0.1)
+
+Agent AI: Dark mode Mandatomatu jest NAJCZYSTSZY — 
+zero kolorowych podtonów w tle. Daje wrażenie profesjonalnego 
+narzędzia developerskiego (jak VS Code dark theme).
+
+4.14 STANY PUSTE I BŁĘDÓW
+EMPTY STATE (brak pism):
+  Ilustracja: BRAK ilustracji. Mandatomat nie ilustruje — informuje.
+  
+  Centralnie:
+    Ikona: file-plus 48px, iron-300, stroke 1.5px
+    H3: "Brak pism" — Inter Tight 20px weight 700, iron-700
+    Paragraph: "Stwórz pierwsze odwołanie w 3 minuty." — Inter 15px, iron-500
+    Button: blue-600, white, "Nowe pismo →"
+  
+  Agent AI: ZERO dekoracji. Ikona + tekst + button. 
+  Mandatomat empty state jest NAJSUROWSZY — ale nie zimny. 
+  Prosty, funkcjonalny, bez fałszywej empatii.
+
+ERROR STATE:
+  Card: border-left 3px signal-500, bg signal-50, radius 10px, padding 20px
+  
+  Layout: flex row, gap 12px
+  Ikona: alert-circle 20px, signal-600
+  Content:
+    "Nie udało się wygenerować pisma." — Inter 15px weight 600, iron-900
+    "Spróbuj ponownie lub skontaktuj się z pomocą." — Inter 14px, iron-600
+  Button: "Ponów" ghost small, signal-600
+  
+  Agent AI: krótkie, rzeczowe. Brak "Przepraszamy" (Mandatomat nie przeprasza — naprawia).
+
+404:
+  Centralnie, max-width 400px
+  "404" — Inter Tight 72px weight 800, iron-200
+  "Nie znaleziono strony." — Inter 16px, iron-500
+  Link: "Panel →" blue-600
+  
+  To wszystko. Żadnych ilustracji, żadnych żartów, żadnego "Ups".
+
+4.15 RESPONSYWNOŚĆ
+MOBILE:
+  Bottom nav: 5 ikon (Panel, Pisma, Nowe+, Kalendarz, Menu)
+    Ikona "Nowe+" (środkowa): 
+      Circle 48px, blue-600 bg, white "+" 20px
+      Elevated -8px nad bar (mniej niż Długomat -12px — subtelniej)
+  
+  Dashboard: tabela → lista kompaktowa
+    Każdy item: 64px height, flex row
+    Left: ikona kategorii w circle 36px
+    Center: typ + instytucja + data (2 linie)
+    Right: status badge + chevron-right 16px iron-300
+  
+  Wizard: full-width formularz, brak panelu bocznego
+    SuccessEstimator: pod formularzem (nie boczny), full-width
+  
+  Kategorie: horizontal scroll z snap, peek 24px
+  
+  H1 hero: 34px / 1.02 / -0.04em (nadal ściśnięty — charakter zachowany)
+  Device mockup: ukryty
+  Stats: horizontal scroll (3 elementy, snap)
+
+TABLET:
+  Sidebar: collapsed 64px (węższy niż inne SaaS-y)
+  Tabela: zachowana, mniejsze padding (8px)
+  Wizard: panel boczny → inline pod formularzem
+  Kategorie: 2 kolumny
+
+PRINT:
+  Pismo: drukowalne na A4
+  Marginesy: 2.5cm
+  Font: Times New Roman 12pt
+  Dashboard/lista: niepotrzebne, @media print { display: none }
+
+4.16 SEKCJA CASE STUDY (LANDING PAGE)
+Mandatomat jako jedyny SaaS ma dedykowaną sekcję Case Study na landing page — bo mandaty to najczęstszy i najbardziej relatable problem.
+Background: iron-50
+Padding: 100px 0
+
+Overline: "PRZYKŁAD" — JetBrains Mono 11px, blue-600, uppercase
+H2: "Od mandatu do uchylenia — w 3 minuty."
+    Inter Tight 36px weight 700, iron-900
+    Margin-bottom: 56px
+
+LAYOUT: 4 kroki w rzędzie, connected line
+Max-width: 1080px, centered
+
+  Linia łącząca: 2px, iron-200, position absolute, top 32px (center of dots)
+  
+  Każdy krok:
+    Flex column, align-center, text-center
+    Width: 25%
+    
+    Circle: 64px, bg white, border 2px iron-200, shadow sm
+      Wewnątrz: ikona 28px, blue-500
+      Ukończony: bg blue-600, border blue-600, ikona white
+    
+    Tytuł: Inter 15px weight 600, iron-900, margin-top 20px
+    Opis: Inter 13px, iron-500, max-width 200px, margin-top 8px
+    
+  Krok 1: 
+    Ikona: smartphone (telefon)
+    "Wejście na stronę"
+    "Wybieram 'Mandat za prędkość'"
+  
+  Krok 2:
+    Ikona: edit-3 (formularz)
+    "3 pytania"
+    "Policja, fotoradar, błąd urządzenia"
+  
+  Krok 3:
+    Ikona: file-check (dokument z check)
+    "Gotowe pismo"
+    "AI generuje odwołanie z argumentami"
+  
+  Krok 4:
+    Ikona: check-circle (sukces)
+    "Uchylenie mandatu"
+    "76% skuteczność w tej kategorii"
+
+  Pod krokami — cytat:
+    Max-width: 560px, centered, margin-top 56px
+    Background: white, border iron-100, radius 14px, padding 28px
+    
+    Cytat: "Mandat za fotoradar — 500 zł. Odwołanie przez Mandatomat — 99 zł i 3 minuty. 
+    Po miesiącu dostałem pismo: mandat uchylony."
+    Inter 16px italic, iron-700, line-height 1.65
+    
+    Autor: "— Marek, Warszawa" — Inter 14px weight 500, iron-500, margin-top 16px
+    
+    Agent AI: cytat jest generyczny (nie prawdziwy). W produkcji: zbierać realne testimoniale.
+
+MOBILE:
+  4 kroki → 2×2 grid LUB vertical stack
+  Linia łącząca: pionowa (jeśli stack)
+  Circles: 48px
+
+5. PODSUMOWANIE PORÓWNAWCZE — SZYBKA REFERENCYJNA TABELA
+| Aspekt              | Alimentomat         | Rozwodomat          | Długomat            | Mandatomat          |
+|---------------------|---------------------|---------------------|---------------------|---------------------|
+| Display font        | Instrument Serif    | Playfair Display    | Space Grotesk       | Inter Tight         |
+| Charakter fontu     | Klasyczny serif     | Elegancki serif     | Geometric sans      | Tight industrial    |
+| H1 size/weight      | 56px / 400          | 52px / 500          | 56px / 700          | 52px / 800          |
+| H1 letter-spacing   | -0.02em             | -0.02em             | -0.03em             | -0.04em             |
+| Body size           | 16px / 1.65         | 17px / 1.7          | 16px / 1.6          | 16px / 1.6          |
+| Primary color       | Royal Violet #4C1D95| Deep Teal #0E7490   | Fortress Navy #1D4ED8| Precision Blue #2563EB|
+| Accent              | Burnished Gold      | Sage Green          | Emerald Signal      | Volt Green          |
+| Neutrals            | Warm Gray           | Stone               | Slate               | Iron (zinc)         |
+| Hero background     | Warm off-white      | Subtle gradient     | DARK navy-950       | Clean off-white     |
+| Hero visual         | Floating cards      | Centered text only  | Terminal Card       | Phone mockup        |
+| Sidebar bg          | royal-950           | teal-950            | navy-950            | iron-950            |
+| Dashboard unikalny  | —                   | Checklist docs      | Deadline Radar      | Success Rate widget |
+| Wizard kroków       | 5                   | 4–7 (branching)     | 6                   | 3–4                 |
+| Wizard first step   | Formularz           | Card-select branch  | OCR Upload (dark)   | Card-select grid    |
+| Wizard bg           | Jasny               | Jasny               | Krok 1: CIEMNY      | Jasny               |
+| Animacja bazowa     | 300ms               | 400ms               | 200ms               | 150ms               |
+| Ease                | [0.4, 0, 0.2, 1]   | [0.25, 0.46, 0.45, 0.94]| [0.16, 1, 0.3, 1]| [0.12, 0.8, 0.3, 1]|
+| Success animation   | Confetti            | Calm check draw-in  | Shield draw-in      | Check scale (snap)  |
+| Section padding     | 120px               | 140px               | 140px               | 100px               |
+| Card padding        | 24px                | 28px                | 24px                | 20px                |
+| Card gap            | 24px                | 32px                | 20px                | 16px                |
+| Content max-width   | 1080px              | 1020px              | 1080px              | 1140px              |
+| Border-radius cards | 14px                | 16px                | 14px                | 12px                |
+| Empty state style   | Ilustracja + tekst  | Ilustracja + tekst  | Ilustracja + tekst  | Ikona + tekst TYLKO |
+| Dark mode podton    | Fioletowy           | Tealowy             | Navy                | BRAK (czysty zinc)  |
+| Emocja              | Ciepło + siła       | Spokój + godność    | Bezpieczeństwo + nadzieja| Efektywność + precyzja|
+| Archetypt           | Opiekun-Wojownik    | Mędrzec-Przewodnik  | Forteca             | Inżynier            |
+| Tempo               | Umiarkowane         | Wolne               | Dynamiczne          | Najszybsze          |
+| Gęstość UI          | Średnia             | Niska (dużo whitespace)| Wysoka           | Najwyższa           |
+| Mobile FAB kolor    | royal-600           | teal-600            | emerald-500         | blue-600            |
+| Mobile FAB offset   | -8px                | -8px                | -12px               | -8px                |
+
+
