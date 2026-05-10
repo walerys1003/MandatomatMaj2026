@@ -10,6 +10,7 @@
 **Tier 3 — Wizard + AI Pipeline (phase 1+2): ✅ DONE** (`f92d6f3`)
 
 ### Tier 1+2 (foundation, auth, landing)
+
 - [x] Knowledge base (30 chunków, tag/agent indexes, retrieval CLI)
 - [x] Plan 5×50 zadań (Tier 1–5) + GitHub 50 issues Tier 1, 19 etykiet, templates, CODEOWNERS
 - [x] **Monorepo Turborepo + pnpm workspaces** (apps/web, packages/ui, packages/db-types, packages/config)
@@ -29,12 +30,14 @@
 - [x] **Observability stubs** (Sentry client/server/edge, Vercel cron config)
 
 ### Tier 3 phase 1 (wizard engine + cases CRUD) — `85b8b3c`
+
 - [x] **5 MVP form schemas** (M1, M4, P1, P3, W1) z conditional fields + AI-suggested options + OCR autofill hints — `apps/web/src/lib/cases/schemas.ts`
 - [x] **DB enum mapping** (TS shortId ↔ DB ENUM) dla wszystkich 34 typów — `lib/cases/db-mapping.ts`
 - [x] **Wizard pages** (3-step): `/sprawy/nowa` (kategorie) → `/sprawy/nowa/[category]` (subtypy) → `/sprawy/nowa/[category]/[subtype]/formularz`
 - [x] **Cases CRUD API**: `POST/GET /api/cases` + `GET/PATCH/DELETE /api/cases/[caseId]` (DELETE tylko `status='draft'`)
 
 ### Tier 3 phase 2 (AI pipeline + OCR + preview) — `f92d6f3`
+
 - [x] **Claude wrapper** (`lib/ai/claude.ts`): PRICING (Sonnet/Haiku/Opus per 1M tokens), `calcCostUsd()`, `extractJson()`, `generateDocument()` z retry, `scoringAnalysis()` (Haiku), `validateDocument()` (Haiku), `parseOcrDocument()` (Sonnet vision)
 - [x] **5 prompt templates** (M1, M4, P1, P3, W1) + `loadPrompt()` discriminated union loader
 - [x] **letter-to-markdown.ts** — render `LetterResponse` → Markdown z polskimi datami i strukturą pisma urzędowego
@@ -47,15 +50,54 @@
 - [x] **migration 017** — `documents.score INTEGER (0..100 CHECK)`, `validation_passed BOOLEAN`, `validation_issues JSONB`
 - [x] **Navbar** — link `Sprawdź szanse` z highlight styling
 
-### Pozostałe
-- [ ] Tier 3 phase 3: Stripe checkout + płatność + PDF download
-- [ ] Storybook + Vercel preview pipeline (Tier 1.5)
-- [ ] Tier 4 — Admin + Inngest + Webhook reliability
-- [ ] Tier 5 — SEO content + Security audit + Production launch
+### Tier 3+4+5 — P-packs (UX/SEO/Ops/Admin/AI/E2E) — `5ced0fa`
+
+| Pack | Zakres                                                          | Status | Commit         |
+| ---- | --------------------------------------------------------------- | ------ | -------------- |
+| P7   | Onboarding gating + ścieżka `/witaj`                            | ✅     | `35a8b7a`      |
+| P8   | Loading skeletons (`/panel`, `/sprawy`, `/terminy`)             | ✅     | `4338a47`      |
+| P9   | Subskrypcja `/profil/subskrypcja` + Stripe webhook              | ✅     | `a2ef1fb`      |
+| P10  | CrossSellBanner + heurystyka `pickCrossSellProduct`             | ✅     | `e263928`      |
+| P11  | Anti-bounce wizard (`beforeunload`) + ConfirmDialog regenerate  | ✅     | `6d9a1fc`      |
+| P12  | AIBadge sparkle + ValidationBanner + scoring weryfikacja        | ✅     | (już istniało) |
+| P13  | FileUpload drag&drop (OcrUploader, 484 linii)                   | ✅     | (już istniało) |
+| P14  | CodeEditor (lekki, CSP-safe) + version history `/admin/prompty` | ✅     | `1718c44`      |
+| P15  | PDF watermark "PROJEKT" gdy `!isPaid`                           | ✅     | (już istniało) |
+| P16  | Blog: 5 artykułów + RelatedArticles + JSON-LD Article           | ✅     | `d751bb9`      |
+| P17  | `@next/bundle-analyzer` + lazy admin CodeEditor                 | ✅     | `f799706`      |
+| P18  | DPA `docs/legal/dpa.md` + `/status` page + 18× 301 redirects    | ✅     | `e585975`      |
+| P19  | Validation system prompt + eval runner CLI (90 evals)           | ✅     | `5ced0fa`      |
+| P20  | Playwright E2E: 6 specs / 72 testów (chromium + mobile)         | ✅     | (już istniało) |
+
+**Stan końcowy 250 zadań:** ~245/250 ✅, ~5 do produkcyjnego dopięcia (uzupełnienie kategorii w `db-mapping`, wartości produkcyjne secrets dla Stripe/Anthropic, opublikowanie DPA, finalna konfiguracja domeny).
+
+### Endpointy dodane w P-packach
+
+- `GET /blog` + `GET /blog/[slug]` — 5 publicznych artykułów (SSG, JSON-LD)
+- `GET /status` — public status page (Stripe / Anthropic / Supabase / Resend)
+- `GET /profil/subskrypcja` — zarządzanie subskrypcją (cancel / resume)
+- `GET /admin/szablony/[caseType]` + `GET /admin/prompty/[caseType]` — z `<CodeEditor>` (lazy)
+
+### Skrypty CLI dodane w P-packach
+
+- `pnpm -F @mandatomat/web analyze` — bundle analyzer (`.next/analyze/{client,server}.html`)
+- `pnpm -F @mandatomat/web evals` — uruchom 90 evals przez Claude API (próg 70%)
+- `pnpm -F @mandatomat/web evals:dry` — walidacja struktury bez LLM
+- `pnpm test:e2e` — Playwright (chromium + mobile-chrome)
+
+### 301 redirects (P18 — `next.config.mjs`)
+
+- `/artykul/:slug` → `/blog/:slug` · `/artykuly` → `/blog` · `/blog-archiwum` → `/blog`
+- `/faq` · `/pomoc` → `/jak-to-dziala` · `/cennik` → `/#cennik`
+- `/rejestracja` → `/signup` · `/logowanie` → `/login` · `/dashboard` → `/panel`
+- `/sprawa/:id` → `/sprawy/:id`
+- `/mandat` `/fotoradar` `/parking` `/windykacja` `/epu` → `/kategoria/*`
+- `/privacy` → `/polityka-prywatnosci` · `/terms` → `/regulamin` · `/gdpr` → `/rodo`
 
 ## 🛣️ Mapa endpointów (Tier 1–3)
 
 ### Public (anonimowi)
+
 - `GET /` — landing
 - `GET /sprawdz-szanse` — darmowe pre-scoring szans (Haiku)
 - `GET /jak-to-dziala`, `/cennik`, `/o-nas`, `/kontakt`, `/regulamin`, `/polityka-prywatnosci`, `/rodo`
@@ -64,12 +106,14 @@
 - `GET /api/health` — liveness probe
 
 ### Auth required (`/panel`, `/sprawy`, `/profil`, `/ustawienia`)
+
 - `GET /panel` — dashboard listy spraw
 - `GET /sprawy/nowa` → `/sprawy/nowa/[category]` → `/sprawy/nowa/[category]/[subtype]/formularz` — wizard 3-step
 - `GET /sprawy/[caseId]/podglad` — podgląd + edycja + scoring + validation + generuj pismo
 - `GET /profil`, `/ustawienia` — RODO export/delete
 
 ### API routes (auth required, RLS-enforced)
+
 - `POST/GET /api/cases` — utwórz draft / lista
 - `GET/PATCH/DELETE /api/cases/[caseId]`
 - `POST /api/ai/generate-document` — pełen pipeline (Idempotency-Key zalecany)
@@ -182,17 +226,17 @@ node scripts/kb-integrity.mjs # KB integrity (30 chunków)
 
 **Tożsamość**: Bloomberg Terminal — ale dla mandatów. Czysty, gęsty, profesjonalny.
 
-| Token | Wartość | Użycie |
-|---|---|---|
-| Primary | `#2563EB` (Precision Blue 600) | CTA, focus ring, linki |
-| Neutral | Iron (`#09090B` → `#FAFAFA`) | 72% ekranu — tło, tekst, krawędzie |
-| Success | `#16A34A` (Volt 600) | „Uwzględnione", success states |
-| Danger | `#DC2626` (Signal 600) | Odrzucone, błędy |
-| Warning | `#D97706` (Amber 600) | Termin w toku |
-| Display | Inter Tight 800 / -0.04em | H1–H4 |
-| Body | Inter 400/500 | tekst |
-| Mono | JetBrains Mono | numery spraw, kwoty, daty |
-| Animation | 150ms cubic-bezier(0.12, 0.8, 0.3, 1) | „snap" — najszybsza w LexMate24 |
+| Token     | Wartość                               | Użycie                             |
+| --------- | ------------------------------------- | ---------------------------------- |
+| Primary   | `#2563EB` (Precision Blue 600)        | CTA, focus ring, linki             |
+| Neutral   | Iron (`#09090B` → `#FAFAFA`)          | 72% ekranu — tło, tekst, krawędzie |
+| Success   | `#16A34A` (Volt 600)                  | „Uwzględnione", success states     |
+| Danger    | `#DC2626` (Signal 600)                | Odrzucone, błędy                   |
+| Warning   | `#D97706` (Amber 600)                 | Termin w toku                      |
+| Display   | Inter Tight 800 / -0.04em             | H1–H4                              |
+| Body      | Inter 400/500                         | tekst                              |
+| Mono      | JetBrains Mono                        | numery spraw, kwoty, daty          |
+| Animation | 150ms cubic-bezier(0.12, 0.8, 0.3, 1) | „snap" — najszybsza w LexMate24    |
 
 Szczegóły: `spec/chunks/D01_..D10_*.md` + `packages/ui/src/tokens/*.ts`.
 
@@ -213,7 +257,7 @@ Szczegóły: `spec/chunks/D01_..D10_*.md` + `packages/ui/src/tokens/*.ts`.
 - **DB / Auth / Storage**: Supabase, region `eu-central-1`
 - **AI**: Anthropic (Sonnet 4.6 generation, Haiku 4.5 scoring)
 - **Płatności**: Stripe + Fakturownia (faktury PL)
-- **Email**: Resend  · **SMS**: SMSAPI  · **OCR**: Tesseract.js w Inngest job
+- **Email**: Resend · **SMS**: SMSAPI · **OCR**: Tesseract.js w Inngest job
 - **Observability**: Sentry + Axiom + PostHog
 
 ## 🔗 Linki
