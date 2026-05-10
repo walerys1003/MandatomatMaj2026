@@ -1,4 +1,4 @@
-import { getServerEnv } from '@/lib/env'
+import { serverEnv } from '@/lib/env'
 
 /**
  * Wrapper na Anthropic Messages API (Claude).
@@ -16,9 +16,20 @@ const ANTHROPIC_VERSION = '2023-06-01'
 
 export type AnthropicRole = 'user' | 'assistant'
 
+/** Block content — text + image (vision). */
+export type AnthropicContentBlock =
+  | { type: 'text'; text: string }
+  | {
+      type: 'image'
+      source:
+        | { type: 'base64'; media_type: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif'; data: string }
+        | { type: 'url'; url: string }
+    }
+
 export interface AnthropicMessage {
   role: AnthropicRole
-  content: string
+  /** String dla zwykłych wiadomości; array dla vision (text + image blocks). */
+  content: string | AnthropicContentBlock[]
 }
 
 export interface AnthropicCallOptions {
@@ -40,19 +51,19 @@ export interface AnthropicResult {
 }
 
 export class AnthropicError extends Error {
-  constructor(
-    message: string,
-    public readonly status?: number,
-    public readonly cause?: unknown,
-  ) {
+  public readonly status?: number
+  public override readonly cause?: unknown
+
+  constructor(message: string, status?: number, cause?: unknown) {
     super(message)
     this.name = 'AnthropicError'
+    this.status = status
+    this.cause = cause
   }
 }
 
 export async function callClaude(opts: AnthropicCallOptions): Promise<AnthropicResult> {
-  const env = getServerEnv()
-  const apiKey = env.ANTHROPIC_API_KEY
+  const apiKey = serverEnv.ANTHROPIC_API_KEY
   if (!apiKey) {
     throw new AnthropicError('Brak ANTHROPIC_API_KEY w środowisku.')
   }

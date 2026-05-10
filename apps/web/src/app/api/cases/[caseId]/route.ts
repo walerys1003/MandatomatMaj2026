@@ -51,7 +51,9 @@ export async function GET(_req: NextRequest, ctx: RouteContext): Promise<NextRes
       .single(),
     supabase
       .from('documents')
-      .select('id, document_type, content_md, score, validation_passed, created_at, updated_at')
+      .select(
+        'id, doc_type, title, content_markdown, score, validation_passed, validation_issues, ai_cost_usd, created_at, updated_at',
+      )
       .eq('case_id', ctx.params.caseId)
       .order('created_at', { ascending: false }),
     supabase

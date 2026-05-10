@@ -39,7 +39,11 @@ export async function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className="text-sm font-medium text-iron-700 transition-colors hover:text-iron-950 dark:text-iron-300 dark:hover:text-white"
+              className={
+                'highlight' in link && link.highlight
+                  ? 'text-sm font-semibold text-precision-blue-600 transition-colors hover:text-precision-blue-700 dark:text-precision-blue-400 dark:hover:text-precision-blue-300'
+                  : 'text-sm font-medium text-iron-700 transition-colors hover:text-iron-950 dark:text-iron-300 dark:hover:text-white'
+              }
             >
               {link.label}
             </Link>
