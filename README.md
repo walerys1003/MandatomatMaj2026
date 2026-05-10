@@ -6,34 +6,76 @@
 ## 🎯 Status projektu
 
 **Tier 1 — Foundation: ✅ DONE** (`0de8de8`)
-**Tier 2 — Auth + Landing: ✅ DONE** (kod pod tym commitem)
+**Tier 2 — Auth + Landing: ✅ DONE** (`5f9d2a4`)
+**Tier 3 — Wizard + AI Pipeline (phase 1+2): ✅ DONE** (`f92d6f3`)
 
+### Tier 1+2 (foundation, auth, landing)
 - [x] Knowledge base (30 chunków, tag/agent indexes, retrieval CLI)
-- [x] Plan 5×50 zadań (Tier 1–5)
-- [x] Prompt v2 dla GenSpark AI Developer + Operations runbook + Evals harness
-- [x] GitHub: 50 issues Tier 1, 19 etykiet, templates, CODEOWNERS
+- [x] Plan 5×50 zadań (Tier 1–5) + GitHub 50 issues Tier 1, 19 etykiet, templates, CODEOWNERS
 - [x] **Monorepo Turborepo + pnpm workspaces** (apps/web, packages/ui, packages/db-types, packages/config)
 - [x] **TypeScript strict + ESLint + Prettier + Commitlint + Husky**
 - [x] **Next.js 14 App Router skeleton** (RSC, middleware, error boundaries)
 - [x] **Design tokens** (Precision Blue + Iron + Volt + Inter Tight, animacja 150ms)
-- [x] **UI library — 14 komponentów** (Button, Card, Badge, Spinner, Input, Logo, Checkbox, Textarea, Select, Stepper, Accordion, Alert, StatusBadge)
-- [x] **Supabase: 16 migracji SQL** (15 z planu + 1 storage), seed 5 typów MVP
-- [x] **Auth — pełen flow** (login, rejestracja, reset hasła + confirm, magic-link callback `/api/auth/callback`)
-- [x] **Server Actions auth** z Zod validation, IP rate-limit (Upstash + memory fallback), enumeration prevention
-- [x] **Middleware** chroniący `/panel`, `/sprawy`, `/profil`, `/ustawienia`, `/kreator` z `?next=`
-- [x] **Landing page** (Hero + siatka perspektywiczna + SocialProof + HowItWorks + CategoryGrid + SuccessRateTracker + PricingSection + FAQ + CtaFooter)
-- [x] **Marketing layout** (sticky Navbar 72px + Footer iron-950 4-kolumnowy)
+- [x] **UI library — 16 komponentów** (Button, Card, Badge, Spinner, Input, Logo, Checkbox, Textarea, Select, Stepper, Accordion, Alert, StatusBadge, MarkdownPreview, ScoringGauge) + 4 form-engine moduły (CardSelectGrid, DynamicForm, FieldRenderer, OcrUploader, zod-builder)
+- [x] **Supabase: 17 migracji SQL** (16 z Tier 1+2 + migracja 017 documents_validation)
+- [x] **Auth — pełen flow** (login, rejestracja, reset hasła + confirm, magic-link callback)
+- [x] **Server Actions auth** z Zod, IP rate-limit (Upstash + memory fallback), enumeration prevention
+- [x] **Middleware** chroniący `/panel`, `/sprawy`, `/profil`, `/ustawienia` z `?next=`
+- [x] **Landing page** + marketing layout (sticky Navbar 72px + Footer iron-950)
 - [x] **Strony statyczne** (regulamin, polityka prywatności, RODO, kontakt, o-nas, jak-to-dziala)
 - [x] **App layout** (Sidebar 240px + Topbar 64px + Dashboard `/panel`)
 - [x] **Profil + Ustawienia** + RODO export (JSON) + RODO delete (anonimizacja + auth.users)
-- [x] **API routes**: `/api/auth/callback`, `/api/profile` GET/PATCH, `/api/profile/export`, `/api/profile/delete`, `/api/health`
-- [x] **SEO**: sitemap.ts (9 statycznych + 9 kategorii), robots.ts (preview noindex / prod allow), opengraph-image.tsx (1200×630 edge), JSON-LD Organization + WebSite + FAQPage
-- [x] **AI client wrapper** (Anthropic Claude — Edge-compatible fetch wrapper) + M1 prompt seed (sprzeciw za prędkość) + Zod scoring schema
+- [x] **SEO**: sitemap.ts, robots.ts, opengraph-image.tsx, JSON-LD Organization + WebSite + FAQPage
 - [x] **Observability stubs** (Sentry client/server/edge, Vercel cron config)
+
+### Tier 3 phase 1 (wizard engine + cases CRUD) — `85b8b3c`
+- [x] **5 MVP form schemas** (M1, M4, P1, P3, W1) z conditional fields + AI-suggested options + OCR autofill hints — `apps/web/src/lib/cases/schemas.ts`
+- [x] **DB enum mapping** (TS shortId ↔ DB ENUM) dla wszystkich 34 typów — `lib/cases/db-mapping.ts`
+- [x] **Wizard pages** (3-step): `/sprawy/nowa` (kategorie) → `/sprawy/nowa/[category]` (subtypy) → `/sprawy/nowa/[category]/[subtype]/formularz`
+- [x] **Cases CRUD API**: `POST/GET /api/cases` + `GET/PATCH/DELETE /api/cases/[caseId]` (DELETE tylko `status='draft'`)
+
+### Tier 3 phase 2 (AI pipeline + OCR + preview) — `f92d6f3`
+- [x] **Claude wrapper** (`lib/ai/claude.ts`): PRICING (Sonnet/Haiku/Opus per 1M tokens), `calcCostUsd()`, `extractJson()`, `generateDocument()` z retry, `scoringAnalysis()` (Haiku), `validateDocument()` (Haiku), `parseOcrDocument()` (Sonnet vision)
+- [x] **5 prompt templates** (M1, M4, P1, P3, W1) + `loadPrompt()` discriminated union loader
+- [x] **letter-to-markdown.ts** — render `LetterResponse` → Markdown z polskimi datami i strukturą pisma urzędowego
+- [x] **`POST /api/ai/scoring`** — public endpoint (rate-limited, anon by IP / auth bucket 'ai'), Haiku
+- [x] **`POST /api/ai/generate-document`** — pełen pipeline: auth → rate limit → idempotency → Claude Sonnet → Zod → render Markdown → INSERT documents → status `preview` → background Haiku validation
+- [x] **`POST /api/uploads`** — multipart upload → Supabase Storage bucket 'uploads' → Claude vision parse (JPEG/PNG/WebP) → `uploads.ocr_parsed_data` + `detected_fields`, telemetria `ocr_completed`
+- [x] **`/sprawy/[caseId]/podglad`** — pełna strona z PreviewClient: ScoringGauge + uzasadnienie + taby Podgląd/Edycja (sessionStorage) + banner walidacji z polling Haiku w tle + przycisk "Generuj pismo" z `Idempotency-Key`
+- [x] **`/sprawdz-szanse`** (free tier) — public landing + ScoringForm z 7 kategoriami, ScoringGauge result + recommendations + legal_basis_hints
+- [x] **OcrUploader** komponent (drag&drop, thumb, parse spinner, OcrResultPanel z confidence badge) + integracja w wizard-client.tsx (`ocrData` → `DynamicForm` matching przez `field.autoFillFromOcr`)
+- [x] **migration 017** — `documents.score INTEGER (0..100 CHECK)`, `validation_passed BOOLEAN`, `validation_issues JSONB`
+- [x] **Navbar** — link `Sprawdź szanse` z highlight styling
+
+### Pozostałe
+- [ ] Tier 3 phase 3: Stripe checkout + płatność + PDF download
 - [ ] Storybook + Vercel preview pipeline (Tier 1.5)
-- [ ] Tier 3 — Wizard + AI generation pipeline + Stripe checkout
 - [ ] Tier 4 — Admin + Inngest + Webhook reliability
 - [ ] Tier 5 — SEO content + Security audit + Production launch
+
+## 🛣️ Mapa endpointów (Tier 1–3)
+
+### Public (anonimowi)
+- `GET /` — landing
+- `GET /sprawdz-szanse` — darmowe pre-scoring szans (Haiku)
+- `GET /jak-to-dziala`, `/cennik`, `/o-nas`, `/kontakt`, `/regulamin`, `/polityka-prywatnosci`, `/rodo`
+- `GET /login`, `/rejestracja`, `/reset-hasla`, `/reset-hasla/potwierdz`
+- `POST /api/ai/scoring` — public Haiku scoring (rate-limited)
+- `GET /api/health` — liveness probe
+
+### Auth required (`/panel`, `/sprawy`, `/profil`, `/ustawienia`)
+- `GET /panel` — dashboard listy spraw
+- `GET /sprawy/nowa` → `/sprawy/nowa/[category]` → `/sprawy/nowa/[category]/[subtype]/formularz` — wizard 3-step
+- `GET /sprawy/[caseId]/podglad` — podgląd + edycja + scoring + validation + generuj pismo
+- `GET /profil`, `/ustawienia` — RODO export/delete
+
+### API routes (auth required, RLS-enforced)
+- `POST/GET /api/cases` — utwórz draft / lista
+- `GET/PATCH/DELETE /api/cases/[caseId]`
+- `POST /api/ai/generate-document` — pełen pipeline (Idempotency-Key zalecany)
+- `POST /api/uploads` — multipart upload + Claude vision OCR
+- `GET /api/profile`, `PATCH /api/profile`, `GET /api/profile/export`, `DELETE /api/profile/delete`
+- `GET /api/auth/callback` — magic-link / OAuth callback
 
 ## 🏗️ Architektura
 
