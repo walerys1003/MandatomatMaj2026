@@ -22,6 +22,7 @@
     "./input": "./src/components/input.tsx",
     "./logo": "./src/components/logo.tsx",
     "./markdown-preview": "./src/components/markdown-preview.tsx",
+    "./related-articles": "./src/components/related-articles.tsx",
     "./scoring-gauge": "./src/components/scoring-gauge.tsx",
     "./select": "./src/components/select.tsx",
     "./skeleton": "./src/components/skeleton.tsx",
