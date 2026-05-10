@@ -18,6 +18,7 @@ export {
 export * from './components/button'
 export * from './components/card'
 export * from './components/checkbox'
+export * from './components/code-editor'
 export * from './components/cross-sell-banner'
 export * from './components/empty-state'
 export * from './components/input'

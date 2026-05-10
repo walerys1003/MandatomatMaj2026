@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import type { Metadata } from 'next'
 
+import { CodeEditor } from '@mandatomat/ui'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -23,7 +24,15 @@ export const metadata: Metadata = {
  * Server Action 'updateConfig' zapisuje zmiany do DB + admin_logs.
  */
 
-const CATEGORIES = ['mandaty', 'parking', 'windykacja', 'ubezpieczenia', 'etoll', 'kontrole', 'techniczne'] as const
+const CATEGORIES = [
+  'mandaty',
+  'parking',
+  'windykacja',
+  'ubezpieczenia',
+  'etoll',
+  'kontrole',
+  'techniczne',
+] as const
 
 type ConfigFull = {
   id: string
@@ -68,7 +77,11 @@ async function updateConfig(formData: FormData) {
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle()
   if ((profile as { role?: string } | null)?.role !== 'admin') {
     throw new Error('Forbidden — admin role required')
   }
@@ -97,7 +110,10 @@ async function updateConfig(formData: FormData) {
     .filter((n) => Number.isFinite(n))
   const seo_keywords_raw = String(formData.get('seo_keywords') ?? '').trim()
   const seo_keywords = seo_keywords_raw
-    ? seo_keywords_raw.split(',').map((s) => s.trim()).filter(Boolean)
+    ? seo_keywords_raw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
     : null
 
   const form_schema_raw = String(formData.get('form_schema') ?? '{}')
@@ -108,7 +124,9 @@ async function updateConfig(formData: FormData) {
       throw new Error('form_schema musi być obiektem JSON')
     }
   } catch (err) {
-    throw new Error(`Nieprawidłowy JSON w form_schema: ${err instanceof Error ? err.message : String(err)}`)
+    throw new Error(
+      `Nieprawidłowy JSON w form_schema: ${err instanceof Error ? err.message : String(err)}`,
+    )
   }
 
   const admin = createAdminClient()
@@ -191,7 +209,10 @@ export default async function AdminSzablonEditPage({
   return (
     <div className="space-y-6">
       <header>
-        <Link href="/admin/szablony" className="text-xs text-brand-600 hover:underline dark:text-brand-400">
+        <Link
+          href="/admin/szablony"
+          className="text-brand-600 dark:text-brand-400 text-xs hover:underline"
+        >
           ← Lista szablonów
         </Link>
         <h1 className="mt-1 text-2xl font-bold tracking-tight text-iron-900 dark:text-iron-50">
@@ -214,12 +235,21 @@ export default async function AdminSzablonEditPage({
 
         {/* Sekcja: Wyświetlanie */}
         <section className="rounded-lg border border-iron-200 bg-white p-6 dark:border-iron-700 dark:bg-iron-900">
-          <h2 className="mb-4 text-base font-semibold text-iron-900 dark:text-iron-50">Wyświetlanie</h2>
+          <h2 className="mb-4 text-base font-semibold text-iron-900 dark:text-iron-50">
+            Wyświetlanie
+          </h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Nazwa wyświetlana" name="display_name" defaultValue={c.display_name} required />
+            <Field
+              label="Nazwa wyświetlana"
+              name="display_name"
+              defaultValue={c.display_name}
+              required
+            />
             <Field label="Krótka nazwa" name="short_name" defaultValue={c.short_name} required />
             <div className="sm:col-span-2">
-              <label className="mb-1 block text-xs font-medium text-iron-600 dark:text-iron-300">Opis</label>
+              <label className="mb-1 block text-xs font-medium text-iron-600 dark:text-iron-300">
+                Opis
+              </label>
               <textarea
                 name="description"
                 rows={3}
@@ -240,7 +270,9 @@ export default async function AdminSzablonEditPage({
 
         {/* Sekcja: Cennik & terminy */}
         <section className="rounded-lg border border-iron-200 bg-white p-6 dark:border-iron-700 dark:bg-iron-900">
-          <h2 className="mb-4 text-base font-semibold text-iron-900 dark:text-iron-50">Cennik & terminy</h2>
+          <h2 className="mb-4 text-base font-semibold text-iron-900 dark:text-iron-50">
+            Cennik & terminy
+          </h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Field
               label="Cena (grosze)"
@@ -333,12 +365,12 @@ export default async function AdminSzablonEditPage({
               Zostaje walidowane jako JSON object
             </span>
           </header>
-          <textarea
+          <CodeEditor
             name="form_schema"
+            language="json"
             rows={20}
-            spellCheck={false}
             defaultValue={JSON.stringify(c.form_schema ?? {}, null, 2)}
-            className="w-full rounded-md border border-iron-200 bg-iron-50 px-3 py-2 font-mono text-xs text-iron-900 dark:border-iron-700 dark:bg-iron-950 dark:text-iron-100"
+            ariaLabel="Form schema (JSON)"
           />
         </section>
 
@@ -351,9 +383,11 @@ export default async function AdminSzablonEditPage({
                 type="checkbox"
                 name="is_active"
                 defaultChecked={c.is_active ?? true}
-                className="h-4 w-4 rounded border-iron-300 text-brand-600 focus:ring-brand-500"
+                className="text-brand-600 focus:ring-brand-500 h-4 w-4 rounded border-iron-300"
               />
-              <span className="text-iron-700 dark:text-iron-200">Aktywny (widoczny w katalogu)</span>
+              <span className="text-iron-700 dark:text-iron-200">
+                Aktywny (widoczny w katalogu)
+              </span>
             </label>
             <Field
               label="Sort order"
@@ -374,7 +408,7 @@ export default async function AdminSzablonEditPage({
           </Link>
           <button
             type="submit"
-            className="rounded-md bg-brand-600 px-6 py-2 text-sm font-medium text-white hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
+            className="bg-brand-600 hover:bg-brand-700 focus:ring-brand-500 rounded-md px-6 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2"
           >
             Zapisz zmiany
           </button>
@@ -401,7 +435,10 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={name} className="mb-1 block text-xs font-medium text-iron-600 dark:text-iron-300">
+      <label
+        htmlFor={name}
+        className="mb-1 block text-xs font-medium text-iron-600 dark:text-iron-300"
+      >
         {label} {required && <span className="text-signal-600">*</span>}
       </label>
       <input

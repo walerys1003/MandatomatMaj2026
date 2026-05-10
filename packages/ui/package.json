@@ -16,6 +16,7 @@
     "./button": "./src/components/button.tsx",
     "./card": "./src/components/card.tsx",
     "./checkbox": "./src/components/checkbox.tsx",
+    "./code-editor": "./src/components/code-editor.tsx",
     "./confirm-dialog": "./src/components/confirm-dialog.tsx",
     "./cross-sell-banner": "./src/components/cross-sell-banner.tsx",
     "./empty-state": "./src/components/empty-state.tsx",

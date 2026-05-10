@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import type { Metadata } from 'next'
 
+import { CodeEditor } from '@mandatomat/ui'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -78,7 +79,11 @@ async function savePrompt(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle()
   if ((profile as { role?: string } | null)?.role !== 'admin') {
     throw new Error('Forbidden — wymagana rola admin')
   }
@@ -173,8 +178,14 @@ async function savePrompt(formData: FormData) {
       action: 'update_prompt_template',
       target_type: 'prompt_template',
       target_id: templateId,
-      old_data: existing ? { version: existing.version, content_length: existing.content.length } : null,
-      new_data: { version: existing ? newVersion : 1, content_length: content.length, edit_note: editNote },
+      old_data: existing
+        ? { version: existing.version, content_length: existing.content.length }
+        : null,
+      new_data: {
+        version: existing ? newVersion : 1,
+        content_length: content.length,
+        edit_note: editNote,
+      },
     } as any)
 
   revalidatePath(`/admin/prompty/${caseType}`)
@@ -233,11 +244,13 @@ export default async function AdminPromptEditPage({
   }
 
   // Resolve edited_by → email
-  const editorIds = Array.from(new Set(versions.map((v) => v.edited_by).filter((x): x is string => !!x)))
+  const editorIds = Array.from(
+    new Set(versions.map((v) => v.edited_by).filter((x): x is string => !!x)),
+  )
   const editorMap = new Map<string, ProfileShort>()
   if (editorIds.length > 0) {
     const { data: profs } = await admin.from('profiles').select('id, email').in('id', editorIds)
-    for (const p of ((profs as unknown as ProfileShort[] | null) ?? [])) editorMap.set(p.id, p)
+    for (const p of (profs as unknown as ProfileShort[] | null) ?? []) editorMap.set(p.id, p)
   }
 
   const initialContent = tpl?.content ?? defaultPromptScaffold(cfg)
@@ -245,7 +258,10 @@ export default async function AdminPromptEditPage({
   return (
     <div className="space-y-6">
       <header>
-        <Link href="/admin/prompty" className="text-xs text-brand-600 hover:underline dark:text-brand-400">
+        <Link
+          href="/admin/prompty"
+          className="text-brand-600 dark:text-brand-400 text-xs hover:underline"
+        >
           ← Lista promptów
         </Link>
         <h1 className="mt-1 text-2xl font-bold tracking-tight text-iron-900 dark:text-iron-50">
@@ -255,8 +271,8 @@ export default async function AdminPromptEditPage({
           <span className="font-mono">{cfg.case_type}</span> · kategoria: {cfg.category}
           {tpl && (
             <>
-              {' · '}wersja <strong className="tabular-nums">v{tpl.version}</strong> · zaktualizowano{' '}
-              {formatDate(tpl.updated_at)}
+              {' · '}wersja <strong className="tabular-nums">v{tpl.version}</strong> ·
+              zaktualizowano {formatDate(tpl.updated_at)}
             </>
           )}
         </p>
@@ -295,7 +311,10 @@ export default async function AdminPromptEditPage({
           <div className="rounded-lg border border-iron-200 bg-white p-6 dark:border-iron-700 dark:bg-iron-900">
             <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div>
-                <label htmlFor="model" className="mb-1 block text-xs font-medium text-iron-600 dark:text-iron-300">
+                <label
+                  htmlFor="model"
+                  className="mb-1 block text-xs font-medium text-iron-600 dark:text-iron-300"
+                >
                   Model
                 </label>
                 <input
@@ -306,7 +325,10 @@ export default async function AdminPromptEditPage({
                 />
               </div>
               <div>
-                <label htmlFor="temperature" className="mb-1 block text-xs font-medium text-iron-600 dark:text-iron-300">
+                <label
+                  htmlFor="temperature"
+                  className="mb-1 block text-xs font-medium text-iron-600 dark:text-iron-300"
+                >
                   Temperature (0–1)
                 </label>
                 <input
@@ -321,7 +343,10 @@ export default async function AdminPromptEditPage({
                 />
               </div>
               <div>
-                <label htmlFor="max_tokens" className="mb-1 block text-xs font-medium text-iron-600 dark:text-iron-300">
+                <label
+                  htmlFor="max_tokens"
+                  className="mb-1 block text-xs font-medium text-iron-600 dark:text-iron-300"
+                >
                   Max tokens
                 </label>
                 <input
@@ -337,7 +362,10 @@ export default async function AdminPromptEditPage({
             </div>
 
             <div className="mb-4">
-              <label htmlFor="description" className="mb-1 block text-xs font-medium text-iron-600 dark:text-iron-300">
+              <label
+                htmlFor="description"
+                className="mb-1 block text-xs font-medium text-iron-600 dark:text-iron-300"
+              >
                 Opis (krótka notka co prompt robi)
               </label>
               <input
@@ -350,17 +378,19 @@ export default async function AdminPromptEditPage({
             </div>
 
             <div>
-              <label htmlFor="content" className="mb-1 block text-xs font-medium text-iron-600 dark:text-iron-300">
+              <label
+                htmlFor="content"
+                className="mb-1 block text-xs font-medium text-iron-600 dark:text-iron-300"
+              >
                 Treść promptu (Markdown)
               </label>
-              <textarea
-                id="content"
+              <CodeEditor
                 name="content"
+                language="markdown"
                 rows={28}
-                spellCheck={false}
-                defaultValue={initialContent}
                 required
-                className="w-full rounded-md border border-iron-200 bg-iron-50 px-3 py-2 font-mono text-xs text-iron-900 dark:border-iron-700 dark:bg-iron-950 dark:text-iron-100"
+                defaultValue={initialContent}
+                ariaLabel="Treść promptu (Markdown)"
               />
               <p className="mt-1 text-xs text-iron-500 dark:text-iron-400">
                 Min. 50 znaków. Każdy zapis tworzy nową wersję — możesz wrócić do poprzedniej.
@@ -368,7 +398,10 @@ export default async function AdminPromptEditPage({
             </div>
 
             <div className="mt-4">
-              <label htmlFor="edit_note" className="mb-1 block text-xs font-medium text-iron-600 dark:text-iron-300">
+              <label
+                htmlFor="edit_note"
+                className="mb-1 block text-xs font-medium text-iron-600 dark:text-iron-300"
+              >
                 Notatka do tej wersji (opcjonalnie)
               </label>
               <input
@@ -389,7 +422,7 @@ export default async function AdminPromptEditPage({
             </Link>
             <button
               type="submit"
-              className="rounded-md bg-brand-600 px-6 py-2 text-sm font-medium text-white hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
+              className="bg-brand-600 hover:bg-brand-700 focus:ring-brand-500 rounded-md px-6 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2"
             >
               {tpl ? 'Zapisz nową wersję' : 'Utwórz prompt'}
             </button>
@@ -419,14 +452,14 @@ export default async function AdminPromptEditPage({
                         <span className="font-medium tabular-nums text-iron-900 dark:text-iron-50">
                           v{v.version}
                           {isCurrent && (
-                            <span className="ml-2 rounded-full bg-brand-100 px-2 py-0.5 text-xs font-normal text-brand-700 dark:bg-brand-950 dark:text-brand-300">
+                            <span className="bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 ml-2 rounded-full px-2 py-0.5 text-xs font-normal">
                               aktualna
                             </span>
                           )}
                         </span>
                         <Link
                           href={`/admin/prompty/${caseType}?ver=${v.version}`}
-                          className="text-xs text-brand-600 hover:underline dark:text-brand-400"
+                          className="text-brand-600 dark:text-brand-400 text-xs hover:underline"
                         >
                           Podgląd →
                         </Link>
@@ -436,7 +469,9 @@ export default async function AdminPromptEditPage({
                         {editor && <span> · {editor.email}</span>}
                       </p>
                       {v.edit_note && (
-                        <p className="mt-1 text-xs italic text-iron-600 dark:text-iron-300">"{v.edit_note}"</p>
+                        <p className="mt-1 text-xs italic text-iron-600 dark:text-iron-300">
+                          "{v.edit_note}"
+                        </p>
                       )}
                     </li>
                   )
@@ -446,7 +481,9 @@ export default async function AdminPromptEditPage({
           </div>
 
           <div className="rounded-lg border border-iron-200 bg-white p-4 text-xs text-iron-600 dark:border-iron-700 dark:bg-iron-900 dark:text-iron-400">
-            <h3 className="mb-2 text-sm font-semibold text-iron-900 dark:text-iron-50">Zmienne dostępne</h3>
+            <h3 className="mb-2 text-sm font-semibold text-iron-900 dark:text-iron-50">
+              Zmienne dostępne
+            </h3>
             <ul className="space-y-1 font-mono">
               <li>{'{{form_data}}'} — JSON danych z formularza</li>
               <li>{'{{ocr_data}}'} — dane z OCR (jeśli dostępne)</li>
