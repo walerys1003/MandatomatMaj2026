@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 
 import { DownloadClient } from './download-client'
+import { FeedbackSection } from './feedback-section'
 
 interface PageProps {
   params: { caseId: string }
@@ -109,25 +110,46 @@ export default async function DownloadPage({ params, searchParams }: PageProps) 
         <h2 className="text-base font-semibold text-iron-900 dark:text-iron-50">Co dalej?</h2>
         <ol className="mt-3 space-y-3 text-sm text-iron-700 dark:text-iron-300">
           <li className="flex gap-3">
-            <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700 dark:bg-brand-900 dark:text-brand-200">1</span>
+            <span className="bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-200 flex h-6 w-6 flex-none items-center justify-center rounded-full text-xs font-bold">
+              1
+            </span>
             <span>Wydrukuj pismo (A4) lub wyślij elektronicznie przez ePUAP/e-mail.</span>
           </li>
           <li className="flex gap-3">
-            <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700 dark:bg-brand-900 dark:text-brand-200">2</span>
-            <span>Podpisz odręcznie i wyślij listem poleconym (zachowaj potwierdzenie nadania).</span>
+            <span className="bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-200 flex h-6 w-6 flex-none items-center justify-center rounded-full text-xs font-bold">
+              2
+            </span>
+            <span>
+              Podpisz odręcznie i wyślij listem poleconym (zachowaj potwierdzenie nadania).
+            </span>
           </li>
           <li className="flex gap-3">
-            <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700 dark:bg-brand-900 dark:text-brand-200">3</span>
-            <span>Dodamy automatyczny termin do Twojego kalendarza — przypomnimy o reakcji organu.</span>
+            <span className="bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-200 flex h-6 w-6 flex-none items-center justify-center rounded-full text-xs font-bold">
+              3
+            </span>
+            <span>
+              Dodamy automatyczny termin do Twojego kalendarza — przypomnimy o reakcji organu.
+            </span>
           </li>
         </ol>
       </div>
 
+      {/* Feedback widget — Faza 9 (T20): "Oceń pismo" 1-5★ + outcome + komentarz */}
+      <div className="mt-8">
+        <FeedbackSection caseId={caseTyped.id} />
+      </div>
+
       <div className="mt-6 flex justify-between text-sm">
-        <Link href="/dashboard" className="text-iron-600 underline hover:text-iron-900 dark:text-iron-400 dark:hover:text-iron-100">
+        <Link
+          href="/dashboard"
+          className="text-iron-600 underline hover:text-iron-900 dark:text-iron-400 dark:hover:text-iron-100"
+        >
           ← Panel
         </Link>
-        <Link href={`/sprawy/${caseTyped.id}`} className="text-brand-600 hover:text-brand-700 dark:text-brand-400">
+        <Link
+          href={`/sprawy/${caseTyped.id}`}
+          className="text-brand-600 hover:text-brand-700 dark:text-brand-400"
+        >
           Szczegóły sprawy →
         </Link>
       </div>

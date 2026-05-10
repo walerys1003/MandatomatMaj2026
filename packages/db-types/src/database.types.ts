@@ -444,6 +444,18 @@ interface PromptTemplateVersionsRow {
   created_at: string | null
 }
 
+export type FeedbackOutcomeEnum = 'success' | 'partial' | 'failure' | 'pending' | 'unknown'
+
+interface FeedbackRow {
+  id: string
+  user_id: string
+  case_id: string
+  rating: number | null
+  outcome: FeedbackOutcomeEnum | null
+  comment: string | null
+  created_at: string | null
+}
+
 // Generic helper: turn a Row interface into Insert (most fields optional thanks
 // to defaults / nullable columns) and Update (all optional).
 type RowToInsert<R> = {
@@ -484,6 +496,7 @@ export interface Database {
       stripe_events: Table<StripeEventsRow>
       prompt_templates: Table<PromptTemplatesRow>
       prompt_template_versions: Table<PromptTemplateVersionsRow>
+      feedback: Table<FeedbackRow>
     }
     Views: Record<string, never>
     Functions: {
