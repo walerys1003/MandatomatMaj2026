@@ -4,6 +4,8 @@ import type { Metadata } from 'next'
 
 import { createAdminClient } from '@/lib/supabase/admin'
 
+import { CaseAdminControls } from './admin-controls'
+
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
@@ -72,6 +74,15 @@ type EventRow = {
   created_at: string
 }
 
+type AdminLogRow = {
+  id: string
+  admin_id: string
+  action: string
+  old_data: Record<string, unknown> | null
+  new_data: Record<string, unknown> | null
+  created_at: string
+}
+
 type ProfileShort = {
   id: string
   email: string
@@ -101,7 +112,7 @@ export default async function AdminSprawaDetailPage({
   const { id } = await params
   const admin = createAdminClient()
 
-  const [caseRes, docsRes, paymentsRes, eventsRes] = await Promise.all([
+  const [caseRes, docsRes, paymentsRes, eventsRes, adminLogsRes] = await Promise.all([
     admin.from('cases').select('*').eq('id', id).maybeSingle(),
     admin
       .from('documents')
@@ -119,6 +130,13 @@ export default async function AdminSprawaDetailPage({
       .eq('case_id', id)
       .order('created_at', { ascending: false })
       .limit(50),
+    admin
+      .from('admin_logs')
+      .select('id, admin_id, action, old_data, new_data, created_at')
+      .eq('target_type', 'case')
+      .eq('target_id', id)
+      .order('created_at', { ascending: false })
+      .limit(50),
   ])
 
   const c = caseRes.data as unknown as CaseFull | null
@@ -127,6 +145,19 @@ export default async function AdminSprawaDetailPage({
   const docs = (docsRes.data as unknown as DocumentRow[] | null) ?? []
   const payments = (paymentsRes.data as unknown as PaymentRow[] | null) ?? []
   const events = (eventsRes.data as unknown as EventRow[] | null) ?? []
+  const adminLogs = (adminLogsRes.data as unknown as AdminLogRow[] | null) ?? []
+
+  // Resolve admin emails for log display
+  const adminIds = Array.from(new Set(adminLogs.map((l) => l.admin_id)))
+  let adminEmails: Record<string, string> = {}
+  if (adminIds.length > 0) {
+    const { data: adminsRaw } = await admin.from('profiles').select('id, email').in('id', adminIds)
+    const adminsTyped = (adminsRaw as unknown as { id: string; email: string }[] | null) ?? []
+    adminEmails = adminsTyped.reduce<Record<string, string>>((acc, a) => {
+      acc[a.id] = a.email
+      return acc
+    }, {})
+  }
 
   // Pobierz dane użytkownika
   const { data: profileRaw } = await admin
@@ -142,10 +173,15 @@ export default async function AdminSprawaDetailPage({
     <div className="space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Link href="/admin/sprawy" className="text-xs text-brand-600 hover:underline dark:text-brand-400">
+          <Link
+            href="/admin/sprawy"
+            className="text-brand-600 dark:text-brand-400 text-xs hover:underline"
+          >
             ← Lista spraw
           </Link>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-iron-900 dark:text-iron-50">{c.title}</h1>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-iron-900 dark:text-iron-50">
+            {c.title}
+          </h1>
           <p className="text-sm text-iron-600 dark:text-iron-400">
             <span className="font-mono text-xs">{c.case_type}</span> · {c.category} · ID:{' '}
             <code className="text-xs">{c.id}</code>
@@ -155,7 +191,7 @@ export default async function AdminSprawaDetailPage({
               👤 Użytkownik:{' '}
               <Link
                 href={`/admin/uzytkownicy/${user.id}`}
-                className="text-brand-600 hover:underline dark:text-brand-400"
+                className="text-brand-600 dark:text-brand-400 hover:underline"
               >
                 {user.email}
               </Link>{' '}
@@ -177,6 +213,9 @@ export default async function AdminSprawaDetailPage({
           )}
         </div>
       </header>
+
+      {/* Admin controls — mutacje statusu / archiwizacja / notatki */}
+      <CaseAdminControls caseId={c.id} currentStatus={c.status} />
 
       {/* Statystyki */}
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -202,18 +241,28 @@ export default async function AdminSprawaDetailPage({
           )}
         </div>
         <div className="rounded-lg border border-iron-200 bg-white p-4 dark:border-iron-700 dark:bg-iron-900">
-          <p className="text-xs uppercase tracking-wide text-iron-500 dark:text-iron-400">Dokumenty</p>
-          <p className="mt-1 text-xl font-bold tabular-nums text-iron-900 dark:text-iron-50">{docs.length}</p>
+          <p className="text-xs uppercase tracking-wide text-iron-500 dark:text-iron-400">
+            Dokumenty
+          </p>
+          <p className="mt-1 text-xl font-bold tabular-nums text-iron-900 dark:text-iron-50">
+            {docs.length}
+          </p>
         </div>
         <div className="rounded-lg border border-iron-200 bg-white p-4 dark:border-iron-700 dark:bg-iron-900">
-          <p className="text-xs uppercase tracking-wide text-iron-500 dark:text-iron-400">Płatności</p>
-          <p className="mt-1 text-xl font-bold tabular-nums text-iron-900 dark:text-iron-50">{payments.length}</p>
+          <p className="text-xs uppercase tracking-wide text-iron-500 dark:text-iron-400">
+            Płatności
+          </p>
+          <p className="mt-1 text-xl font-bold tabular-nums text-iron-900 dark:text-iron-50">
+            {payments.length}
+          </p>
         </div>
       </section>
 
       {/* Form data */}
       <section className="rounded-lg border border-iron-200 bg-white p-6 dark:border-iron-700 dark:bg-iron-900">
-        <h2 className="mb-4 text-base font-semibold text-iron-900 dark:text-iron-50">Dane formularza</h2>
+        <h2 className="mb-4 text-base font-semibold text-iron-900 dark:text-iron-50">
+          Dane formularza
+        </h2>
         {Object.keys(formData).length === 0 ? (
           <p className="text-sm text-iron-500 dark:text-iron-400">Brak danych formularza.</p>
         ) : (
@@ -244,14 +293,19 @@ export default async function AdminSprawaDetailPage({
             <tbody className="divide-y divide-iron-100 dark:divide-iron-800">
               {docs.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-iron-500 dark:text-iron-400">
+                  <td
+                    colSpan={5}
+                    className="px-4 py-8 text-center text-iron-500 dark:text-iron-400"
+                  >
                     Brak dokumentów.
                   </td>
                 </tr>
               )}
               {docs.map((d) => (
                 <tr key={d.id}>
-                  <td className="px-4 py-2 font-medium text-iron-900 dark:text-iron-50">{d.title ?? '—'}</td>
+                  <td className="px-4 py-2 font-medium text-iron-900 dark:text-iron-50">
+                    {d.title ?? '—'}
+                  </td>
                   <td className="px-4 py-2 tabular-nums">v{d.version ?? 1}</td>
                   <td className="px-4 py-2 font-mono text-xs text-iron-600 dark:text-iron-400">
                     {d.storage_path ?? '—'}
@@ -259,7 +313,9 @@ export default async function AdminSprawaDetailPage({
                   <td className="px-4 py-2 tabular-nums text-iron-700 dark:text-iron-300">
                     {d.file_size ? `${Math.round(d.file_size / 1024)} kB` : '—'}
                   </td>
-                  <td className="px-4 py-2 text-iron-600 dark:text-iron-400">{formatDate(d.created_at)}</td>
+                  <td className="px-4 py-2 text-iron-600 dark:text-iron-400">
+                    {formatDate(d.created_at)}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -290,7 +346,10 @@ export default async function AdminSprawaDetailPage({
             <tbody className="divide-y divide-iron-100 dark:divide-iron-800">
               {payments.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-iron-500 dark:text-iron-400">
+                  <td
+                    colSpan={7}
+                    className="px-4 py-8 text-center text-iron-500 dark:text-iron-400"
+                  >
                     Brak płatności.
                   </td>
                 </tr>
@@ -311,7 +370,7 @@ export default async function AdminSprawaDetailPage({
                         href={`https://dashboard.stripe.com/payments/${p.stripe_session_id}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-brand-600 hover:underline dark:text-brand-400"
+                        className="text-brand-600 dark:text-brand-400 hover:underline"
                       >
                         {p.stripe_session_id.substring(0, 16)}…
                       </a>
@@ -325,7 +384,7 @@ export default async function AdminSprawaDetailPage({
                         href={p.invoice_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-brand-600 hover:underline dark:text-brand-400"
+                        className="text-brand-600 dark:text-brand-400 text-xs hover:underline"
                       >
                         PDF →
                       </a>
@@ -333,9 +392,79 @@ export default async function AdminSprawaDetailPage({
                       '—'
                     )}
                   </td>
-                  <td className="px-4 py-2 text-iron-600 dark:text-iron-400">{formatDate(p.created_at)}</td>
+                  <td className="px-4 py-2 text-iron-600 dark:text-iron-400">
+                    {formatDate(p.created_at)}
+                  </td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Logi adminów (admin_logs) */}
+      <section className="rounded-lg border border-iron-200 bg-white dark:border-iron-700 dark:bg-iron-900">
+        <header className="border-b border-iron-200 px-6 py-4 dark:border-iron-700">
+          <h2 className="text-base font-semibold text-iron-900 dark:text-iron-50">
+            Logi administracyjne ({adminLogs.length})
+          </h2>
+          <p className="mt-1 text-xs text-iron-500 dark:text-iron-400">
+            Mutacje wykonane przez adminów na tej sprawie. Trwałe, nieedytowalne.
+          </p>
+        </header>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-iron-50 text-left text-xs font-semibold uppercase tracking-wide text-iron-600 dark:bg-iron-800 dark:text-iron-300">
+              <tr>
+                <th className="px-4 py-2">Akcja</th>
+                <th className="px-4 py-2">Admin</th>
+                <th className="px-4 py-2">Zmiana</th>
+                <th className="px-4 py-2">Czas</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-iron-100 dark:divide-iron-800">
+              {adminLogs.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-4 py-8 text-center text-iron-500 dark:text-iron-400"
+                  >
+                    Brak akcji administracyjnych.
+                  </td>
+                </tr>
+              )}
+              {adminLogs.map((l) => {
+                const note = (l.new_data as { note?: string } | null)?.note
+                const reason = (l.new_data as { reason?: string } | null)?.reason
+                return (
+                  <tr key={l.id}>
+                    <td className="px-4 py-2 font-mono text-xs">{l.action}</td>
+                    <td className="px-4 py-2 text-xs text-iron-700 dark:text-iron-200">
+                      {adminEmails[l.admin_id] ?? l.admin_id.substring(0, 8) + '…'}
+                    </td>
+                    <td className="px-4 py-2 text-xs text-iron-700 dark:text-iron-200">
+                      {note ? (
+                        <span className="italic">📝 {note}</span>
+                      ) : reason ? (
+                        <span>
+                          {l.old_data && Object.keys(l.old_data).length > 0
+                            ? `${JSON.stringify(l.old_data)} → ${JSON.stringify(l.new_data)}`
+                            : JSON.stringify(l.new_data)}
+                          <br />
+                          <span className="text-iron-500">powód: {reason}</span>
+                        </span>
+                      ) : (
+                        <code className="text-xs text-iron-600 dark:text-iron-400">
+                          {JSON.stringify({ old: l.old_data, new: l.new_data }).substring(0, 100)}
+                        </code>
+                      )}
+                    </td>
+                    <td className="px-4 py-2 text-iron-600 dark:text-iron-400">
+                      {formatDate(l.created_at)}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -360,7 +489,10 @@ export default async function AdminSprawaDetailPage({
             <tbody className="divide-y divide-iron-100 dark:divide-iron-800">
               {events.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="px-4 py-8 text-center text-iron-500 dark:text-iron-400">
+                  <td
+                    colSpan={3}
+                    className="px-4 py-8 text-center text-iron-500 dark:text-iron-400"
+                  >
                     Brak eventów.
                   </td>
                 </tr>
@@ -377,7 +509,9 @@ export default async function AdminSprawaDetailPage({
                       <span className="text-iron-400">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-2 text-iron-600 dark:text-iron-400">{formatDate(e.created_at)}</td>
+                  <td className="px-4 py-2 text-iron-600 dark:text-iron-400">
+                    {formatDate(e.created_at)}
+                  </td>
                 </tr>
               ))}
             </tbody>
