@@ -12,9 +12,9 @@
 
 const BRAND = {
   primary: '#2563eb', // brand-600
-  bg: '#f9fafb',      // iron-50
-  text: '#111827',    // iron-900
-  muted: '#6b7280',   // iron-500
+  bg: '#f9fafb', // iron-50
+  text: '#111827', // iron-900
+  muted: '#6b7280', // iron-500
   signal: '#dc2626',
   amber: '#d97706',
   success: '#059669',
@@ -72,7 +72,7 @@ function button(label: string, href: string, color = BRAND.primary): string {
   </table>`
 }
 
-function escapeHtml(s: string): string {
+export function escapeHtml(s: string): string {
   return s
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -86,8 +86,18 @@ function escapeAttr(s: string): string {
 }
 
 const POLISH_MONTHS = [
-  'stycznia', 'lutego', 'marca', 'kwietnia', 'maja', 'czerwca',
-  'lipca', 'sierpnia', 'września', 'października', 'listopada', 'grudnia',
+  'stycznia',
+  'lutego',
+  'marca',
+  'kwietnia',
+  'maja',
+  'czerwca',
+  'lipca',
+  'sierpnia',
+  'września',
+  'października',
+  'listopada',
+  'grudnia',
 ]
 
 function formatPolishDate(d: Date): string {
@@ -126,7 +136,10 @@ export function tplDeadlineD5(d: DeadlineTemplateData): { subject: string; html:
       Pamiętaj — jeśli masz wątpliwości, kliknij „Zobacz sprawę”. Tam znajdziesz wszystkie szczegóły i pisma.
     </p>
   `
-  return { subject, html: shell({ title: subject, preheader: `5 dni do terminu: ${d.caseTitle}`, bodyHtml: body }) }
+  return {
+    subject,
+    html: shell({ title: subject, preheader: `5 dni do terminu: ${d.caseTitle}`, bodyHtml: body }),
+  }
 }
 
 export function tplDeadlineD3(d: DeadlineTemplateData): { subject: string; html: string } {
@@ -148,7 +161,10 @@ export function tplDeadlineD3(d: DeadlineTemplateData): { subject: string; html:
       Po upływie terminu sprawa może zostać rozstrzygnięta na Twoją niekorzyść.
     </p>
   `
-  return { subject, html: shell({ title: subject, preheader: `3 dni: ${d.caseTitle}`, bodyHtml: body }) }
+  return {
+    subject,
+    html: shell({ title: subject, preheader: `3 dni: ${d.caseTitle}`, bodyHtml: body }),
+  }
 }
 
 export function tplDeadlineD1(d: DeadlineTemplateData): { subject: string; html: string } {
@@ -170,7 +186,10 @@ export function tplDeadlineD1(d: DeadlineTemplateData): { subject: string; html:
       Jeśli pismo jest już opłacone i wydrukowane — wyślij je dziś listem poleconym. Liczy się data nadania.
     </p>
   `
-  return { subject, html: shell({ title: subject, preheader: `JUTRO termin: ${d.caseTitle}`, bodyHtml: body }) }
+  return {
+    subject,
+    html: shell({ title: subject, preheader: `JUTRO termin: ${d.caseTitle}`, bodyHtml: body }),
+  }
 }
 
 export function tplDeadlineD0(d: DeadlineTemplateData): { subject: string; html: string } {
@@ -191,7 +210,10 @@ export function tplDeadlineD0(d: DeadlineTemplateData): { subject: string; html:
       Jeśli wysłałeś już pismo — oznacz termin jako zrealizowany w panelu.
     </p>
   `
-  return { subject, html: shell({ title: subject, preheader: `DZIŚ termin: ${d.caseTitle}`, bodyHtml: body }) }
+  return {
+    subject,
+    html: shell({ title: subject, preheader: `DZIŚ termin: ${d.caseTitle}`, bodyHtml: body }),
+  }
 }
 
 // ============================================================
@@ -222,7 +244,10 @@ export function tplWelcome(d: WelcomeTemplateData): { subject: string; html: str
       Pytania? Napisz: <a href="mailto:pomoc@mandatomat.pl" style="color:${BRAND.primary};">pomoc@mandatomat.pl</a>
     </p>
   `
-  return { subject, html: shell({ title: subject, preheader: 'Twój prawny asystent jest gotowy', bodyHtml: body }) }
+  return {
+    subject,
+    html: shell({ title: subject, preheader: 'Twój prawny asystent jest gotowy', bodyHtml: body }),
+  }
 }
 
 // ============================================================
@@ -238,7 +263,10 @@ export interface PaymentSuccessTemplateData {
   invoiceUrl?: string | null
 }
 
-export function tplPaymentSuccess(d: PaymentSuccessTemplateData): { subject: string; html: string } {
+export function tplPaymentSuccess(d: PaymentSuccessTemplateData): {
+  subject: string
+  html: string
+} {
   const url = `https://mandatomat.pl/sprawy/${d.caseId}/pobranie`
   const subject = `Płatność zaakceptowana — ${d.caseTitle}`
   const body = `
@@ -264,7 +292,10 @@ export function tplPaymentSuccess(d: PaymentSuccessTemplateData): { subject: str
       Wydrukuj pismo (A4), podpisz odręcznie i wyślij listem poleconym. Liczy się data nadania.
     </p>
   `
-  return { subject, html: shell({ title: subject, preheader: `Pismo gotowe: ${d.caseTitle}`, bodyHtml: body }) }
+  return {
+    subject,
+    html: shell({ title: subject, preheader: `Pismo gotowe: ${d.caseTitle}`, bodyHtml: body }),
+  }
 }
 
 // ============================================================
@@ -303,7 +334,10 @@ export function tplPasswordReset(d: PasswordResetTemplateData): { subject: strin
       <a href="${escapeAttr(d.resetUrl)}" style="color:${BRAND.muted};">${escapeHtml(d.resetUrl)}</a>
     </p>
   `
-  return { subject, html: shell({ title: subject, preheader: 'Link do resetu hasła', bodyHtml: body }) }
+  return {
+    subject,
+    html: shell({ title: subject, preheader: 'Link do resetu hasła', bodyHtml: body }),
+  }
 }
 
 // ============================================================
@@ -349,7 +383,10 @@ export function tplDocumentReady(d: DocumentReadyTemplateData): { subject: strin
       Pamiętaj: pismo wygenerowane przez AI to projekt — przed wysłaniem warto sprawdzić daty, kwoty i adres organu.
     </p>
   `
-  return { subject, html: shell({ title: subject, preheader: `Projekt pisma: ${d.caseTitle}`, bodyHtml: body }) }
+  return {
+    subject,
+    html: shell({ title: subject, preheader: `Projekt pisma: ${d.caseTitle}`, bodyHtml: body }),
+  }
 }
 
 // ============================================================
@@ -387,10 +424,14 @@ export function tplInvoice(d: InvoiceTemplateData): { subject: string; html: str
           <td style="color:${BRAND.muted};font-size:13px;padding-top:6px;">Data wystawienia</td>
           <td style="text-align:right;color:${BRAND.text};padding-top:6px;">${dateStr}</td>
         </tr>
-        ${d.caseTitle ? `<tr>
+        ${
+          d.caseTitle
+            ? `<tr>
           <td style="color:${BRAND.muted};font-size:13px;padding-top:6px;">Sprawa</td>
           <td style="text-align:right;color:${BRAND.text};padding-top:6px;">${escapeHtml(d.caseTitle)}</td>
-        </tr>` : ''}
+        </tr>`
+            : ''
+        }
         <tr>
           <td style="color:${BRAND.muted};font-size:13px;padding-top:6px;">Kwota brutto</td>
           <td style="text-align:right;color:${BRAND.text};font-weight:700;padding-top:6px;">${d.amountPln.toFixed(2).replace('.', ',')} zł</td>
@@ -402,7 +443,10 @@ export function tplInvoice(d: InvoiceTemplateData): { subject: string; html: str
       Dokument księgowy zachowaj na potrzeby ewentualnych rozliczeń. W razie pytań — <a href="mailto:pomoc@mandatomat.pl" style="color:${BRAND.primary};">pomoc@mandatomat.pl</a>.
     </p>
   `
-  return { subject, html: shell({ title: subject, preheader: `${kindCap} ${d.invoiceNumber}`, bodyHtml: body }) }
+  return {
+    subject,
+    html: shell({ title: subject, preheader: `${kindCap} ${d.invoiceNumber}`, bodyHtml: body }),
+  }
 }
 
 // ============================================================
