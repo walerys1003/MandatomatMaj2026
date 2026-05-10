@@ -1,0 +1,66 @@
+{
+  "id": "m1-mandat-001",
+  "case_type": "M1_mandat_predkosc",
+  "description": "Happy path — wadliwy pomiar prędkości, brak znaku D-43",
+  "input": {
+    "imie": "Jan",
+    "nazwisko": "Kowalski",
+    "pesel": "85010112345",
+    "adres": "ul. Marszałkowska 1, 00-001 Warszawa",
+    "data_mandatu": "2026-04-15",
+    "miejsce_mandatu": "ul. Wiejska 4, Warszawa",
+    "numer_mandatu": "MK/12345/2026",
+    "kwota_mandatu": 500,
+    "punkty_karne": 6,
+    "predkosc_zmierzona": 65,
+    "predkosc_dozwolona": 50,
+    "obszar_zabudowany": true,
+    "powod_odwolania": "wadliwy_pomiar_brak_znaku",
+    "uzasadnienie_szczegolowe": "Pomiar wykonany w obszarze zabudowanym, jednak brak znaku D-43 końca obszaru zabudowanego za skrzyżowaniem przed miejscem pomiaru, co czyni pomiar prędkości nieważnym (wskazana prędkość mierzona w obszarze niezabudowanym, gdzie limit wynosi 90 km/h).",
+    "organ_wydajacy": "Komenda Stołeczna Policji, Wydział Ruchu Drogowego"
+  },
+  "expected": {
+    "must_contain_keywords": [
+      "odwołanie",
+      "wnoszę o uchylenie",
+      "Jan Kowalski",
+      "MK/12345/2026",
+      "art. 99",
+      "KPW"
+    ],
+    "must_contain_sections": [
+      "naglowek_data_miejsce",
+      "dane_wnoszacego",
+      "adresat",
+      "tytul_pisma",
+      "uzasadnienie",
+      "wnioski",
+      "podpis"
+    ],
+    "must_cite_articles": [
+      "art. 99 § 1 KPW",
+      "art. 92a"
+    ],
+    "min_word_count": 300,
+    "max_word_count": 900,
+    "tone": "formal-legal-polish",
+    "must_not_contain": [
+      "halo",
+      "cześć",
+      "imho",
+      "podaję wam",
+      "spoko",
+      "FYI"
+    ],
+    "must_reference_input_facts": [
+      "data_mandatu",
+      "numer_mandatu",
+      "miejsce_mandatu",
+      "predkosc_zmierzona",
+      "predkosc_dozwolona"
+    ],
+    "scoring_threshold": 80,
+    "scoring_baseline_v1": 87
+  },
+  "notes_for_reviewer": "Sprawdź czy AI nie zmyślił numeru artykułu — częsty błąd to 'art. 92a § 2' zamiast '§ 1'. Pomiar prędkości to KPW, nie KW."
+}

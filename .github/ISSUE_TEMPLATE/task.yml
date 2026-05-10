@@ -1,0 +1,98 @@
+name: Task — implementacja zadania z planu
+description: Pojedyncze zadanie z planu Tieru 1–5 (z plan/02..06_*.md)
+title: "[T?-???-???] <skrócony opis>"
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Użyj tego template'u dla każdego zadania z planu Tieru 1–5.
+        Numer Task ID musi się zgadzać z numerem w `plan/02..06_*.md`.
+
+  - type: input
+    id: task_id
+    attributes:
+      label: Task ID
+      description: Format `[T<tier>-<AGENT>-<num>]` (np. `[T1-DB-013]`)
+      placeholder: "[T1-DB-013]"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tier
+    attributes:
+      label: Tier
+      options:
+        - "tier-1 (Foundation)"
+        - "tier-2 (Auth + Landing)"
+        - "tier-3 (Core AI + Wizard)"
+        - "tier-4 (Payments + Dashboard)"
+        - "tier-5 (SEO + Polish + Launch)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Sub-agent
+      options:
+        - agent-database
+        - agent-backend
+        - agent-frontend
+        - agent-design
+        - agent-ai
+        - agent-payments
+        - agent-notifications
+        - agent-ocr
+        - agent-seo
+        - agent-security
+        - agent-devops
+        - orchestrator
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Opis zadania
+      description: Skopiuj z `plan/0?_tier?_*.md` odpowiednie zadanie.
+    validations:
+      required: true
+
+  - type: textarea
+    id: chunks
+    attributes:
+      label: Knowledge base chunks
+      description: Wymień chunki z `spec/chunks/` użyte do tego zadania.
+      placeholder: |
+        - T03_db_schema_001_002
+        - D01_tozsamosc_kolory
+    validations:
+      required: true
+
+  - type: textarea
+    id: dod
+    attributes:
+      label: Definition of Done
+      description: Co musi być spełnione, by uznać zadanie za zamknięte.
+      value: |
+        - [ ]
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Zależności (blocked by / blocks)
+      description: Issue numbers — które inne zadania muszą być zamknięte zanim to zacznie się robić, i które to zadanie odblokuje.
+      placeholder: |
+        Blocked by: #1, #2
+        Blocks: #15, #16
+
+  - type: input
+    id: branch
+    attributes:
+      label: Sugerowany branch
+      placeholder: "t1/database/013-migration-001-profiles"

@@ -1,0 +1,67 @@
+# Auto-label PRs based on changed paths
+
+agent-database:
+  - changed-files:
+      - any-glob-to-any-file:
+          - supabase/migrations/**
+          - packages/db-types/**
+
+agent-backend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - apps/web/app/api/**
+          - apps/web/lib/server/**
+
+agent-frontend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - apps/web/app/(marketing)/**
+          - apps/web/app/(app)/**
+          - apps/web/components/**
+          - packages/ui/**
+
+agent-design:
+  - changed-files:
+      - any-glob-to-any-file:
+          - apps/web/styles/**
+          - apps/web/tailwind.config.*
+          - packages/ui/**
+
+agent-ai:
+  - changed-files:
+      - any-glob-to-any-file:
+          - apps/web/lib/ai/**
+          - evals/**
+
+agent-payments:
+  - changed-files:
+      - any-glob-to-any-file:
+          - apps/web/app/api/billing/**
+          - apps/web/lib/stripe/**
+
+agent-seo:
+  - changed-files:
+      - any-glob-to-any-file:
+          - apps/web/app/(seo)/**
+          - apps/web/app/sitemap.*
+          - apps/web/app/robots.*
+
+agent-security:
+  - changed-files:
+      - any-glob-to-any-file:
+          - apps/web/middleware.ts
+          - apps/web/lib/security/**
+
+agent-devops:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/workflows/**
+          - turbo.json
+          - pnpm-workspace.yaml
+          - vercel.json
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.md"
+          - docs/**

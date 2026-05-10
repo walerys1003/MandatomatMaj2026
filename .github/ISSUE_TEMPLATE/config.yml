@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Plan wdrożenia (5 tierów × 50 zadań)
+    url: https://github.com/walerys1003/MandatomatMaj2026/tree/main/plan
+    about: Zobacz plan i wybierz zadanie do otworzenia jako issue.
+  - name: Knowledge base (chunki specyfikacji)
+    url: https://github.com/walerys1003/MandatomatMaj2026/tree/main/spec
+    about: Selective retrieval przez node spec/index/retrieve.mjs
+  - name: Runbook operatora
+    url: https://github.com/walerys1003/MandatomatMaj2026/blob/main/docs/RUNBOOK.md
+    about: Operacje codzienne, disaster recovery, deployment.

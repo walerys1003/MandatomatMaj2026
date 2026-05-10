@@ -1,0 +1,43 @@
+name: Bug report
+description: Coś nie działa zgodnie z oczekiwaniem
+title: "[BUG] <opis>"
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: Co się stało?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Czego oczekiwano?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Kroki reprodukcji
+      placeholder: |
+        1. Otwórz ...
+        2. Kliknij ...
+        3. Zobacz error
+    validations:
+      required: true
+
+  - type: textarea
+    id: env
+    attributes:
+      label: Środowisko
+      placeholder: |
+        - Branch / commit SHA: ...
+        - Browser / OS: ...
+        - Tier zadania, w którym powstał: ...
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logi / Sentry link / screenshot

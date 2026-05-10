@@ -1,0 +1,57 @@
+name: Needs decision — prośba o decyzję kierunkową
+description: Agent natrafił na rozwidlenie, na które potrzebuje decyzji operatora
+title: "[NEEDS-DECISION] <skrócony opis dylematu>"
+labels: ["needs-decision"]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Kontekst
+      description: Co robisz, w którym zadaniu, jakie chunki użyłeś.
+    validations:
+      required: true
+
+  - type: textarea
+    id: dilemma
+    attributes:
+      label: Dylemat
+      description: Na czym polega rozwidlenie?
+    validations:
+      required: true
+
+  - type: textarea
+    id: options
+    attributes:
+      label: Opcje (z pros/cons)
+      value: |
+        ### Opcja A
+        - Pros:
+        - Cons:
+
+        ### Opcja B
+        - Pros:
+        - Cons:
+
+        ### Opcja C (jeśli)
+        - Pros:
+        - Cons:
+    validations:
+      required: true
+
+  - type: textarea
+    id: recommendation
+    attributes:
+      label: Twoja rekomendacja jako Orchestratora
+      description: Którą opcję rekomendujesz i dlaczego.
+
+  - type: input
+    id: blocking_task
+    attributes:
+      label: Które zadanie/PR jest zablokowane?
+      placeholder: "#42 (T3-AI-098)"
+
+  - type: input
+    id: deadline
+    attributes:
+      label: Do kiedy potrzebna decyzja?
+      placeholder: "Do końca dnia (blokuje strumień AI)"

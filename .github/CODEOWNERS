@@ -1,0 +1,22 @@
+# Mandatomat — code owners
+# Orchestrator (operator) reviewuje WSZYSTKIE PR-y.
+# Specyficzne ścieżki mają dodatkowych właścicieli (kontekstowych).
+
+# Domyślnie wszystko należy do operatora
+*                                       @walerys1003
+
+# Migracje DB — wymagają szczególnej uwagi
+/supabase/migrations/                   @walerys1003
+/packages/db-types/                     @walerys1003
+
+# Sekrety / ENV
+.env.example                            @walerys1003
+/.github/workflows/                     @walerys1003
+
+# Knowledge base — niezmieniana bez zgody
+/spec/                                  @walerys1003
+/plan/                                  @walerys1003
+
+# AI prompts — wersjonowane, wymagają evals
+/apps/web/lib/ai/prompts/               @walerys1003
+/evals/                                 @walerys1003
