@@ -1,12 +1,12 @@
 /**
- * Sentry stub — T5-DEV-046.
+ * Sentry abstraction — używa realnego @sentry/nextjs gdy DSN jest skonfigurowane,
+ * w przeciwnym razie spada do console (dev / preview bez DSN).
  *
- * Lekka warstwa abstrakcji dla error trackingu. W MVP używamy console,
- * po dodaniu @sentry/nextjs (post-launch) podmieniamy implementacje.
- *
- * Cel: wszystkie miejsca, gdzie chcemy zgłosić błąd, używają jednego API,
- * dzięki czemu migracja na Sentry to zmiana wewnątrz tego pliku.
+ * Cel: wszystkie miejsca w kodzie, gdzie zgłaszamy błąd, używają jednego API,
+ * dzięki czemu można wyłączyć Sentry zmieniając tylko env (bez zmiany kodu).
  */
+
+import * as Sentry from '@sentry/nextjs'
 
 export interface ErrorContext {
   /** Identyfikator user-a (z auth.uid()) — opcjonalny */
@@ -19,9 +19,13 @@ export interface ErrorContext {
   level?: 'fatal' | 'error' | 'warning' | 'info' | 'debug'
 }
 
+const HAS_DSN = Boolean(
+  process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN,
+)
+
 /**
  * Zgłoś błąd do systemu monitoringu.
- * W MVP — console.error. Po dodaniu Sentry — Sentry.captureException.
+ * Jeśli skonfigurowane DSN — Sentry; inaczej console.
  */
 export function captureError(error: unknown, context?: ErrorContext): void {
   const level = context?.level ?? 'error'
@@ -30,6 +34,18 @@ export function captureError(error: unknown, context?: ErrorContext): void {
     return // w testach nie spamujemy konsoli
   }
 
+  if (HAS_DSN) {
+    const err = error instanceof Error ? error : new Error(String(error))
+    Sentry.captureException(err, {
+      level,
+      tags: context?.tags,
+      extra: context?.extra,
+      user: context?.userId ? { id: context.userId } : undefined,
+    })
+    return
+  }
+
+  // Fallback: console
   const payload = {
     level,
     error:
@@ -49,14 +65,24 @@ export function captureError(error: unknown, context?: ErrorContext): void {
   } else {
     console.info('[monitoring]', JSON.stringify(payload))
   }
-
-  // TODO post-launch: Sentry.captureException(error, { tags, extra, level, user: { id: userId } })
 }
 
 /**
  * Zgłoś wiadomość (info / warning) bez Error obiektu.
  */
 export function captureMessage(message: string, context?: ErrorContext): void {
+  if (process.env.NODE_ENV === 'test') return
+
+  if (HAS_DSN) {
+    Sentry.captureMessage(message, {
+      level: context?.level ?? 'info',
+      tags: context?.tags,
+      extra: context?.extra,
+      user: context?.userId ? { id: context.userId } : undefined,
+    })
+    return
+  }
+
   captureError(new Error(message), { ...context, level: context?.level ?? 'info' })
 }
 
@@ -71,15 +97,26 @@ export function addBreadcrumb(params: {
   data?: Record<string, unknown>
 }): void {
   if (process.env.NODE_ENV === 'test') return
-  // TODO: Sentry.addBreadcrumb(params)
-  void params
+  if (HAS_DSN) {
+    Sentry.addBreadcrumb({
+      category: params.category,
+      message: params.message,
+      level: params.level ?? 'info',
+      data: params.data,
+    })
+  }
 }
 
 /**
  * Ustaw kontekst usera dla wszystkich kolejnych zgłoszeń w tej sesji.
- * W MVP — no-op. Po dodaniu Sentry — Sentry.setUser({ id }).
  */
 export function setUserContext(userId: string | null): void {
-  void userId
-  // TODO: Sentry.setUser({ id: userId })
+  if (process.env.NODE_ENV === 'test') return
+  if (HAS_DSN) {
+    if (userId) {
+      Sentry.setUser({ id: userId })
+    } else {
+      Sentry.setUser(null)
+    }
+  }
 }

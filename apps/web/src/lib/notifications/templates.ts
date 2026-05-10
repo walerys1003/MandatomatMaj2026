@@ -266,3 +266,190 @@ export function tplPaymentSuccess(d: PaymentSuccessTemplateData): { subject: str
   `
   return { subject, html: shell({ title: subject, preheader: `Pismo gotowe: ${d.caseTitle}`, bodyHtml: body }) }
 }
+
+// ============================================================
+// Reset hasła
+// ============================================================
+
+export interface PasswordResetTemplateData {
+  recipientName?: string | null
+  resetUrl: string
+  /** TTL linku (np. "60 minut"). */
+  ttlLabel?: string
+  /** IP / urządzenie z którego zlecono reset (opcjonalnie). */
+  requestContext?: string | null
+}
+
+export function tplPasswordReset(d: PasswordResetTemplateData): { subject: string; html: string } {
+  const subject = 'Resetowanie hasła do Mandatomat.pl'
+  const ttl = d.ttlLabel ?? '60 minut'
+  const body = `
+    <h1 style="margin:0 0 12px 0;font-size:22px;color:${BRAND.text};">Resetowanie hasła</h1>
+    <p style="margin:0 0 12px 0;color:${BRAND.text};font-size:15px;line-height:1.5;">
+      ${d.recipientName ? `Cześć ${escapeHtml(d.recipientName.split(' ')[0] ?? '')}, ` : ''}otrzymaliśmy prośbę o zresetowanie hasła do Twojego konta. Kliknij przycisk poniżej, aby ustawić nowe hasło.
+    </p>
+    ${button('Ustaw nowe hasło', d.resetUrl)}
+    <p style="margin:0 0 8px 0;color:${BRAND.muted};font-size:13px;">
+      Link wygaśnie za <strong>${escapeHtml(ttl)}</strong>. Z linku można skorzystać tylko raz.
+    </p>
+    <div style="margin:16px 0;padding:12px;background:#fef3c7;border-radius:6px;border-left:4px solid ${BRAND.amber};">
+      <p style="margin:0;color:${BRAND.text};font-size:13px;line-height:1.5;">
+        <strong>Nie zlecałeś resetu?</strong> Zignoruj tę wiadomość — Twoje hasło pozostanie bez zmian. Jeżeli widzisz powtarzające się próby, napisz: <a href="mailto:pomoc@mandatomat.pl" style="color:${BRAND.primary};">pomoc@mandatomat.pl</a>.
+      </p>
+    </div>
+    ${d.requestContext ? `<p style="margin:0;color:${BRAND.muted};font-size:12px;">Zlecono z: ${escapeHtml(d.requestContext)}</p>` : ''}
+    <p style="margin:16px 0 0 0;color:${BRAND.muted};font-size:12px;word-break:break-all;">
+      Jeśli przycisk nie działa, skopiuj ten link do przeglądarki:<br>
+      <a href="${escapeAttr(d.resetUrl)}" style="color:${BRAND.muted};">${escapeHtml(d.resetUrl)}</a>
+    </p>
+  `
+  return { subject, html: shell({ title: subject, preheader: 'Link do resetu hasła', bodyHtml: body }) }
+}
+
+// ============================================================
+// Dokument gotowy (po wygenerowaniu pisma przez AI)
+// ============================================================
+
+export interface DocumentReadyTemplateData {
+  recipientName?: string | null
+  caseTitle: string
+  caseId: string
+  documentType: string
+  /** Liczba stron PDF (opcjonalnie). */
+  pageCount?: number | null
+  /** Data wygenerowania. */
+  generatedAt?: Date
+}
+
+export function tplDocumentReady(d: DocumentReadyTemplateData): { subject: string; html: string } {
+  const url = `https://mandatomat.pl/sprawy/${d.caseId}`
+  const subject = `Pismo gotowe do akceptacji — ${d.caseTitle}`
+  const body = `
+    <h1 style="margin:0 0 12px 0;font-size:22px;color:${BRAND.text};">📄 Twoje pismo jest gotowe</h1>
+    <p style="margin:0 0 12px 0;color:${BRAND.text};font-size:15px;line-height:1.5;">
+      ${d.recipientName ? `${escapeHtml(d.recipientName.split(' ')[0] ?? '')}, ` : ''}AI wygenerowało projekt pisma w sprawie:
+    </p>
+    <div style="margin:16px 0;padding:16px;background:${BRAND.bg};border-radius:6px;border-left:4px solid ${BRAND.primary};">
+      <p style="margin:0;font-weight:600;color:${BRAND.text};">${escapeHtml(d.caseTitle)}</p>
+      <p style="margin:8px 0 0 0;color:${BRAND.muted};font-size:13px;">
+        Typ pisma: <strong>${escapeHtml(d.documentType)}</strong>${d.pageCount ? ` · ${d.pageCount} ${d.pageCount === 1 ? 'strona' : 'stron'}` : ''}
+      </p>
+      ${d.generatedAt ? `<p style="margin:4px 0 0 0;color:${BRAND.muted};font-size:13px;">Wygenerowano: ${formatPolishDate(d.generatedAt)}</p>` : ''}
+    </div>
+    <p style="margin:0 0 12px 0;color:${BRAND.text};font-size:14px;line-height:1.5;">
+      <strong>Co dalej?</strong>
+    </p>
+    <ol style="margin:0 0 16px 0;padding-left:20px;color:${BRAND.text};font-size:14px;line-height:1.6;">
+      <li>Otwórz sprawę i przeczytaj projekt pisma.</li>
+      <li>Wprowadź ewentualne poprawki w edytorze.</li>
+      <li>Opłać i pobierz finalny PDF (A4) — gotowy do podpisu i wysyłki.</li>
+    </ol>
+    ${button('Otwórz pismo', url)}
+    <p style="margin:16px 0 0 0;color:${BRAND.muted};font-size:13px;">
+      Pamiętaj: pismo wygenerowane przez AI to projekt — przed wysłaniem warto sprawdzić daty, kwoty i adres organu.
+    </p>
+  `
+  return { subject, html: shell({ title: subject, preheader: `Projekt pisma: ${d.caseTitle}`, bodyHtml: body }) }
+}
+
+// ============================================================
+// Faktura / paragon
+// ============================================================
+
+export interface InvoiceTemplateData {
+  recipientName?: string | null
+  invoiceNumber: string
+  invoiceDate: Date
+  amountPln: number
+  caseTitle?: string | null
+  invoiceUrl: string
+  /** "faktura" lub "paragon" */
+  documentKind?: 'faktura' | 'paragon'
+}
+
+export function tplInvoice(d: InvoiceTemplateData): { subject: string; html: string } {
+  const kind = d.documentKind ?? 'faktura'
+  const kindCap = kind.charAt(0).toUpperCase() + kind.slice(1)
+  const dateStr = formatPolishDate(d.invoiceDate)
+  const subject = `${kindCap} ${d.invoiceNumber} — Mandatomat.pl`
+  const body = `
+    <h1 style="margin:0 0 12px 0;font-size:22px;color:${BRAND.text};">${kindCap} ${escapeHtml(d.invoiceNumber)}</h1>
+    <p style="margin:0 0 12px 0;color:${BRAND.text};font-size:15px;line-height:1.5;">
+      ${d.recipientName ? `${escapeHtml(d.recipientName.split(' ')[0] ?? '')}, w` : 'W'} załączeniu ${kind} za usługę wygenerowaną w Mandatomat.pl.
+    </p>
+    <div style="margin:16px 0;padding:16px;background:${BRAND.bg};border-radius:6px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="color:${BRAND.muted};font-size:13px;">Numer</td>
+          <td style="text-align:right;color:${BRAND.text};font-weight:600;">${escapeHtml(d.invoiceNumber)}</td>
+        </tr>
+        <tr>
+          <td style="color:${BRAND.muted};font-size:13px;padding-top:6px;">Data wystawienia</td>
+          <td style="text-align:right;color:${BRAND.text};padding-top:6px;">${dateStr}</td>
+        </tr>
+        ${d.caseTitle ? `<tr>
+          <td style="color:${BRAND.muted};font-size:13px;padding-top:6px;">Sprawa</td>
+          <td style="text-align:right;color:${BRAND.text};padding-top:6px;">${escapeHtml(d.caseTitle)}</td>
+        </tr>` : ''}
+        <tr>
+          <td style="color:${BRAND.muted};font-size:13px;padding-top:6px;">Kwota brutto</td>
+          <td style="text-align:right;color:${BRAND.text};font-weight:700;padding-top:6px;">${d.amountPln.toFixed(2).replace('.', ',')} zł</td>
+        </tr>
+      </table>
+    </div>
+    ${button(`Pobierz ${kind} (PDF)`, d.invoiceUrl)}
+    <p style="margin:16px 0 0 0;color:${BRAND.muted};font-size:13px;">
+      Dokument księgowy zachowaj na potrzeby ewentualnych rozliczeń. W razie pytań — <a href="mailto:pomoc@mandatomat.pl" style="color:${BRAND.primary};">pomoc@mandatomat.pl</a>.
+    </p>
+  `
+  return { subject, html: shell({ title: subject, preheader: `${kindCap} ${d.invoiceNumber}`, bodyHtml: body }) }
+}
+
+// ============================================================
+// renderTemplate — uniwersalny dispatcher
+// ============================================================
+
+export type TemplateName =
+  | 'deadline-d5'
+  | 'deadline-d3'
+  | 'deadline-d1'
+  | 'deadline-d0'
+  | 'welcome'
+  | 'payment-success'
+  | 'password-reset'
+  | 'document-ready'
+  | 'invoice'
+
+export type TemplateData =
+  | { name: 'deadline-d5'; data: DeadlineTemplateData }
+  | { name: 'deadline-d3'; data: DeadlineTemplateData }
+  | { name: 'deadline-d1'; data: DeadlineTemplateData }
+  | { name: 'deadline-d0'; data: DeadlineTemplateData }
+  | { name: 'welcome'; data: WelcomeTemplateData }
+  | { name: 'payment-success'; data: PaymentSuccessTemplateData }
+  | { name: 'password-reset'; data: PasswordResetTemplateData }
+  | { name: 'document-ready'; data: DocumentReadyTemplateData }
+  | { name: 'invoice'; data: InvoiceTemplateData }
+
+export function renderTemplate(t: TemplateData): { subject: string; html: string } {
+  switch (t.name) {
+    case 'deadline-d5':
+      return tplDeadlineD5(t.data)
+    case 'deadline-d3':
+      return tplDeadlineD3(t.data)
+    case 'deadline-d1':
+      return tplDeadlineD1(t.data)
+    case 'deadline-d0':
+      return tplDeadlineD0(t.data)
+    case 'welcome':
+      return tplWelcome(t.data)
+    case 'payment-success':
+      return tplPaymentSuccess(t.data)
+    case 'password-reset':
+      return tplPasswordReset(t.data)
+    case 'document-ready':
+      return tplDocumentReady(t.data)
+    case 'invoice':
+      return tplInvoice(t.data)
+  }
+}

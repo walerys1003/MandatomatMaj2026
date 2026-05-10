@@ -1,17 +1,15 @@
 /**
- * Sentry — edge runtime init (middleware, edge route handlers).
- *
- * Aby aktywować: pnpm add @sentry/nextjs i odkomentuj poniżej.
+ * Sentry — edge runtime init (middleware, Edge API routes).
+ * Auto-importowany przez @sentry/nextjs.
  */
+import * as Sentry from '@sentry/nextjs'
 
-// import * as Sentry from '@sentry/nextjs'
-//
-// if (process.env.SENTRY_DSN) {
-//   Sentry.init({
-//     dsn: process.env.SENTRY_DSN,
-//     environment: process.env.VERCEL_ENV ?? 'development',
-//     tracesSampleRate: 0.1,
-//   })
-// }
+const dsn = process.env.SENTRY_DSN ?? process.env.NEXT_PUBLIC_SENTRY_DSN
 
-export {}
+if (dsn) {
+  Sentry.init({
+    dsn,
+    environment: process.env.NODE_ENV,
+    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.05 : 0,
+  })
+}

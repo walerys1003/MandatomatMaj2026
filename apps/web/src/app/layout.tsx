@@ -3,6 +3,9 @@ import { Inter, Inter_Tight, JetBrains_Mono } from 'next/font/google'
 
 import '@mandatomat/ui/globals.css'
 
+import { AnalyticsGate } from '@/components/app/analytics-gate'
+import { CookieConsentBanner } from '@/components/app/cookie-consent'
+
 const displayFont = Inter_Tight({
   subsets: ['latin', 'latin-ext'],
   weight: ['600', '700', '800'],
@@ -123,6 +126,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-dvh bg-white text-iron-900 antialiased dark:bg-iron-950 dark:text-iron-50">
         {children}
+        <CookieConsentBanner />
+        <AnalyticsGate />
       </body>
     </html>
   )
