@@ -27,18 +27,25 @@
     "kb:retrieve": "node spec/index/retrieve.mjs",
     "kb:integrity": "node scripts/kb-integrity.mjs",
     "evals": "node evals/run.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:install": "playwright install --with-deps chromium",
+    "test:e2e:report": "playwright show-report",
     "prepare": "husky || true"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",
     "@commitlint/config-conventional": "^19.5.0",
+    "@playwright/test": "^1.59.1",
     "@types/node": "^20.16.10",
+    "@vitest/ui": "^4.1.5",
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8",
     "turbo": "^2.1.3",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "vitest": "^4.1.5"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

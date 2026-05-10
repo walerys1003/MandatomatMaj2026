@@ -18,45 +18,45 @@ export const CASE_CATEGORIES = [
 
 export type CaseCategory = (typeof CASE_CATEGORIES)[number]
 
-/** All 34 case sub-types grouped by category prefix. */
+/** All 29 case sub-types — typ pisma/procedura zgodnie ze specyfikacją Mandatomat. */
 export const CASE_TYPES = [
-  // Mandaty (M1-M7)
-  'M1_mandat_predkosc',
-  'M2_mandat_skrzyzowanie',
-  'M3_mandat_telefon',
-  'M4_mandat_pasy',
-  'M5_mandat_parkowanie',
-  'M6_mandat_dokumenty',
-  'M7_mandat_inny',
+  // Mandaty (M1-M7) — drogowe + administracyjne
+  'M1_mandat_predkosc',           // Sprzeciw od mandatu za przekroczenie prędkości
+  'M2_mandat_odmowa_przyjecia',   // Odmowa przyjęcia mandatu (art. 97 § 2 KPSW)
+  'M3_mandat_uchylenie',          // Wniosek o uchylenie prawomocnego mandatu (art. 101 KPSW)
+  'M4_mandat_straz_gminna',       // Odwołanie od mandatu straży gminnej/miejskiej
+  'M5_mandat_straz_fotoradar',    // Odwołanie SM/SG fotoradar mobilny (kompetencje od 2016)
+  'M6_mandat_itd',                // Odwołanie od kary ITD (transport drogowy)
+  'M7_mandat_odroczenie_raty',    // Wniosek o odroczenie/raty (Ordynacja podatkowa)
   // Parking (P1-P4)
-  'P1_parking_strefa_platna',
-  'P2_parking_zakaz_postoju',
-  'P3_parking_oplata_dodatkowa',
-  'P4_parking_holowanie',
+  'P1_parking_spp',               // Reklamacja opłaty dodatkowej SPP
+  'P2_parking_zdm',               // Reklamacja opłaty ZDM
+  'P3_parking_ztm',               // Odwołanie ZTM/MPK (jazda bez biletu)
+  'P4_parking_blad_identyfikacji',// Sprzeciw od opłaty z błędem identyfikacji ANPR
   // Windykacja (W1-W5)
-  'W1_windykacja_przedawnienie',
-  'W2_windykacja_brak_dlugu',
-  'W3_windykacja_naruszenie_rodo',
-  'W4_windykacja_komornik',
-  'W5_windykacja_bik',
+  'W1_windykacja_przedawnienie',  // Odpowiedź na wezwanie z zarzutem przedawnienia
+  'W2_windykacja_odpowiedz',      // Odpowiedź na wezwanie windykacyjne
+  'W3_windykacja_sprzeciw_epu',   // Sprzeciw od nakazu zapłaty w EPU (Lublin-Zachód)
+  'W4_windykacja_krd_bik',        // Wniosek o usunięcie wpisu KRD/BIK/ERIF
+  'W5_windykacja_skarga_rf',      // Skarga do RF na windykatora
   // Ubezpieczenia (U1-U3)
-  'U1_ubezp_odmowa_wyplaty',
-  'U2_ubezp_zanizone',
-  'U3_ubezp_oc_komunikacyjne',
+  'U1_ubezp_odwolanie_decyzja',   // Odwołanie od decyzji ubezpieczyciela (OC/AC/NNW)
+  'U2_ubezp_wezwanie_wyplata',    // Wezwanie do wypłaty odszkodowania
+  'U3_ubezp_skarga_rf',           // Skarga do RF na ubezpieczyciela
   // e-TOLL (E1-E3)
-  'E1_etoll_brak_oplaty',
-  'E2_etoll_naruszenie',
-  'E3_etoll_blad_systemu',
+  'E1_etoll_odwolanie_kara',      // Odwołanie od kary GITD e-TOLL
+  'E2_etoll_reklamacja_podwojne', // Reklamacja podwójnego naliczenia
+  'E3_etoll_anulowanie',          // Wniosek o umorzenie/odstąpienie/raty (e-TOLL)
   // Kontrole drogowe (K1-K4)
-  'K1_kontrola_alkomat',
-  'K2_kontrola_przeszukanie',
-  'K3_kontrola_zatrzymanie_prawa_jazdy',
-  'K4_kontrola_inne',
-  // Techniczne (T1-T4)
-  'T1_techn_brak_badan',
-  'T2_techn_negatywny_wynik',
-  'T3_techn_oc_badanie',
-  'T4_techn_zatrzymanie_dowodu',
+  'K1_kontrola_zatrzymanie_pj',   // Sprzeciw od zatrzymania prawa jazdy
+  'K2_kontrola_cofniecie_cepik',  // Wniosek o cofnięcie decyzji o cofnięciu uprawnień
+  'K3_kontrola_weryfikacja_urzadzenia', // Wniosek dowodowy o weryfikację urządzenia
+  'K4_kontrola_korekta_punktow',  // Wniosek o korektę punktów karnych w CEPiK
+  // Techniczne / pomocnicze (T1-T4)
+  'T1_techn_pelnomocnictwo',      // Pełnomocnictwo procesowe/administracyjne
+  'T2_techn_rodo_dostep',         // Wniosek RODO o dostęp (art. 15)
+  'T3_techn_rodo_usuniecie',      // Wniosek RODO o usunięcie (art. 17)
+  'T4_techn_lista_zalacznikow',   // Generator listy załączników
 ] as const
 
 export type CaseType = (typeof CASE_TYPES)[number]

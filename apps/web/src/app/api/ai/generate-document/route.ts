@@ -351,9 +351,9 @@ function buildPromptInput(
         },
       }
 
-    case 'M4_mandat_pasy':
+    case 'M4_mandat_straz_gminna':
       return {
-        caseType: 'M4_mandat_pasy',
+        caseType: 'M4_mandat_straz_gminna',
         data: {
           numer_mandatu: s('numer_mandatu'),
           data_zdarzenia: s('data_zdarzenia'),
@@ -370,9 +370,9 @@ function buildPromptInput(
         },
       }
 
-    case 'P1_parking_strefa_platna':
+    case 'P1_parking_spp':
       return {
-        caseType: 'P1_parking_strefa_platna',
+        caseType: 'P1_parking_spp',
         data: {
           numer_wezwania: s('numer_wezwania'),
           data_zdarzenia: s('data_zdarzenia'),
@@ -392,9 +392,9 @@ function buildPromptInput(
         },
       }
 
-    case 'P3_parking_oplata_dodatkowa':
+    case 'P3_parking_ztm':
       return {
-        caseType: 'P3_parking_oplata_dodatkowa',
+        caseType: 'P3_parking_ztm',
         data: {
           numer_wezwania: s('numer_wezwania'),
           data_zdarzenia: s('data_zdarzenia'),

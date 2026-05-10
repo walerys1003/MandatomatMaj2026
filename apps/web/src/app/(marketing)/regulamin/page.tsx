@@ -64,15 +64,33 @@ const SECTIONS = [
     ],
   },
   {
-    h: '§ 8. Odpowiedzialność',
+    h: '§ 8. Wykorzystanie sztucznej inteligencji (AI)',
+    p: [
+      'Pisma generowane są z wykorzystaniem dużych modeli językowych (LLM) — w szczególności Anthropic Claude. Operator stosuje custom prompt prawny i bibliotekę walidacji (golden evals) zapewniającą zgodność z polskim prawem.',
+      'Każde wygenerowane pismo jest projektem, który Użytkownik powinien zweryfikować przed użyciem. Operator nie gwarantuje, że pismo jest wolne od błędów merytorycznych — modele AI mogą halucynować podstawy prawne (rzadko, ale zdarza się).',
+      'Dane wpisane przez Użytkownika do formularza są przekazywane do Anthropic (USA, Standard Contractual Clauses RODO). Operator nie wykorzystuje danych Użytkownika do trenowania modeli AI (umowa DPA).',
+      'Użytkownik może w każdej chwili zażądać usunięcia danych z bazy Operatora (art. 17 RODO). Dane przekazane do Anthropic są przechowywane maksymalnie 30 dni (zgodnie z polityką Anthropic Zero Data Retention).',
+    ],
+  },
+  {
+    h: '§ 9. Odpowiedzialność',
     p: [
       'Operator nie ponosi odpowiedzialności za skutki procesowe wykorzystania Pisma, w szczególności za odrzucenie odwołania przez organ.',
       'Operator dokłada najwyższej staranności przy aktualizacji bazy podstaw prawnych, jednak nie gwarantuje ich pełnej zgodności z najnowszymi zmianami prawa.',
+      'Modele AI mogą generować błędne lub przestarzałe odniesienia prawne — Użytkownik MUSI zweryfikować każde powołanie podstaw prawnych przed wniesieniem pisma.',
       'Łączna odpowiedzialność Operatora ograniczona jest do wysokości zapłaconej za daną usługę.',
     ],
   },
   {
-    h: '§ 9. Postanowienia końcowe',
+    h: '§ 10. Bezpieczeństwo i dane osobowe',
+    p: [
+      'Operator stosuje środki bezpieczeństwa zgodne z art. 32 RODO: szyfrowanie TLS 1.3, hashowanie haseł (bcrypt), Row Level Security w bazie, Content Security Policy, rate-limiting.',
+      'Audyt bezpieczeństwa: dokument Security Checklist (docs/security/SECURITY_CHECKLIST.md) — RLS, CSP, HSTS, Permissions-Policy.',
+      'Zgłaszanie podatności: security@mandatomat.pl. Reagujemy w ciągu 48 godzin (responsible disclosure).',
+    ],
+  },
+  {
+    h: '§ 11. Postanowienia końcowe',
     p: [
       'Regulamin obowiązuje od dnia: 10 maja 2026 r.',
       'Operator zastrzega prawo zmiany Regulaminu z zachowaniem 14-dniowego okresu wypowiedzenia.',

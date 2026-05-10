@@ -830,14 +830,18 @@ const W1_SCHEMA: FormSchema = {
 
 /**
  * UWAGA: `Record<CaseType, FormSchema>` byłby zbyt restrykcyjny — mamy
- * 34 typy, a w MVP definiujemy tylko 5. Używamy `Partial<Record<...>>`
+ * 29 typów, a w MVP definiujemy tylko 5. Używamy `Partial<Record<...>>`
  * i `loadFormSchema()` zwraca `null` dla brakujących typów.
+ *
+ * Mapowanie używa nowego enum (M4_mandat_straz_gminna zamiast M4_mandat_pasy itd.) —
+ * semantyka tych 5 schemat MVP nie zmieniła się: M1 (prędkość), M4 (straż),
+ * P1 (SPP), P3 (ZTM), W1 (przedawnienie).
  */
 export const FORM_SCHEMAS: Partial<Record<CaseType, FormSchema>> = {
   M1_mandat_predkosc: M1_SCHEMA,
-  M4_mandat_pasy: M4_SCHEMA,
-  P1_parking_strefa_platna: P1_SCHEMA,
-  P3_parking_oplata_dodatkowa: P3_SCHEMA,
+  M4_mandat_straz_gminna: M4_SCHEMA,
+  P1_parking_spp: P1_SCHEMA,
+  P3_parking_ztm: P3_SCHEMA,
   W1_windykacja_przedawnienie: W1_SCHEMA,
 }
 

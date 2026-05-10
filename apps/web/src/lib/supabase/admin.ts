@@ -2,35 +2,32 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 import type { Database } from '@mandatomat/db-types'
 
+import { serverEnv } from '@/lib/env'
+
 /**
- * Server-only Supabase client z service_role key.
+ * Supabase admin client (service_role).
  *
- * !!! NIGDY nie eksportuj tego do Client Components.
- * Używaj wyłącznie w:
- *  - Route Handlers (`app/api/.../route.ts`)
- *  - Server Actions
- *  - Cron jobs / webhooks (Stripe, Inngest)
- *  - Admin actions chronionych middleware
+ * UWAGA: omija RLS — używać TYLKO w trusted backend pathways:
+ *  - Stripe webhook (brak sesji usera)
+ *  - CRON jobs
+ *  - admin actions z dodatkową weryfikacją role='admin'
  *
- * RLS jest omijany — sprawdzaj uprawnienia ręcznie przed każdym query.
+ * NIGDY nie używać w Server Component lub Server Action triggered by user input.
  */
 export function createAdminClient() {
   const url = process.env['NEXT_PUBLIC_SUPABASE_URL']
-  const serviceKey = process.env['SUPABASE_SERVICE_ROLE_KEY']
+  const serviceKey = serverEnv.SUPABASE_SERVICE_ROLE_KEY
 
   if (!url || !serviceKey) {
     throw new Error(
-      'Admin Supabase env missing. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.',
+      'Supabase admin client missing env. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.',
     )
   }
 
   return createSupabaseClient<Database>(url, serviceKey, {
     auth: {
-      autoRefreshToken: false,
       persistSession: false,
-    },
-    global: {
-      headers: { 'x-client-info': 'mandatomat-admin' },
+      autoRefreshToken: false,
     },
   })
 }

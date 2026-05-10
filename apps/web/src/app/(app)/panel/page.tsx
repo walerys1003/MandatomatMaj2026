@@ -1,161 +1,255 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 
-import { Badge } from '@mandatomat/ui/badge'
-import { Button } from '@mandatomat/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@mandatomat/ui/card'
+import {
+  CasesList,
+  CasesTable,
+  DeadlineWidget,
+  MetricsGrid,
+  QuickActionBar,
+  SuccessRateWidget,
+  type CaseTableRow,
+  type DeadlineItem,
+  type MetricItem,
+  type SuccessRateData,
+} from '@mandatomat/ui'
 
+import { caseTypeFromDb } from '@/lib/cases/db-mapping'
+import { getCaseTypeMeta } from '@/lib/cases/catalog'
 import { createClient } from '@/lib/supabase/server'
-
-/**
- * Pulpit (dashboard) — strona startowa panelu.
- *
- * Zawiera:
- *  - Powitanie z imieniem
- *  - 3 quick stat cards (sprawy aktywne / terminy / oszczędności)
- *  - CTA "Nowe pismo" + lista 5 ostatnich spraw (jeśli są)
- *  - Empty state dla nowego usera
- */
 
 export const dynamic = 'force-dynamic'
 
-export default async function DashboardPage() {
+export const metadata: Metadata = {
+  title: 'Pulpit',
+  description: 'Twój panel — sprawy, terminy, statystyki.',
+}
+
+interface CaseRow {
+  id: string
+  case_type: string
+  status: string
+  created_at: string
+  title: string | null
+  institution: string | null
+}
+
+interface DeadlineRow {
+  id: string
+  case_id: string
+  title: string
+  deadline_date: string
+  legal_basis: string | null
+}
+
+/**
+ * /panel — pulpit (dashboard) B2C.
+ *
+ * Layout (D06):
+ *  - Header z powitaniem + DeadlineWidget (jeśli są terminy)
+ *  - QuickActionBar (5 buttonów)
+ *  - MetricsGrid (4 kafle KPI)
+ *  - SuccessRateWidget (donut + breakdown + sparkline)
+ *  - CasesTable (desktop) / CasesList (mobile)
+ */
+export default async function PanelPage() {
   const supabase = createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
-
   const userId = user!.id
 
-  const [profileRes, casesRes, deadlinesRes] = await Promise.all([
-    supabase.from('profiles').select('full_name, plan').eq('id', userId).single(),
+  // Parallel data fetch
+  const [profileRes, casesRes, deadlinesRes, monthCountRes, successRes] = await Promise.all([
+    supabase.from('profiles').select('full_name, plan, subscription_tier').eq('id', userId).maybeSingle(),
     supabase
       .from('cases')
-      .select('id, case_type, status, created_at, title')
+      .select('id, case_type, status, created_at, title, institution')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
-      .limit(5),
+      .limit(20),
     supabase
       .from('deadlines')
-      .select('id, due_at, label')
+      .select('id, case_id, title, deadline_date, legal_basis')
       .eq('user_id', userId)
-      .gte('due_at', new Date().toISOString())
-      .order('due_at', { ascending: true })
-      .limit(3),
+      .in('status', ['active', 'reminded_d5', 'reminded_d3', 'reminded_d1'])
+      .gte('deadline_date', new Date().toISOString().slice(0, 10))
+      .order('deadline_date', { ascending: true })
+      .limit(10),
+    supabase
+      .from('cases')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .gte('created_at', firstOfMonthIso()),
+    supabase
+      .from('cases')
+      .select('id, status')
+      .eq('user_id', userId),
   ])
 
-  const profile = profileRes.data
-  const cases = casesRes.data ?? []
-  const deadlines = deadlinesRes.data ?? []
+  const profile = profileRes.data as { full_name: string | null; plan: string | null; subscription_tier: string | null } | null
+  const cases = (casesRes.data ?? []) as CaseRow[]
+  const deadlines = (deadlinesRes.data ?? []) as DeadlineRow[]
+  const monthCount = monthCountRes.count ?? 0
+
+  // Stats — derived
+  const allCases = (successRes.data ?? []) as { id: string; status: string }[]
+  const accepted = allCases.filter((c) => c.status === 'resolved').length
+  const rejected = allCases.filter((c) => c.status === 'archived').length
+  const pending = allCases.filter((c) => ['paid', 'sent', 'waiting'].includes(c.status)).length
+  const totalFinished = accepted + rejected
+  const successRate = totalFinished > 0 ? Math.round((accepted / totalFinished) * 100) : 0
+  const pendingCount = allCases.filter((c) => ['draft', 'preview', 'paid_pending'].includes(c.status)).length
+
   const firstName = profile?.full_name?.split(' ')[0] ?? 'Cześć'
 
+  // Build metric items
+  const metrics: MetricItem[] = [
+    {
+      label: 'Pisma w miesiącu',
+      value: monthCount,
+      icon: '📝',
+      variant: 'neutral',
+    },
+    {
+      label: 'Oczekujące',
+      value: pendingCount,
+      icon: '⏳',
+      variant: pendingCount > 0 ? 'warning' : 'neutral',
+    },
+    {
+      label: 'Uwzględnione',
+      value: accepted,
+      icon: '✓',
+      variant: accepted > 0 ? 'success' : 'neutral',
+    },
+    {
+      label: 'Skuteczność',
+      value: totalFinished > 0 ? `${successRate}%` : '—',
+      icon: '★',
+      variant: 'hero',
+      ...(totalFinished > 0 ? { trend: `${accepted}/${totalFinished} spraw` } : {}),
+    },
+  ]
+
+  const successData: SuccessRateData = {
+    successRate,
+    totalCases: allCases.length,
+    breakdown: { accepted, rejected, pending },
+  }
+
+  // Map cases to table rows
+  const caseRows: CaseTableRow[] = cases.map((c) => {
+    const shortId = caseTypeFromDb(c.case_type) ?? null
+    const meta = shortId ? getCaseTypeMeta(shortId) : null
+    return {
+      id: c.id,
+      type: c.case_type,
+      typeLabel: meta?.title ?? c.case_type,
+      createdAt: c.created_at,
+      institution: c.institution,
+      status: c.status,
+      title: c.title,
+      // deadline mapped from deadlines list (first matching case_id)
+      ...(deadlines.find((d) => d.case_id === c.id)?.deadline_date
+        ? { deadline: deadlines.find((d) => d.case_id === c.id)!.deadline_date }
+        : {}),
+    }
+  })
+
+  const deadlineItems: DeadlineItem[] = deadlines.map((d) => ({
+    id: d.id,
+    caseId: d.case_id,
+    title: d.title,
+    deadlineDate: d.deadline_date,
+    legalBasis: d.legal_basis,
+  }))
+
+  const isEmpty = cases.length === 0
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-end justify-between">
+      <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="font-mono text-[11px] uppercase tracking-wider text-precision-blue-600 dark:text-precision-blue-400">
-            PULPIT
-          </p>
-          <h1 className="mt-2 font-display text-3xl font-extrabold tracking-[-0.03em] text-iron-950 sm:text-4xl dark:text-white">
-            {firstName === 'Cześć' ? 'Cześć!' : `Cześć, ${firstName}!`}
+          <h1 className="text-2xl font-bold tracking-tight text-iron-900 dark:text-iron-50">
+            {firstName === 'Cześć' ? firstName : `Cześć, ${firstName}!`}
           </h1>
-          <p className="mt-1 text-iron-600 dark:text-iron-300">
-            Zarządzaj swoimi sprawami i pisz odwołania w 3 minuty.
+          <p className="mt-1 text-sm text-iron-600 dark:text-iron-400">
+            Tu znajdziesz wszystkie sprawy, terminy i statystyki.
           </p>
         </div>
-        <Button asChild size="md" variant="primary">
-          <Link href="/sprawy/nowa">+ Nowe pismo</Link>
-        </Button>
-      </div>
+        <Link
+          href="/sprawy/nowa"
+          className="inline-flex items-center gap-2 rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
+        >
+          + Nowe pismo
+        </Link>
+      </header>
 
-      {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardDescription>Sprawy aktywne</CardDescription>
-            <CardTitle className="font-display text-3xl tabular-nums">
-              {
-                cases.filter(
-                  (c) =>
-                    c.status === 'draft' ||
-                    c.status === 'form_completed' ||
-                    c.status === 'preview' ||
-                    c.status === 'editing',
-                ).length
-              }
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardDescription>Najbliższe terminy</CardDescription>
-            <CardTitle className="font-display text-3xl tabular-nums">
-              {deadlines.length}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardDescription>Wszystkie sprawy</CardDescription>
-            <CardTitle className="font-display text-3xl tabular-nums">{cases.length}</CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
+      {/* Quick actions */}
+      <QuickActionBar />
 
-      {/* Recent cases */}
-      <section>
-        <div className="mb-4 flex items-end justify-between">
-          <h2 className="font-display text-xl font-bold tracking-[-0.02em] text-iron-950 dark:text-white">
-            Ostatnie sprawy
+      {/* Empty state vs full dashboard */}
+      {isEmpty ? (
+        <div className="rounded-lg border-2 border-dashed border-iron-200 bg-white p-10 text-center dark:border-iron-700 dark:bg-iron-900">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-2xl text-brand-700 dark:bg-brand-900 dark:text-brand-300">
+            ✨
+          </div>
+          <h2 className="mt-4 text-lg font-semibold text-iron-900 dark:text-iron-100">
+            Witaj w Mandatomacie
           </h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-iron-600 dark:text-iron-400">
+            Stwórz pierwsze pismo — kreator zajmie ok. 3 minut. AI wygeneruje dla Ciebie sprzeciw, odwołanie lub odpowiedź.
+          </p>
           <Link
-            href="/sprawy"
-            className="text-sm font-medium text-precision-blue-600 hover:underline dark:text-precision-blue-400"
+            href="/sprawy/nowa"
+            className="mt-4 inline-flex items-center gap-2 rounded-md bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
           >
-            Zobacz wszystkie →
+            Stwórz pierwsze pismo →
           </Link>
         </div>
+      ) : (
+        <>
+          {/* Deadlines */}
+          {deadlineItems.length > 0 ? <DeadlineWidget items={deadlineItems} /> : null}
 
-        {cases.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <p className="text-3xl" aria-hidden>
-                📋
-              </p>
-              <h3 className="mt-4 font-display text-lg font-bold text-iron-950 dark:text-white">
-                Nie masz jeszcze żadnych spraw
-              </h3>
-              <p className="mt-1 text-sm text-iron-600 dark:text-iron-300">
-                Zacznij od pierwszego odwołania — zajmie to 3 minuty.
-              </p>
-              <Button asChild size="md" variant="primary" className="mt-6">
-                <Link href="/sprawy/nowa">Zacznij pierwsze pismo →</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <ul className="divide-y divide-iron-100 rounded-xl border border-iron-100 bg-white dark:divide-iron-800 dark:border-iron-800 dark:bg-iron-900">
-            {cases.map((c) => (
-              <li key={c.id}>
-                <Link
-                  href={`/sprawy/${c.id}`}
-                  className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-iron-50 dark:hover:bg-iron-800"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-iron-950 dark:text-white">
-                      {c.title ?? c.case_type}
-                    </p>
-                    <p className="mt-0.5 font-mono text-[11px] uppercase tracking-wider text-iron-500">
-                      {c.case_type} · {new Date(c.created_at).toLocaleDateString('pl-PL')}
-                    </p>
-                  </div>
-                  <Badge variant="default">{c.status}</Badge>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+          {/* Metrics grid */}
+          <MetricsGrid items={metrics} />
+
+          {/* Success rate */}
+          <SuccessRateWidget data={successData} />
+
+          {/* Cases */}
+          <section>
+            <div className="mb-3 flex items-baseline justify-between">
+              <h2 className="text-lg font-semibold text-iron-900 dark:text-iron-100">
+                Twoje sprawy
+              </h2>
+              <Link
+                href="/sprawy"
+                className="text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400"
+              >
+                Wszystkie →
+              </Link>
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block">
+              <CasesTable rows={caseRows} />
+            </div>
+            {/* Mobile list */}
+            <div className="md:hidden">
+              <CasesList rows={caseRows} />
+            </div>
+          </section>
+        </>
+      )}
     </div>
   )
+}
+
+function firstOfMonthIso(): string {
+  const d = new Date()
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString()
 }

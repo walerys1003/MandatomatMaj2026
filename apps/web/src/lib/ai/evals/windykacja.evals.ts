@@ -1,0 +1,407 @@
+/**
+ * Golden evals — Windykacja (W1-W5), 5 promptów × 3 scenariusze = 15 evals.
+ *
+ * W1 — Odpowiedź na wezwanie z zarzutem przedawnienia
+ * W2 — Odpowiedź na wezwanie do zapłaty (żądanie dokumentów)
+ * W3 — Sprzeciw od nakazu zapłaty w EPU (Sąd Rejonowy Lublin-Zachód)
+ * W4 — Wniosek o usunięcie wpisu z KRD/BIK/BIG/ERIF
+ * W5 — Skarga do Rzecznika Finansowego
+ */
+
+import type { GoldenEval } from './index'
+
+export const WINDYKACJA_EVALS: GoldenEval[] = [
+  // ==========================================================================
+  // W1 — Zarzut przedawnienia
+  // ==========================================================================
+  {
+    id: 'W1-A1',
+    description: 'Dług telekomunikacyjny przedawniony 5 lat temu, brak uznania, brak pozwu — wysokie szanse',
+    input: {
+      caseType: 'W1_windykacja_przedawnienie',
+      data: {
+        wierzyciel: 'Kruk S.A.',
+        pierwotny_wierzyciel: 'Orange Polska S.A.',
+        numer_sprawy: 'KRK/2024/55512',
+        data_wezwania: '2026-03-15',
+        kwota_zadania: 1850,
+        rodzaj_zobowiazania: 'telekom',
+        data_wymagalnosci: '2018-06-10',
+        data_ostatniej_platnosci: null,
+        czy_uznano_dlug: 'nie' as never,
+        czy_byl_pozew: 'nie' as never,
+        kwestionuje_dlug: ['nie zawierałem nowej umowy', 'wierzyciel nie wykazał cesji'],
+        opis_dodatkowy: 'Otrzymałem wezwanie po 7 latach od rozwiązania umowy.',
+        imie_nazwisko: 'Andrzej Wojciechowski',
+        adres: 'ul. Testowa 10, 00-010 Warszawa',
+        data_pisma: '2026-03-20',
+      } as never,
+    },
+    expectedScoring: { min: 0.85, max: 1.0 },
+    mustContainPodstawy: ['art. 117', 'art. 118', 'KC'],
+    mustContainArgumenty: ['przedawnien'],
+    mustNotContain: ['uznaję dług', 'zobowiązuję się zapłacić'],
+  },
+  {
+    id: 'W1-A2',
+    description: 'Roszczenie z 2024 (nieprzedawnione) — niskie szanse na zarzut przedawnienia',
+    input: {
+      caseType: 'W1_windykacja_przedawnienie',
+      data: {
+        wierzyciel: 'Intrum Justitia',
+        pierwotny_wierzyciel: 'Provident Polska',
+        numer_sprawy: 'INT/2026/77777',
+        data_wezwania: '2026-04-01',
+        kwota_zadania: 3200,
+        rodzaj_zobowiazania: 'kredyt_konsum',
+        data_wymagalnosci: '2024-11-15',
+        data_ostatniej_platnosci: '2024-09-01',
+        czy_uznano_dlug: 'tak_niedawno' as never,
+        czy_byl_pozew: 'nie' as never,
+        kwestionuje_dlug: null,
+        opis_dodatkowy: null,
+        imie_nazwisko: 'Beata Lis',
+        adres: 'ul. Testowa 11, 00-011 Warszawa',
+        data_pisma: '2026-04-05',
+      } as never,
+    },
+    expectedScoring: { min: 0.0, max: 0.4 },
+    mustContainPodstawy: ['art. 117', 'KC'],
+    mustContainArgumenty: [],
+  },
+  {
+    id: 'W1-A3',
+    description: 'Faktura B2C 4 lata temu, graniczna sytuacja, brak pozwu — średnie szanse',
+    input: {
+      caseType: 'W1_windykacja_przedawnienie',
+      data: {
+        wierzyciel: 'Best S.A.',
+        pierwotny_wierzyciel: 'Sklep Online sp. z o.o.',
+        numer_sprawy: 'BST/2026/00021',
+        data_wezwania: '2026-02-10',
+        kwota_zadania: 1200,
+        rodzaj_zobowiazania: 'sklep_raty',
+        data_wymagalnosci: '2022-01-20',
+        data_ostatniej_platnosci: null,
+        czy_uznano_dlug: 'nie_pamietam' as never,
+        czy_byl_pozew: 'nie_wiem' as never,
+        kwestionuje_dlug: ['brak dokumentów cesji'],
+        opis_dodatkowy: 'Nie pamiętam dokładnie sprawy.',
+        imie_nazwisko: 'Cezary Wójcik',
+        adres: 'ul. Testowa 12, 00-012 Warszawa',
+        data_pisma: '2026-02-15',
+      } as never,
+    },
+    expectedScoring: { min: 0.45, max: 0.75 },
+    mustContainPodstawy: ['art. 117', 'KC'],
+    mustContainArgumenty: ['przedawnien'],
+  },
+
+  // ==========================================================================
+  // W2 — Odpowiedź na wezwanie z żądaniem dokumentów
+  // ==========================================================================
+  {
+    id: 'W2-A1',
+    description: 'Stary dług, brak dokumentów u windykatora — żądanie dokumentów + przedawnienie',
+    input: {
+      caseType: 'W2_windykacja_odpowiedz',
+      data: {
+        numer_sprawy: 'EOS/2026/12345',
+        wierzyciel_pierwotny: 'mBank S.A.',
+        firma_windykacyjna: 'EOS KSI Polska',
+        kwota_glowna: 8500,
+        kwota_odsetek: 2100,
+        kwota_kosztow: 450,
+        data_powstania_dlugu: '2019-03-15',
+        data_wezwania: '2026-04-10',
+        rodzaj_zobowiazania: 'umowa_kredyt' as never,
+        uznajesz_dlug: false,
+        szczegoly: 'Brak jakiejkolwiek umowy w korespondencji od windykatora — żądam wglądu w dokumentację.',
+        imie_nazwisko: 'Dorota Kaczmarek',
+        adres: 'ul. Testowa 13, 00-013 Warszawa',
+      } as never,
+    },
+    expectedScoring: { min: 0.75, max: 0.95 },
+    mustContainPodstawy: ['art. 6', 'KC'],
+    mustContainArgumenty: ['dokument'],
+    mustNotContain: ['uznaję dług w całości'],
+  },
+  {
+    id: 'W2-A2',
+    description: 'Świeży dług, dłużnik uznaje, niewielka kwota — niskie szanse',
+    input: {
+      caseType: 'W2_windykacja_odpowiedz',
+      data: {
+        numer_sprawy: 'KRD/2026/99999',
+        wierzyciel_pierwotny: 'Allegro Pay',
+        firma_windykacyjna: null,
+        kwota_glowna: 350,
+        kwota_odsetek: 30,
+        kwota_kosztow: 0,
+        data_powstania_dlugu: '2025-12-01',
+        data_wezwania: '2026-04-15',
+        rodzaj_zobowiazania: 'umowa_o_swiadczenie' as never,
+        uznajesz_dlug: true,
+        szczegoly: 'Zapomniałem zapłacić ratę za zakup.',
+        imie_nazwisko: 'Eryk Kowalski',
+        adres: 'ul. Testowa 14, 00-014 Warszawa',
+      } as never,
+    },
+    expectedScoring: { min: 0.2, max: 0.55 },
+    mustContainPodstawy: ['KC'],
+    mustContainArgumenty: ['dokument'],
+  },
+  {
+    id: 'W2-A3',
+    description: 'Niezapłacona faktura B2C, kwestionowana wysokość odsetek',
+    input: {
+      caseType: 'W2_windykacja_odpowiedz',
+      data: {
+        numer_sprawy: 'GET/2026/22221',
+        wierzyciel_pierwotny: 'GetBack S.A.',
+        firma_windykacyjna: 'Hoist I NSFIZ',
+        kwota_glowna: 4500,
+        kwota_odsetek: 5800,
+        kwota_kosztow: 1200,
+        data_powstania_dlugu: '2021-06-30',
+        data_wezwania: '2026-03-25',
+        rodzaj_zobowiazania: 'fv_niezaplacone' as never,
+        uznajesz_dlug: false,
+        szczegoly: 'Odsetki przekraczają kapitał — kwestionuję wysokość, żądam wyliczenia.',
+        imie_nazwisko: 'Filip Adamski',
+        adres: 'ul. Testowa 15, 00-015 Warszawa',
+      } as never,
+    },
+    expectedScoring: { min: 0.6, max: 0.85 },
+    mustContainPodstawy: ['art. 6', 'KC'],
+    mustContainArgumenty: ['odsetki', 'wysokość'],
+  },
+
+  // ==========================================================================
+  // W3 — Sprzeciw od nakazu zapłaty w EPU
+  // ==========================================================================
+  {
+    id: 'W3-A1',
+    description: 'Nakaz EPU doręczony 3 dni temu, kwestionowanie + przedawnienie — bardzo wysokie szanse',
+    input: {
+      caseType: 'W3_windykacja_sprzeciw_epu',
+      data: {
+        sygnatura_epu: 'VI Nc-e 1234567/26',
+        data_doreczenia_nakazu: '2026-05-07',
+        powod: 'Prokura NSFIZ',
+        kwota_dochodzona: 6800,
+        data_powstania_dlugu: '2017-08-12',
+        rodzaj_zobowiazania: 'kredyt konsumencki',
+        podstawy_kwestionowania: ['przedawnienie', 'brak_dokumentow', 'cesja_bez_powiadomienia'],
+        szczegoly: 'Nigdy nie otrzymałem informacji o cesji wierzytelności.',
+        imie_nazwisko: 'Grzegorz Maj',
+        adres: 'ul. Testowa 16, 00-016 Warszawa',
+      } as never,
+    },
+    expectedScoring: { min: 0.8, max: 1.0 },
+    mustContainPodstawy: ['art. 503', 'KPC'],
+    mustContainArgumenty: ['kwestionuj'],
+    mustContainDoOrganu: ['Lublin-Zachód'],
+  },
+  {
+    id: 'W3-A2',
+    description: 'Nakaz EPU, zobowiązanie spełnione (dług zapłacony) — bardzo wysokie szanse',
+    input: {
+      caseType: 'W3_windykacja_sprzeciw_epu',
+      data: {
+        sygnatura_epu: 'VI Nc-e 7654321/26',
+        data_doreczenia_nakazu: '2026-05-01',
+        powod: 'Vivus Finance sp. z o.o.',
+        kwota_dochodzona: 1200,
+        data_powstania_dlugu: '2024-04-10',
+        rodzaj_zobowiazania: 'pożyczka chwilówka',
+        podstawy_kwestionowania: ['spelnienie_zobowiazania', 'bledna_wysokosc'],
+        szczegoly: 'Spłaciłem pożyczkę w całości w dniu 12.07.2024 — mam potwierdzenie przelewu.',
+        imie_nazwisko: 'Hanna Borowska',
+        adres: 'ul. Testowa 17, 00-017 Warszawa',
+      } as never,
+    },
+    expectedScoring: { min: 0.85, max: 1.0 },
+    mustContainPodstawy: ['art. 503', 'KPC'],
+    mustContainArgumenty: ['kwestionuj'],
+    mustContainDoOrganu: ['Lublin-Zachód'],
+  },
+  {
+    id: 'W3-A3',
+    description: 'Sprzeciw na granicy terminu (12 dni od doręczenia), słabe argumenty merytoryczne',
+    input: {
+      caseType: 'W3_windykacja_sprzeciw_epu',
+      data: {
+        sygnatura_epu: 'VI Nc-e 9999999/26',
+        data_doreczenia_nakazu: '2026-04-28',
+        powod: 'Ultimo Portfolio sp. z o.o.',
+        kwota_dochodzona: 950,
+        data_powstania_dlugu: '2023-01-15',
+        rodzaj_zobowiazania: 'rachunek za prąd',
+        podstawy_kwestionowania: ['inna'],
+        szczegoly: 'Uważam, że kwota jest zawyżona, ale nie mam dokumentów.',
+        imie_nazwisko: 'Igor Czarnecki',
+        adres: 'ul. Testowa 18, 00-018 Warszawa',
+      } as never,
+    },
+    expectedScoring: { min: 0.65, max: 0.9 },
+    mustContainPodstawy: ['art. 503'],
+    mustContainArgumenty: ['kwestionuj'],
+    mustContainDoOrganu: ['Lublin-Zachód'],
+  },
+
+  // ==========================================================================
+  // W4 — Usunięcie z KRD/BIK
+  // ==========================================================================
+  {
+    id: 'W4-A1',
+    description: 'Spłacono dług, mamy potwierdzenie przelewu, wpis nadal w KRD — bardzo wysokie szanse',
+    input: {
+      caseType: 'W4_windykacja_krd_bik',
+      data: {
+        rejestr: 'KRD' as never,
+        numer_wpisu: 'KRD-2024-AB123456',
+        wierzyciel_zglaszajacy: 'PKO BP S.A.',
+        kwota_zobowiazania: 4500,
+        data_wpisu: '2024-01-20',
+        podstawa_usuniecia: 'splacono' as never,
+        data_splaty: '2025-06-15',
+        numer_potwierdzenia_splaty: 'P-2025-987654321',
+        szczegoly: 'Spłata całkowita 15.06.2025, potwierdzenie banku w załączniku. Wpis nie usunięty po 10 miesiącach.',
+        imie_nazwisko: 'Joanna Sikora',
+        pesel_maskowany: '850315*****',
+        adres: 'ul. Testowa 19, 00-019 Warszawa',
+      } as never,
+    },
+    expectedScoring: { min: 0.85, max: 1.0 },
+    mustContainPodstawy: ['UUIG', 'RODO', 'art. 17'],
+    mustContainArgumenty: ['spłac'],
+    mustNotContain: ['uznaję dług'],
+  },
+  {
+    id: 'W4-A2',
+    description: 'Bezpodstawny wpis (kradzież tożsamości) — wysokie szanse',
+    input: {
+      caseType: 'W4_windykacja_krd_bik',
+      data: {
+        rejestr: 'BIK' as never,
+        numer_wpisu: 'BIK-2025-CR789',
+        wierzyciel_zglaszajacy: 'NetCredit sp. z o.o.',
+        kwota_zobowiazania: 8000,
+        data_wpisu: '2025-03-10',
+        podstawa_usuniecia: 'bezpodstawny' as never,
+        data_splaty: null,
+        numer_potwierdzenia_splaty: null,
+        szczegoly: 'Nigdy nie zaciągałem pożyczki — zgłoszenie na policję 04/2025, sygn. RSD-456/25.',
+        imie_nazwisko: 'Karol Gajewski',
+        pesel_maskowany: '900812*****',
+        adres: 'ul. Testowa 20, 00-020 Warszawa',
+      } as never,
+    },
+    expectedScoring: { min: 0.7, max: 0.95 },
+    mustContainPodstawy: ['UUIG', 'RODO'],
+    mustContainArgumenty: ['bezpodstaw'],
+  },
+  {
+    id: 'W4-A3',
+    description: 'Sprzeciw RODO bez konkretnej podstawy faktycznej — średnie/niskie szanse',
+    input: {
+      caseType: 'W4_windykacja_krd_bik',
+      data: {
+        rejestr: 'BIG_InfoMonitor' as never,
+        numer_wpisu: null,
+        wierzyciel_zglaszajacy: 'P4 sp. z o.o.',
+        kwota_zobowiazania: 320,
+        data_wpisu: '2025-09-01',
+        podstawa_usuniecia: 'sprzeciw_rodo' as never,
+        data_splaty: null,
+        numer_potwierdzenia_splaty: null,
+        szczegoly: 'Nie chcę być w rejestrze, składam sprzeciw RODO.',
+        imie_nazwisko: 'Liliana Maj',
+        pesel_maskowany: '870505*****',
+        adres: 'ul. Testowa 21, 00-021 Warszawa',
+      } as never,
+    },
+    expectedScoring: { min: 0.2, max: 0.5 },
+    mustContainPodstawy: ['RODO'],
+    mustContainArgumenty: ['sprzeciw'],
+  },
+
+  // ==========================================================================
+  // W5 — Skarga do RF (Rzecznik Finansowy)
+  // ==========================================================================
+  {
+    id: 'W5-A1',
+    description: 'Agresywna windykacja: 30 telefonów dziennie, SMS-y nocą, bilingi w załączniku — wysokie szanse',
+    input: {
+      caseType: 'W5_windykacja_skarga_rf',
+      data: {
+        podmiot_skarzony: 'Kruk S.A.',
+        numer_sprawy_u_podmiotu: 'KRK/2025/12345',
+        rodzaj_podmiotu: 'firma_windykacyjna' as never,
+        zarzucane_naruszenia: ['agresywna_windykacja', 'niedozwolone_oplaty'],
+        opis_zdarzen:
+          'Od 01.03.2026 do 15.04.2026 codziennie 20-30 telefonów (w tym 22:30, 23:15). SMS-y o nieludzkich godzinach. Doliczono 1500 zł kosztów windykacyjnych bez podstawy.',
+        zadania: 'Zaprzestanie kontaktów telefonicznych poza godzinami 8-20, korekta kwoty o 1500 zł.',
+        zaalacznikiopis: 'Bilingi telefoniczne 03-04/2026, screeny SMS, korespondencja',
+        imie_nazwisko: 'Marek Pawlak',
+        email: 'marek.pawlak@example.com',
+        telefon: '+48 600 123 456',
+        adres: 'ul. Testowa 22, 00-022 Warszawa',
+      } as never,
+    },
+    expectedScoring: { min: 0.75, max: 0.95 },
+    mustContainPodstawy: ['Rzecznik Finansowy', 'KC'],
+    mustContainArgumenty: ['windykacj'],
+    mustContainDoOrganu: ['Rzecznik Finansowy'],
+  },
+  {
+    id: 'W5-A2',
+    description: 'Bank doliczył klauzule abuzywne, dokumentacja kompletna — wysokie szanse',
+    input: {
+      caseType: 'W5_windykacja_skarga_rf',
+      data: {
+        podmiot_skarzony: 'Santander Bank Polska',
+        numer_sprawy_u_podmiotu: 'SAN/2026/55555',
+        rodzaj_podmiotu: 'bank' as never,
+        zarzucane_naruszenia: ['niedozwolone_oplaty'],
+        opis_zdarzen:
+          'Bank pobrał 2400 zł "opłaty za obsługę przeterminowanej zaległości" — klauzula uznana za abuzywną w rejestrze UOKiK pod nr 7842.',
+        zadania: 'Zwrot 2400 zł nadpłaconej opłaty + odsetki ustawowe.',
+        zaalacznikiopis: 'Wyciąg z rachunku, regulamin produktu, decyzja UOKiK',
+        imie_nazwisko: 'Natalia Wójcik',
+        email: 'natalia.w@example.com',
+        telefon: '+48 600 654 321',
+        adres: 'ul. Testowa 23, 00-023 Warszawa',
+      } as never,
+    },
+    expectedScoring: { min: 0.8, max: 1.0 },
+    mustContainPodstawy: ['Rzecznik Finansowy', 'KC'],
+    mustContainArgumenty: ['opłat'],
+    mustContainDoOrganu: ['Rzecznik Finansowy'],
+  },
+  {
+    id: 'W5-A3',
+    description: 'Ogólna skarga bez konkretnej dokumentacji — średnie/niskie szanse',
+    input: {
+      caseType: 'W5_windykacja_skarga_rf',
+      data: {
+        podmiot_skarzony: 'Vivus Finance',
+        numer_sprawy_u_podmiotu: null,
+        rodzaj_podmiotu: 'instytucja_pozyczkowa' as never,
+        zarzucane_naruszenia: ['inne'],
+        opis_zdarzen: 'Nie podoba mi się sposób kontaktu firmy.',
+        zadania: 'Aby firma traktowała mnie lepiej.',
+        zaalacznikiopis: 'brak',
+        imie_nazwisko: 'Olgierd Nowicki',
+        email: 'olgierd.n@example.com',
+        telefon: '+48 600 111 222',
+        adres: 'ul. Testowa 24, 00-024 Warszawa',
+      } as never,
+    },
+    expectedScoring: { min: 0.15, max: 0.5 },
+    mustContainPodstawy: ['Rzecznik Finansowy'],
+    mustContainArgumenty: [],
+    mustContainDoOrganu: ['Rzecznik Finansowy'],
+  },
+]

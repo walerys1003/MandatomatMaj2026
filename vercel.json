@@ -1,0 +1,23 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/deadlines/check",
+      "schedule": "0 * * * *"
+    }
+  ],
+  "functions": {
+    "apps/web/src/app/api/billing/webhook/route.ts": {
+      "maxDuration": 30
+    },
+    "apps/web/src/app/api/documents/[docId]/pdf/route.ts": {
+      "maxDuration": 30
+    },
+    "apps/web/src/app/api/deadlines/check/route.ts": {
+      "maxDuration": 60
+    },
+    "apps/web/src/app/api/uploads/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}
