@@ -6,13 +6,10 @@ import {
   breadcrumbJsonLd,
   faqJsonLd,
   legalServiceJsonLd,
+  productJsonLd,
   serializeJsonLd,
 } from '@/lib/seo/json-ld'
-import {
-  CATEGORIES,
-  findCategory,
-  getAllCategorySlugs,
-} from '@/lib/seo/categories'
+import { CATEGORIES, findCategory, getAllCategorySlugs } from '@/lib/seo/categories'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -22,9 +19,7 @@ export async function generateStaticParams() {
   return getAllCategorySlugs().map((slug) => ({ slug }))
 }
 
-export async function generateMetadata({
-  params,
-}: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
   const cat = findCategory(slug)
   if (!cat) return { title: 'Kategoria nie znaleziona' }
@@ -60,6 +55,13 @@ export default async function CategoryPage({ params }: PageProps) {
     url: `/kategoria/${slug}`,
     serviceType: cat.h1,
   })
+  // T5-SEO-019: Product schema — Google Rich Results dla cennika
+  const product = productJsonLd({
+    name: cat.h1,
+    description: cat.metaDescription,
+    sku: `mandatomat-${slug}`,
+    url: `/kategoria/${slug}`,
+  })
 
   return (
     <>
@@ -74,6 +76,10 @@ export default async function CategoryPage({ params }: PageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(service) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(product) }}
       />
 
       <article className="mx-auto w-full max-w-4xl px-4 py-12 sm:py-16">
@@ -96,9 +102,7 @@ export default async function CategoryPage({ params }: PageProps) {
           <h1 className="font-display text-4xl font-extrabold tracking-[-0.04em] text-iron-950 dark:text-white sm:text-5xl">
             {cat.h1}
           </h1>
-          <p className="mt-4 max-w-2xl text-base text-iron-600 dark:text-iron-300">
-            {cat.intro}
-          </p>
+          <p className="mt-4 max-w-2xl text-base text-iron-600 dark:text-iron-300">{cat.intro}</p>
         </header>
 
         <section className="mb-10 grid gap-4 sm:grid-cols-2">
@@ -135,25 +139,16 @@ export default async function CategoryPage({ params }: PageProps) {
           </h2>
           <dl className="space-y-4">
             {cat.faq.map((item, i) => (
-              <div
-                key={i}
-                className="rounded-lg border border-iron-200 p-5 dark:border-iron-800"
-              >
-                <dt className="font-semibold text-iron-900 dark:text-iron-100">
-                  {item.q}
-                </dt>
-                <dd className="mt-2 text-sm text-iron-600 dark:text-iron-400">
-                  {item.a}
-                </dd>
+              <div key={i} className="rounded-lg border border-iron-200 p-5 dark:border-iron-800">
+                <dt className="font-semibold text-iron-900 dark:text-iron-100">{item.q}</dt>
+                <dd className="mt-2 text-sm text-iron-600 dark:text-iron-400">{item.a}</dd>
               </div>
             ))}
           </dl>
         </section>
 
         <section className="rounded-2xl bg-precision-blue-600 p-8 text-center text-white">
-          <h2 className="font-display text-2xl font-bold">
-            Wygeneruj pismo z AI w 60 sekund
-          </h2>
+          <h2 className="font-display text-2xl font-bold">Wygeneruj pismo z AI w 60 sekund</h2>
           <p className="mt-2 text-precision-blue-100">
             99 zł, gotowy plik PDF z podstawami prawnymi i argumentacją.
           </p>

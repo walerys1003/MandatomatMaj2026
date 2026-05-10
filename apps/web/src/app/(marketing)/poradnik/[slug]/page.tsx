@@ -6,14 +6,10 @@ import {
   articleJsonLd,
   breadcrumbJsonLd,
   faqJsonLd,
+  productJsonLd,
   serializeJsonLd,
 } from '@/lib/seo/json-ld'
-import {
-  findCategory,
-  findLongTail,
-  getAllLongTailSlugs,
-  LONG_TAIL,
-} from '@/lib/seo/categories'
+import { findCategory, findLongTail, getAllLongTailSlugs, LONG_TAIL } from '@/lib/seo/categories'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -23,9 +19,7 @@ export async function generateStaticParams() {
   return getAllLongTailSlugs().map((slug) => ({ slug }))
 }
 
-export async function generateMetadata({
-  params,
-}: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
   const lt = findLongTail(slug)
   if (!lt) return { title: 'Poradnik nie znaleziony' }
@@ -53,15 +47,20 @@ export default async function LongTailPage({ params }: PageProps) {
   const breadcrumbs = breadcrumbJsonLd([
     { name: 'Strona główna', url: '/' },
     { name: 'Poradnik', url: '/' },
-    ...(parentCat
-      ? [{ name: parentCat.h1, url: `/kategoria/${parentCat.slug}` }]
-      : []),
+    ...(parentCat ? [{ name: parentCat.h1, url: `/kategoria/${parentCat.slug}` }] : []),
     { name: lt.h1, url: `/poradnik/${slug}` },
   ])
   const faq = faqJsonLd(lt.faq)
   const article = articleJsonLd({
     headline: lt.h1,
     description: lt.metaDescription,
+    url: `/poradnik/${slug}`,
+  })
+  // T5-SEO-019: Product schema — Google Rich Results dla cennika
+  const product = productJsonLd({
+    name: lt.h1,
+    description: lt.metaDescription,
+    sku: `mandatomat-poradnik-${slug}`,
     url: `/poradnik/${slug}`,
   })
 
@@ -78,6 +77,10 @@ export default async function LongTailPage({ params }: PageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(article) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(product) }}
       />
 
       <article className="mx-auto w-full max-w-3xl px-4 py-12 sm:py-16">
@@ -113,9 +116,7 @@ export default async function LongTailPage({ params }: PageProps) {
           <h1 className="font-display text-3xl font-extrabold tracking-[-0.04em] text-iron-950 dark:text-white sm:text-4xl">
             {lt.h1}
           </h1>
-          <p className="mt-4 text-base text-iron-600 dark:text-iron-300">
-            {lt.intro}
-          </p>
+          <p className="mt-4 text-base text-iron-600 dark:text-iron-300">{lt.intro}</p>
         </header>
 
         <section className="mb-10 space-y-5">
@@ -131,12 +132,8 @@ export default async function LongTailPage({ params }: PageProps) {
                 <p className="mb-2 font-mono text-[11px] uppercase tracking-wider text-precision-blue-600 dark:text-precision-blue-400">
                   {String(i + 1).padStart(2, '0')}
                 </p>
-                <h3 className="font-semibold text-iron-900 dark:text-iron-100">
-                  {step.title}
-                </h3>
-                <p className="mt-2 text-sm text-iron-600 dark:text-iron-400">
-                  {step.content}
-                </p>
+                <h3 className="font-semibold text-iron-900 dark:text-iron-100">{step.title}</h3>
+                <p className="mt-2 text-sm text-iron-600 dark:text-iron-400">{step.content}</p>
               </li>
             ))}
           </ol>
@@ -171,16 +168,9 @@ export default async function LongTailPage({ params }: PageProps) {
           </h2>
           <dl className="space-y-4">
             {lt.faq.map((item, i) => (
-              <div
-                key={i}
-                className="rounded-lg border border-iron-200 p-5 dark:border-iron-800"
-              >
-                <dt className="font-semibold text-iron-900 dark:text-iron-100">
-                  {item.q}
-                </dt>
-                <dd className="mt-2 text-sm text-iron-600 dark:text-iron-400">
-                  {item.a}
-                </dd>
+              <div key={i} className="rounded-lg border border-iron-200 p-5 dark:border-iron-800">
+                <dt className="font-semibold text-iron-900 dark:text-iron-100">{item.q}</dt>
+                <dd className="mt-2 text-sm text-iron-600 dark:text-iron-400">{item.a}</dd>
               </div>
             ))}
           </dl>

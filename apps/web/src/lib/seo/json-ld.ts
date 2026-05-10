@@ -76,6 +76,48 @@ export function legalServiceJsonLd(params: {
   }
 }
 
+/**
+ * T5-SEO-019: Product schema dla stron kategoryjnych/long-tail.
+ *
+ * Schema.org/Product — Google używa do Rich Results (cena, dostępność,
+ * ratingValue gdy podane). SKU = case_type (deterministyczny ID).
+ */
+export function productJsonLd(params: {
+  name: string
+  description: string
+  sku: string
+  url: string
+  price?: string
+  currency?: string
+  imageUrl?: string
+}): object {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: params.name,
+    description: params.description,
+    sku: params.sku,
+    url: params.url.startsWith('http') ? params.url : `${SITE_URL}${params.url}`,
+    image: params.imageUrl ?? `${SITE_URL}/logo.png`,
+    brand: {
+      '@type': 'Brand',
+      name: 'Mandatomat',
+    },
+    offers: {
+      '@type': 'Offer',
+      price: params.price ?? '99.00',
+      priceCurrency: params.currency ?? 'PLN',
+      availability: 'https://schema.org/InStock',
+      url: params.url.startsWith('http') ? params.url : `${SITE_URL}${params.url}`,
+      seller: {
+        '@type': 'Organization',
+        name: 'Mandatomat',
+        url: SITE_URL,
+      },
+    },
+  }
+}
+
 export function organizationJsonLd(): object {
   return {
     '@context': 'https://schema.org',
