@@ -1,5 +1,1 @@
-#!/usr/bin/env sh
-# Husky pre-commit hook
-. "$(dirname -- "$0")/_/husky.sh"
-
 pnpm exec lint-staged

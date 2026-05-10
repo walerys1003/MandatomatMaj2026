@@ -36,6 +36,13 @@ export interface SendEmailInput {
   replyTo?: string
   /** Dodatkowe tagi (Resend tagging API). */
   tags?: Array<{ name: string; value: string }>
+  /**
+   * Klucz idempotencji — Resend deduplikuje wysyłki w oknie 24h.
+   * Używany przy fan-out z Inngest, aby wielokrotne retry tej samej
+   * funkcji nie wysłały kilku maili. Maks 256 znaków.
+   * @see https://resend.com/docs/api-reference/idempotency
+   */
+  idempotencyKey?: string
 }
 
 export interface SendEmailResult {
@@ -65,14 +72,20 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
     tags: input.tags,
   }
 
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${apiKey}`,
+    'Content-Type': 'application/json',
+  }
+  if (input.idempotencyKey) {
+    // Resend obsługuje header `Idempotency-Key` (24h okno deduplikacji).
+    headers['Idempotency-Key'] = input.idempotencyKey.slice(0, 256)
+  }
+
   let res: Response
   try {
     res = await fetch(RESEND_API_URL, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(payload),
     })
   } catch (err) {
@@ -89,5 +102,8 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
 }
 
 function stripHtml(html: string): string {
-  return html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
+  return html
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
 }

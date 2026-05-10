@@ -11,6 +11,7 @@ import { incrementPromoUsage } from '@/lib/payments/promo'
 import { sendEmail } from '@/lib/notifications/email'
 import { tplPaymentSuccess } from '@/lib/notifications/templates'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { inngest } from '@/lib/inngest/client'
 
 /**
  * POST /api/billing/webhook
@@ -67,14 +68,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const admin = createAdminClient()
 
   // T4-PAY-004: Idempotency — drop duplicates
-  const { error: insertErr } = await admin
-    .from('stripe_events')
-    .insert({
-      event_id: event.id,
-      event_type: event.type,
-      payload: event as unknown,
-      processing_status: 'success',
-    })
+  const { error: insertErr } = await admin.from('stripe_events').insert({
+    event_id: event.id,
+    event_type: event.type,
+    payload: event as unknown,
+    processing_status: 'success',
+  })
 
   if (insertErr) {
     // UNIQUE violation = duplicate event, skip
@@ -97,7 +96,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         break
 
       case 'payment_intent.succeeded':
-        await handlePaymentIntentSucceeded(admin, event.data.object as unknown as StripePaymentIntent)
+        await handlePaymentIntentSucceeded(
+          admin,
+          event.data.object as unknown as StripePaymentIntent,
+        )
         break
 
       case 'payment_intent.payment_failed':
@@ -105,7 +107,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         break
 
       case 'charge.refunded':
-        await handleChargeRefunded(admin, event.data.object as unknown as { payment_intent: string; amount_refunded: number })
+        await handleChargeRefunded(
+          admin,
+          event.data.object as unknown as { payment_intent: string; amount_refunded: number },
+        )
         break
 
       default:
@@ -226,6 +231,26 @@ async function handleCheckoutCompleted(
       sessionId: session.id,
     }),
   ])
+
+  // T4-INNGEST-002: fan-out — emit event jako warstwę retry.
+  // Inline path powyżej jest "best-effort", a Inngest function ma własne
+  // checks (events table + payments.invoice_id), więc duplikatów nie będzie.
+  // Jeżeli Resend/Fakturownia padnie inline → Inngest spróbuje ponownie (3x z backoff).
+  try {
+    await inngest.send({
+      name: 'mandatomat/payment.succeeded',
+      data: {
+        userId,
+        caseId,
+        paymentId: pTyped?.id ?? session.id,
+        amountPln: (session.amount_total ?? 0) / 100,
+        stripeSessionId: session.id,
+      },
+    })
+  } catch (err) {
+    // Inngest send failure nie powinno blokować webhooka — inline path już zrobił robotę
+    console.warn('[stripe-webhook] inngest.send failed (non-fatal):', err)
+  }
 }
 
 interface PaymentSideEffectsInput {
