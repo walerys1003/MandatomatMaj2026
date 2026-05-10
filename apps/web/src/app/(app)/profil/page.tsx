@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 
 import { Badge } from '@mandatomat/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@mandatomat/ui/card'
@@ -33,7 +34,7 @@ export default async function ProfilePage() {
         <p className="font-mono text-[11px] uppercase tracking-wider text-precision-blue-600 dark:text-precision-blue-400">
           KONTO
         </p>
-        <h1 className="mt-2 font-display text-3xl font-extrabold tracking-[-0.03em] text-iron-950 sm:text-4xl dark:text-white">
+        <h1 className="mt-2 font-display text-3xl font-extrabold tracking-[-0.03em] text-iron-950 dark:text-white sm:text-4xl">
           Profil
         </h1>
         <p className="mt-1 text-iron-600 dark:text-iron-300">
@@ -76,6 +77,20 @@ export default async function ProfilePage() {
               </CardTitle>
             </CardHeader>
           </Card>
+          <Link
+            href="/profil/polecenia"
+            className="block rounded-xl border border-precision-blue-200 bg-precision-blue-50/50 p-5 transition hover:border-precision-blue-400 hover:bg-precision-blue-100/50 dark:border-precision-blue-900 dark:bg-precision-blue-950/30 dark:hover:bg-precision-blue-900/40"
+          >
+            <p className="font-mono text-[11px] uppercase tracking-wider text-precision-blue-700 dark:text-precision-blue-300">
+              Polecaj znajomym
+            </p>
+            <p className="mt-1 font-display text-base font-bold text-iron-950 dark:text-white">
+              Zniżka 20% za polecenie 🎁
+            </p>
+            <p className="mt-1 text-xs text-iron-600 dark:text-iron-300">
+              Zobacz swój kod referral i statystyki →
+            </p>
+          </Link>
         </aside>
       </div>
     </div>

@@ -92,11 +92,22 @@ export async function loginAction(_prev: AuthState, formData: FormData): Promise
 
 // -------------------------- SIGNUP --------------------------
 
+const referralCodeSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^MND-[A-F0-9]{8}$/i, 'Nieprawidłowy format kodu (oczekiwany: MND-XXXXXXXX).')
+
 const signupSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   acceptTerms: z.literal('on', { errorMap: () => ({ message: 'Musisz zaakceptować regulamin.' }) }),
   newsletter: z.string().optional(),
+  referralCode: z
+    .string()
+    .optional()
+    .transform((v) => (v && v.trim().length > 0 ? v.trim() : undefined))
+    .pipe(referralCodeSchema.optional()),
 })
 
 export async function signupAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
@@ -108,6 +119,7 @@ export async function signupAction(_prev: AuthState, formData: FormData): Promis
     password: formData.get('password'),
     acceptTerms: formData.get('acceptTerms'),
     newsletter: formData.get('newsletter'),
+    referralCode: formData.get('referralCode'),
   })
   if (!parsed.success) {
     const fields: Record<string, string> = {}
@@ -128,6 +140,9 @@ export async function signupAction(_prev: AuthState, formData: FormData): Promis
       emailRedirectTo: `${origin}/api/auth/callback?next=/witaj`,
       data: {
         newsletter_opt_in: parsed.data.newsletter === 'on',
+        ...(parsed.data.referralCode
+          ? { referral_code: parsed.data.referralCode.toUpperCase() }
+          : {}),
       },
     },
   })

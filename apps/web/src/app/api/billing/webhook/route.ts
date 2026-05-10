@@ -219,6 +219,39 @@ async function handleCheckoutCompleted(
     await incrementPromoUsage(promoCode)
   }
 
+  // Faza 9 (T20): jeśli to płatność z referral_applied — emit event `referral_redeemed`
+  // dla referrera (analityka). Idempotencja: stripe_events UNIQUE → ten kod
+  // wykona się max 1x per session.
+  const referralApplied = session.metadata?.['referral_applied'] === 'true'
+  const referredByCode = session.metadata?.['referred_by']
+  if (referralApplied && referredByCode) {
+    const { data: referrerRow } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('referral_code', referredByCode)
+      .maybeSingle()
+    const referrerId = (referrerRow as { id: string } | null)?.id
+    if (referrerId) {
+      await admin
+        .from('events')
+        .insert({
+          user_id: referrerId,
+          event_type: 'referral_redeemed',
+          data: {
+            referee_user_id: userId,
+            referee_case_id: caseId,
+            referral_code: referredByCode,
+            amount: session.amount_total,
+            session_id: session.id,
+          },
+        })
+        .then(
+          () => undefined,
+          () => undefined,
+        )
+    }
+  }
+
   // T4-PAY-009: auto-faktura (Fakturownia) — best-effort, nie blokujemy webhooka
   // T4-NOTIF-038: payment-success email
   await Promise.allSettled([

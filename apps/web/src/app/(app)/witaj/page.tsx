@@ -3,6 +3,8 @@ import Link from 'next/link'
 
 import { Button, Stepper } from '@mandatomat/ui'
 
+import { ReferralRedeemer } from './referral-redeemer'
+
 export const metadata: Metadata = {
   title: 'Witaj w Mandatomat',
   description: 'Onboarding — zacznij pisać pisma prawne w 5 minut.',
@@ -25,6 +27,7 @@ const STEPS = [
 export default function WitajPage() {
   return (
     <div className="space-y-10">
+      <ReferralRedeemer />
       <Stepper steps={STEPS} currentIndex={0} />
 
       <header className="space-y-3">

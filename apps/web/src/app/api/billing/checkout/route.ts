@@ -4,6 +4,7 @@ import { z } from 'zod'
 
 import { createCheckoutSession, getProduct, StripeError } from '@/lib/payments/stripe'
 import { validatePromoCode } from '@/lib/payments/promo'
+import { getReferralDiscount } from '@/lib/payments/referral'
 import { rateLimit, rateLimitHeaders } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/get-ip'
 import { createClient } from '@/lib/supabase/server'
@@ -141,10 +142,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       metadata: { reason: 'subscription_bypass', tier: profileTyped!.subscription_tier },
     })
 
-    await supabase
-      .from('cases')
-      .update({ status: 'paid' })
-      .eq('id', caseId)
+    await supabase.from('cases').update({ status: 'paid' }).eq('id', caseId)
 
     await supabase
       .from('profiles')
@@ -183,6 +181,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     validatedPromoCode = promo.code
   }
 
+  // Referral discount fallback — tylko jeśli user nie podał własnego promo code.
+  // Daje 20% zniżki na pierwszy zakup, jeśli user ma `referred_by` w profilu.
+  let referralApplied = false
+  let referredByCode: string | null = null
+  if (discountPercent === 0) {
+    const referral = await getReferralDiscount(user.id)
+    if (referral.applicable) {
+      discountPercent = referral.discountPercent
+      referralApplied = true
+      referredByCode = referral.referredBy
+    }
+  }
+
   // Build success/cancel URLs
   const origin = req.headers.get('origin') ?? new URL(req.url).origin
   const successUrl = `${origin}/sprawy/${caseId}/pobranie?session_id={CHECKOUT_SESSION_ID}`
@@ -204,6 +215,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       ...(discountPercent ? { discountPercent } : {}),
       metadata: {
         case_type: caseTyped.case_type,
+        ...(referralApplied ? { referral_applied: 'true', referred_by: referredByCode ?? '' } : {}),
       },
     })
   } catch (err) {
@@ -234,19 +246,24 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     original_amount: product.amount,
     promo_code: validatedPromoCode ?? null,
     discount_percent: discountPercent || null,
-    metadata: { stripe_session_id: session.id },
+    metadata: {
+      stripe_session_id: session.id,
+      ...(referralApplied ? { referral_applied: true, referred_by: referredByCode } : {}),
+    },
   })
 
-  await supabase
-    .from('cases')
-    .update({ status: 'paid_pending' })
-    .eq('id', caseId)
+  await supabase.from('cases').update({ status: 'paid_pending' }).eq('id', caseId)
 
   await supabase.from('events').insert({
     user_id: user.id,
     case_id: caseId,
     event_type: 'payment_initiated',
-    data: { product_code: productCode, amount: finalAmount, session_id: session.id },
+    data: {
+      product_code: productCode,
+      amount: finalAmount,
+      session_id: session.id,
+      ...(referralApplied ? { referral_applied: true, referred_by: referredByCode } : {}),
+    },
   })
 
   return NextResponse.json(
@@ -257,6 +274,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       finalAmount,
       discountPercent,
       currency: 'pln',
+      referralApplied,
     },
     { headers: rateLimitHeaders(rl) },
   )

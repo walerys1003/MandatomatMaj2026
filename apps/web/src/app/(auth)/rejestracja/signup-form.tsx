@@ -1,6 +1,8 @@
 'use client'
 
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { useFormState, useFormStatus } from 'react-dom'
 
 import { Alert, Button, Checkbox, Input, Label } from '@mandatomat/ui'
@@ -8,6 +10,8 @@ import { Alert, Button, Checkbox, Input, Label } from '@mandatomat/ui'
 import { signupAction, type AuthState } from '../_actions'
 
 const initial: AuthState = { ok: false }
+
+const REFERRAL_CODE_RE = /^MND-[A-F0-9]{8}$/i
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -20,6 +24,23 @@ function SubmitButton() {
 
 export function SignupForm() {
   const [state, formAction] = useFormState(signupAction, initial)
+  const searchParams = useSearchParams()
+  const [referralCode, setReferralCode] = useState<string>('')
+
+  useEffect(() => {
+    const ref = searchParams?.get('ref') ?? ''
+    if (ref && REFERRAL_CODE_RE.test(ref.trim())) {
+      const normalized = ref.trim().toUpperCase()
+      setReferralCode(normalized)
+      // Persist na wypadek, gdyby user kliknął email-confirm i wrócił na inny URL.
+      // /witaj odczyta to ciasteczko i zawoła /api/referral/redeem.
+      try {
+        document.cookie = `mnd_ref=${encodeURIComponent(normalized)};path=/;max-age=2592000;samesite=lax`
+      } catch {
+        // ignore — cookies disabled
+      }
+    }
+  }, [searchParams])
 
   if (state.ok) {
     return (
@@ -44,6 +65,15 @@ export function SignupForm() {
           {state.error}
         </Alert>
       ) : null}
+
+      {referralCode ? (
+        <Alert variant="success" title="Zaproszenie aktywne">
+          Kod polecenia <strong className="font-mono">{referralCode}</strong> został wykryty. Po
+          pierwszym zakupie otrzymasz <strong>20% zniżki</strong>.
+        </Alert>
+      ) : null}
+
+      <input type="hidden" name="referralCode" value={referralCode} />
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="email">E-mail</Label>
@@ -101,8 +131,7 @@ export function SignupForm() {
             >
               Politykę Prywatności
             </Link>
-            .{' '}
-            <span className="text-iron-500">(wymagane)</span>
+            . <span className="text-iron-500">(wymagane)</span>
           </span>
         </label>
         {state.fields?.['acceptTerms'] ? (
@@ -113,7 +142,9 @@ export function SignupForm() {
           <Checkbox name="newsletter" className="mt-0.5" />
           <span>
             Chcę otrzymywać porady prawne i informacje o nowych funkcjach.{' '}
-            <span className="text-iron-500">(opcjonalne, można wypisać się w dowolnym momencie)</span>
+            <span className="text-iron-500">
+              (opcjonalne, można wypisać się w dowolnym momencie)
+            </span>
           </span>
         </label>
       </div>
