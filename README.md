@@ -68,8 +68,11 @@
 | P18  | DPA `docs/legal/dpa.md` + `/status` page + 18× 301 redirects    | ✅     | `e585975`      |
 | P19  | Validation system prompt + eval runner CLI (90 evals)           | ✅     | `5ced0fa`      |
 | P20  | Playwright E2E: 6 specs / 72 testów (chromium + mobile)         | ✅     | (już istniało) |
+| P21a | Product JSON-LD na `/kategoria/[slug]` i `/poradnik/[slug]`     | ✅     | `654db57`      |
+| P21b | Plausible (privacy-first) consent-gated init + track forwarding | ✅     | `f076fdf`      |
+| P21c | Sentry alerts config + Backup strategy doc (PITR + R2)          | ✅     | `5c1955f`      |
 
-**Stan końcowy 250 zadań:** ~245/250 ✅, ~5 do produkcyjnego dopięcia (uzupełnienie kategorii w `db-mapping`, wartości produkcyjne secrets dla Stripe/Anthropic, opublikowanie DPA, finalna konfiguracja domeny).
+**Stan końcowy 250 zadań:** ~248/250 ✅, ~2 do produkcyjnego dopięcia (wartości produkcyjne secrets Stripe/Anthropic/Plausible/Sentry, finalna konfiguracja domeny + DNS).
 
 ### Endpointy dodane w P-packach
 
@@ -84,6 +87,22 @@
 - `pnpm -F @mandatomat/web evals` — uruchom 90 evals przez Claude API (próg 70%)
 - `pnpm -F @mandatomat/web evals:dry` — walidacja struktury bez LLM
 - `pnpm test:e2e` — Playwright (chromium + mobile-chrome)
+
+### P21 — SEO + Analytics + Ops (finalny szlif)
+
+- **Product JSON-LD** na każdej stronie kategorii/poradnika (schema.org/Product + Offer + Brand + sku)
+- **Plausible** (privacy-first): `initPlausibleIfConsent()` w `lib/analytics/index.ts`
+  - Lazy script injection przez `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` / `NEXT_PUBLIC_PLAUSIBLE_SRC`
+  - Gating przez consent.analytics (jak PostHog)
+  - `track()` forwarduje eventy do PostHog ORAZ Plausible
+- **Sentry alerts** — `docs/launch/SENTRY_ALERTS.md` (T5-DEV-047)
+  - 5 reguł: error rate > 25/5min, new issue, latency p95 > 3s, AI cost > $50/dzień, Stripe webhook fail
+  - Severity matrix P1/P2/P3 + Slack + PagerDuty
+  - PII scrubbing (RODO): IP wymazane, replays domyślnie 0%
+- **Backup strategy** — `docs/launch/BACKUP_STRATEGY.md` (T5-DEV-049)
+  - Supabase PITR (RPO 5min / RTO 1h) + nightly pg_dump → R2 z `age` encryption
+  - Retention: 7d daily / 90d weekly / 7 lat monthly (audyt RODO)
+  - DR runbook: korupcja / region outage / Vercel down + kwartalne testy restore
 
 ### 301 redirects (P18 — `next.config.mjs`)
 
